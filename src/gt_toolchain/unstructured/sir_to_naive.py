@@ -1,10 +1,22 @@
 # -*- coding: utf-8 -*-
-# Eve toolchain
+#
+# Eve Toolchain - GT4Py Project - GridTools Framework
+#
+# Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich
+# All rights reserved.
+#
+# This file is part of the GT4Py project and the GridTools framework.
+# GT4Py is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or any later
+# version. See the LICENSE.txt file at the top-level directory of this
+# distribution for a copy of the license or check <https://www.gnu.org/licenses/>.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 
 from types import MappingProxyType
 from typing import ClassVar, Mapping
-
-from devtools import debug  # noqa: F401
 
 import eve  # noqa: F401
 from eve.core import Node, NodeTranslator
@@ -161,8 +173,8 @@ class SirToNaive(NodeTranslator):
         loctype = ""
         if node.location_type:
             loctype = self.SIR_TO_NAIVE_LOCATION_TYPE[node.location_type]
-        elif self.current_loc_type_stack:
-            loctype = self.current_loc_type_stack[-1]
+            if not self.current_loc_type_stack or self.current_loc_type_stack[-1] != loctype:
+                self.current_loc_type_stack.append(loctype)
         else:
             raise ValueError("no location type")
 
