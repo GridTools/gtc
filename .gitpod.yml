@@ -7,9 +7,11 @@ tasks:
           ln -s /workspace/.caches/pre-commit  ~/.cache/pre-commit
       init: |
           ./scripts/init_env.sh -i
+          cd /workspace && git clone https://github.com/GridTools/atlas4py.git && pip install -e atlas4py
           PYENV_PYTHON_VERSION=$(python --version | cut -d ' ' -f 2)
           cp ~/.pyenv/versions/${PYENV_PYTHON_VERSION}/lib/python${PYENV_PYTHON_VERSION:0:3}/site-packages/easy-install.pth /workspace/.pip-modules/lib/python${PYENV_PYTHON_VERSION:0:3}/site-packages/
           cp ~/.pyenv/versions/${PYENV_PYTHON_VERSION}/lib/python${PYENV_PYTHON_VERSION:0:3}/site-packages/*.egg-link /workspace/.pip-modules/lib/python${PYENV_PYTHON_VERSION:0:3}/site-packages/
+          cd $GITPOD_REPO_ROOT
           pre-commit install --install-hooks
           gp preview file://$GITPOD_REPO_ROOT/docs/_build/html/index.html
 
