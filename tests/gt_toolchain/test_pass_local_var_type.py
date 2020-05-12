@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from typing import Any
+from typing import Any, Callable, Type
 
 from eve import core
 from gt_toolchain.unstructured import common, sir
@@ -94,13 +94,13 @@ class FindNode(core.NodeVisitor):
         self.generic_visit(node, **kwargs)
 
     @classmethod
-    def byPredicate(cls, predicate, node: core.Node, **kwargs):
+    def byPredicate(cls, predicate: Callable[[core.Node], bool], node: core.Node, **kwargs):
         visitor = FindNode()
         visitor.visit(node, predicate=predicate)
         return visitor.result
 
     @classmethod
-    def byType(cls, search_node_type, node: core.Node, **kwargs):
+    def byType(cls, search_node_type: Type[core.Node], node: core.Node, **kwargs):
         def typePredicate(node: core.Node):
             return isinstance(node, search_node_type)
 
