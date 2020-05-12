@@ -20,7 +20,10 @@ import pytest
 
 from eve import core
 from gt_toolchain.unstructured import common, sir
-from gt_toolchain.unstructured.sir_passes.pass_local_var_type import PassException, PassLocalVarType
+from gt_toolchain.unstructured.sir_passes.pass_local_var_type import (
+    InferLocalVariableLocationType,
+    PassException,
+)
 
 
 # import pytest  # type: ignore
@@ -60,14 +63,12 @@ def make_field_acc(name):
     return sir.FieldAccessExpr(name=name, vertical_offset=0, horizontal_offset=sir.ZeroOffset())
 
 
-def make_field(name):
+def make_field(name, location_type=sir.LocationType.Cell):
     return sir.Field(
         name=name,
         is_temporary=False,
         field_dimensions=sir.FieldDimensions(
-            horizontal_dimension=sir.UnstructuredDimension(
-                dense_location_type=sir.LocationType.Cell
-            )
+            horizontal_dimension=sir.UnstructuredDimension(dense_location_type=location_type)
         ),
     )
 
@@ -119,7 +120,7 @@ class TestPassLocalVarType:
             ],
         )
 
-        result = PassLocalVarType.apply(stencil)
+        result = InferLocalVariableLocationType.apply(stencil)
 
         vardecl = FindNodes.byType(sir.VarDeclStmt, result)[0]
         assert vardecl.location_type == sir.LocationType.Cell
@@ -141,7 +142,7 @@ class TestPassLocalVarType:
             ],
         )
 
-        result = PassLocalVarType.apply(stencil)
+        result = InferLocalVariableLocationType.apply(stencil)
 
         vardecl = FindNodes.byType(sir.VarDeclStmt, result)[0]
         assert vardecl.location_type == sir.LocationType.Edge
@@ -156,7 +157,7 @@ class TestPassLocalVarType:
             ],
         )
 
-        result = PassLocalVarType.apply(stencil)
+        result = InferLocalVariableLocationType.apply(stencil)
 
         vardecls = FindNodes.byType(sir.VarDeclStmt, result)
         assert len(vardecls) == 2
@@ -167,7 +168,36 @@ class TestPassLocalVarType:
         stencil = make_stencil(fields=[], statements=[make_var_decl(name="var")])
 
         with pytest.raises(PassException):
-            PassLocalVarType.apply(stencil)
+            InferLocalVariableLocationType.apply(stencil)
+
+    def test_cyclic_assignment(self):
+        stencil = make_stencil(
+            fields=[],
+            statements=[
+                make_var_decl(name="var"),
+                make_var_decl(name="var2"),
+                make_assign_to_local_var("var", make_var_acc("var2")),
+                make_assign_to_local_var("var2", make_var_acc("var")),
+            ],
+        )
+
+        with pytest.raises(PassException):
+            InferLocalVariableLocationType.apply(stencil)
+
+    def test_incompatible_location(self):
+        stencil = make_stencil(
+            fields=[make_field("field_edge", sir.LocationType.Edge), make_field("field_cell")],
+            statements=[
+                make_var_decl(name="var_edge"),
+                make_var_decl(name="var_cell"),
+                make_assign_to_local_var("var_edge", make_field_acc("field_edge")),
+                make_assign_to_local_var("var_cell", make_field_acc("field_cell")),
+                make_assign_to_local_var("var_cell", make_var_acc("var_edge")),
+            ],
+        )
+
+        with pytest.raises(PassException):
+            InferLocalVariableLocationType.apply(stencil)
 
 
 if __name__ == "__main__":
@@ -175,3 +205,5 @@ if __name__ == "__main__":
     TestPassLocalVarType().test_reduction()
     TestPassLocalVarType().test_chain_assignment()
     TestPassLocalVarType().test_var_type_not_deducible()
+    TestPassLocalVarType().test_cyclic_assignment()
+    TestPassLocalVarType().test_incompatible_location()

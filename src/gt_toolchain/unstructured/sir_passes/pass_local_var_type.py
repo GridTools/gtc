@@ -36,13 +36,43 @@ class PassException(Exception):
             return "PassException has been raised"
 
 
-class PassLocalVarType(NodeVisitor):
+class InferLocalVariableLocationType(NodeVisitor):
+    """Returns a tree were local variables have location type set or raises an PassException if deduction failed.
+
+    Usage: InferLocalVariableLocationType.apply(node)
+    """
+
+    @classmethod
+    def apply(cls, root, **kwargs) -> Node:
+        inferred_location = _AnalyseLocationTypes.apply(root)
+        root_copy = copy.deepcopy(root)
+        cls().visit(root_copy, inferred_location=inferred_location)
+        return root_copy
+
+    def visit_VarDeclStmt(self, node: sir.VarDeclStmt, **kwargs):
+        if node.name not in kwargs["inferred_location"] and node.location_type is None:
+            raise PassException("Cannot deduce location type for {}".format(node.name))
+        node.location_type = kwargs["inferred_location"][node.name]
+
+
+class _AnalyseLocationTypes(NodeVisitor):
+    """Analyse local variable usage and infers location type if possible.
+
+    Result is a dict of variable names to LocationType.
+
+    Usage: _AnalyseLocationTypes.apply(root: Node)
+
+    Can deduce by assignments from:
+     - Reductions (as they have a fixed location type)
+     - Fields (as they have a fixed location type)
+     - Variables recursively (by building a dependency tree)
+    """
+
     def __init__(self, **kwargs):
         super().__init__()
         self.inferred_location = dict()
         self.cur_var = None
         self.var_dependencies = dict()  # depender -> set(dependees)
-        self.var_decls = dict()  # name -> var_decl
         # TODO replace naive symbol table
         self.sir_stencil_params = {}
 
@@ -53,19 +83,19 @@ class PassLocalVarType(NodeVisitor):
         instance = cls()
         instance.visit(root_copy)
 
-        for var_name, loc_type in instance.inferred_location.items():
-            instance.var_decls[var_name].location_type = loc_type
+        for var_name in list(instance.inferred_location.keys()):
             instance.propagate_location_type(var_name)
 
-        for vardecl in instance.var_decls.values():
-            if vardecl.location_type is None:
-                raise PassException("Cannot deduce location type for {}".format(vardecl.name))
-        return root_copy
+        return instance.inferred_location
 
     def propagate_location_type(self, var_name: str):
         for dependee in self.var_dependencies[var_name]:
-            self.var_decls[dependee].location_type = self.var_decls[var_name].location_type
-            # TODO protect against infinite recusion in case of cyclic assignments
+            if (
+                dependee in self.inferred_location
+                and self.inferred_location[dependee] != self.inferred_location[var_name]
+            ):
+                raise PassException("Incompatible location type detected for {}".format(dependee))
+            self.inferred_location[dependee] = self.inferred_location[var_name]
             self.propagate_location_type(dependee)
 
     def set_location_type(self, cur_var_name: str, location_type: sir.LocationType):
@@ -95,10 +125,9 @@ class PassLocalVarType(NodeVisitor):
             self.var_dependencies[node.name].add(self.cur_var.name)
 
     def visit_VarDeclStmt(self, node: sir.VarDeclStmt, **kwargs):
-        if node.name in self.var_decls:
+        if node.name in self.var_dependencies:
             raise RuntimeError("Redeclaration of variable")  # TODO symbol table will take care
         else:
-            self.var_decls[node.name] = node
             self.var_dependencies[node.name] = set()
 
         self.cur_var = node
