@@ -17,7 +17,7 @@
 import copy
 
 import eve  # noqa: F401
-from eve.core import Node, NodeVisitor
+from eve.core import Node, NodeTranslator, NodeVisitor
 
 from .. import sir
 
@@ -36,7 +36,7 @@ class PassException(Exception):
             return "PassException has been raised"
 
 
-class InferLocalVariableLocationType(NodeVisitor):
+class InferLocalVariableLocationType(NodeTranslator):
     """Returns a tree were local variables have location type set or raises an PassException if deduction failed.
 
     Usage: InferLocalVariableLocationType.apply(node)
@@ -45,14 +45,13 @@ class InferLocalVariableLocationType(NodeVisitor):
     @classmethod
     def apply(cls, root, **kwargs) -> Node:
         inferred_location = _AnalyseLocationTypes.apply(root)
-        root_copy = copy.deepcopy(root)
-        cls().visit(root_copy, inferred_location=inferred_location)
-        return root_copy
+        return cls().visit(root, inferred_location=inferred_location)
 
     def visit_VarDeclStmt(self, node: sir.VarDeclStmt, **kwargs):
         if node.name not in kwargs["inferred_location"] and node.location_type is None:
             raise PassException("Cannot deduce location type for {}".format(node.name))
         node.location_type = kwargs["inferred_location"][node.name]
+        return node
 
 
 class _AnalyseLocationTypes(NodeVisitor):

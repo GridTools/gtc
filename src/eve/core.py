@@ -256,7 +256,7 @@ class NodeTranslator(NodeVisitor):
         ):
             tmp_items: Collection[ValidNodeType] = []
             if isinstance(node, BaseNode):
-                tmp_items = {key: self.visit(value, **kwargs) for key, value in node}
+                tmp_items = {key: self.visit(value, **kwargs) for key, value in node.children()}
                 result = node.__class__(  # type: ignore
                     **{key: value for key, value in node.attributes()},
                     **{key: value for key, value in tmp_items.items() if value is not NOTHING},

@@ -26,9 +26,6 @@ from gt_toolchain.unstructured.sir_passes.infer_local_variable_location_type imp
 )
 
 
-# import pytest  # type: ignore
-
-
 float_type = sir.BuiltinType(type_id=common.DataType.FLOAT32)
 
 
@@ -99,15 +96,15 @@ class FindNodes(core.NodeVisitor):
         return self.result
 
     @classmethod
-    def byPredicate(cls, predicate: Callable[[core.Node], bool], node: core.Node, **kwargs):
+    def by_predicate(cls, predicate: Callable[[core.Node], bool], node: core.Node, **kwargs):
         return cls().visit(node, predicate=predicate)
 
     @classmethod
-    def byType(cls, node_type: Type[core.Node], node: core.Node, **kwargs):
-        def typePredicate(node: core.Node):
+    def by_type(cls, node_type: Type[core.Node], node: core.Node, **kwargs):
+        def type_predicate(node: core.Node):
             return isinstance(node, node_type)
 
-        return cls.byPredicate(typePredicate, node)
+        return cls.by_predicate(type_predicate, node)
 
 
 class TestInferLocalVariableLocationType:
@@ -122,7 +119,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationType.apply(stencil)
 
-        vardecl = FindNodes.byType(sir.VarDeclStmt, result)[0]
+        vardecl = FindNodes.by_type(sir.VarDeclStmt, result)[0]
         assert vardecl.location_type == sir.LocationType.Cell
 
     def test_reduction(self):
@@ -144,7 +141,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationType.apply(stencil)
 
-        vardecl = FindNodes.byType(sir.VarDeclStmt, result)[0]
+        vardecl = FindNodes.by_type(sir.VarDeclStmt, result)[0]
         assert vardecl.location_type == sir.LocationType.Edge
 
     def test_chain_assignment(self):
@@ -159,7 +156,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationType.apply(stencil)
 
-        vardecls = FindNodes.byType(sir.VarDeclStmt, result)
+        vardecls = FindNodes.by_type(sir.VarDeclStmt, result)
         assert len(vardecls) == 2
         for vardecl in vardecls:
             assert vardecl.location_type == sir.LocationType.Cell
