@@ -16,9 +16,11 @@
 
 from typing import Any, Callable, Type
 
+import pytest
+
 from eve import core
 from gt_toolchain.unstructured import common, sir
-from gt_toolchain.unstructured.sir_passes.pass_local_var_type import PassLocalVarType
+from gt_toolchain.unstructured.sir_passes.pass_local_var_type import PassException, PassLocalVarType
 
 
 # import pytest  # type: ignore
@@ -124,14 +126,14 @@ class TestPassLocalVarType:
 
     def test_reduction(self):
         stencil = make_stencil(
-            fields=[make_field("field")],
+            fields=[],
             statements=[
                 make_var_decl(name="var"),
                 make_assign_to_local_var(
                     "var",
                     sir.ReductionOverNeighborExpr(
                         op="+",
-                        rhs=make_field_acc("my_field"),
+                        rhs=make_literal(),
                         init=make_literal(),
                         chain=[sir.LocationType.Edge, sir.LocationType.Cell],
                     ),
@@ -144,30 +146,32 @@ class TestPassLocalVarType:
         vardecl = FindNodes.byType(sir.VarDeclStmt, result)[0]
         assert vardecl.location_type == sir.LocationType.Edge
 
-        # statements = [
-        #     # make_var_decl(name="local_var"),
-        #     # make_assign_to_local_var("local_var", make_field_acc("my_field")),
-        #     # # =======
-        #     make_var_decl(name="var"),
-        #     make_assign_to_local_var(
-        #         "var",
-        #         sir.ReductionOverNeighborExpr(
-        #             op="+",
-        #             rhs=make_field_acc("my_field"),
-        #             init=make_literal(),
-        #             chain=[sir.LocationType.Edge, sir.LocationType.Cell],
-        #         ),
-        #     ),
-        #     # =======
-        #     # make_var_decl(name="local_var3", dtype=float_type, init=make_var_acc("local_var2")),
-        # ]
+    def test_chain_assignment(self):
+        stencil = make_stencil(
+            fields=[make_field("field")],
+            statements=[
+                make_var_decl(name="var"),
+                make_assign_to_local_var("var", make_field_acc("field")),
+                make_var_decl(name="another_var", dtype=float_type, init=make_var_acc("var")),
+            ],
+        )
 
-        # fields = [make_field("my_field")]
+        result = PassLocalVarType.apply(stencil)
 
-        # stencil = make_stencil(fields, statements)
-        # PassLocalVarType.apply(stencil)
+        vardecls = FindNodes.byType(sir.VarDeclStmt, result)
+        assert len(vardecls) == 2
+        for vardecl in vardecls:
+            assert vardecl.location_type == sir.LocationType.Cell
+
+    def test_var_type_not_deducible(self):
+        stencil = make_stencil(fields=[], statements=[make_var_decl(name="var")])
+
+        with pytest.raises(PassException):
+            PassLocalVarType.apply(stencil)
 
 
 if __name__ == "__main__":
     TestPassLocalVarType().test_simple_assignment()
     TestPassLocalVarType().test_reduction()
+    TestPassLocalVarType().test_chain_assignment()
+    TestPassLocalVarType().test_var_type_not_deducible()

@@ -22,6 +22,20 @@ from eve.core import Node, NodeVisitor
 from .. import sir
 
 
+class PassException(Exception):
+    def __init__(self, *args):
+        if args:
+            self.message = args[0]
+        else:
+            self.message = None
+
+    def __str__(self):
+        if self.message:
+            return "PassException, {0} ".format(self.message)
+        else:
+            return "PassException has been raised"
+
+
 class PassLocalVarType(NodeVisitor):
     def __init__(self, **kwargs):
         super().__init__()
@@ -42,6 +56,10 @@ class PassLocalVarType(NodeVisitor):
         for var_name, loc_type in instance.inferred_location.items():
             instance.var_decls[var_name].location_type = loc_type
             instance.propagate_location_type(var_name)
+
+        for vardecl in instance.var_decls.values():
+            if vardecl.location_type is None:
+                raise PassException("Cannot deduce location type for {}".format(vardecl.name))
         return root_copy
 
     def propagate_location_type(self, var_name: str):
