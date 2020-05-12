@@ -20,7 +20,7 @@ import pytest
 
 from eve import core
 from gt_toolchain.unstructured import common, sir
-from gt_toolchain.unstructured.sir_passes.pass_local_var_type import (
+from gt_toolchain.unstructured.sir_passes.infer_local_variable_location_type import (
     InferLocalVariableLocationType,
     PassException,
 )
@@ -110,7 +110,7 @@ class FindNodes(core.NodeVisitor):
         return cls.byPredicate(typePredicate, node)
 
 
-class TestPassLocalVarType:
+class TestInferLocalVariableLocationType:
     def test_simple_assignment(self):
         stencil = make_stencil(
             fields=[make_field("field")],
@@ -201,9 +201,9 @@ class TestPassLocalVarType:
 
 
 if __name__ == "__main__":
-    TestPassLocalVarType().test_simple_assignment()
-    TestPassLocalVarType().test_reduction()
-    TestPassLocalVarType().test_chain_assignment()
-    TestPassLocalVarType().test_var_type_not_deducible()
-    TestPassLocalVarType().test_cyclic_assignment()
-    TestPassLocalVarType().test_incompatible_location()
+    TestInferLocalVariableLocationType().test_simple_assignment()
+    TestInferLocalVariableLocationType().test_reduction()
+    TestInferLocalVariableLocationType().test_chain_assignment()
+    TestInferLocalVariableLocationType().test_var_type_not_deducible()
+    TestInferLocalVariableLocationType().test_cyclic_assignment()
+    TestInferLocalVariableLocationType().test_incompatible_location()

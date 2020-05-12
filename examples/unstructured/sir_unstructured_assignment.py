@@ -5,7 +5,9 @@ from devtools import debug  # noqa: F401
 
 import eve  # noqa: F401
 from gt_toolchain.unstructured import common, sir
-from gt_toolchain.unstructured.sir_passes.pass_local_var_type import PassLocalVarType
+from gt_toolchain.unstructured.sir_passes.infer_local_variable_location_type import (
+    InferLocalVariableLocationType,
+)
 
 
 float_t = sir.BuiltinType(type_id=common.DataType.FLOAT32)
@@ -76,14 +78,5 @@ my_field = sir.Field(
 
 stencil = sir.Stencil(name="copy", ast=ctrl_flow_ast, params=[my_field])
 
-
-# loc_var_pass = SimplePassLocalVarType()
-# loc_var_pass.visit(stencil)
-# debug(loc_var_pass.inferred_location)
-
-var_loc_type = PassLocalVarType.apply(stencil)
+var_loc_type = InferLocalVariableLocationType.apply(stencil)
 debug(var_loc_type)
-
-# naive = sir_to_naive.SirToNaive().visit(stencil)
-# cpp = naive_codegen.NaiveCodeGenerator.apply(naive)
-# print(cpp)

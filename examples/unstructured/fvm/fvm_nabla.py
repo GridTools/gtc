@@ -5,7 +5,9 @@ from devtools import debug  # noqa: F401
 
 import eve  # noqa: F401
 from gt_toolchain.unstructured import common, naive_codegen, sir, sir_to_naive
-from gt_toolchain.unstructured.sir_passes.pass_local_var_type import PassLocalVarType
+from gt_toolchain.unstructured.sir_passes.infer_local_variable_location_type import (
+    InferLocalVariableLocationType,
+)
 
 
 statements = []
@@ -323,6 +325,6 @@ vert_decl_stmt = sir.VerticalRegionDeclStmt(
 ctrl_flow_ast = sir.AST(root=sir.BlockStmt(statements=[vert_decl_stmt]))
 stencil = sir.Stencil(name="nabla", ast=ctrl_flow_ast, params=fields)
 
-var_loc_type_inferred = PassLocalVarType.apply(stencil)
+var_loc_type_inferred = InferLocalVariableLocationType.apply(stencil)
 naive_ir = sir_to_naive.SirToNaive().visit(var_loc_type_inferred)
 print(naive_codegen.NaiveCodeGenerator.apply(naive_ir))
