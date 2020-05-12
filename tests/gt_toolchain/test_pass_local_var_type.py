@@ -31,9 +31,10 @@ def make_literal(value="0", dtype=float_type):
     return sir.LiteralAccessExpr(value=value, data_type=dtype)
 
 
-def make_var_decl(
-    name: str, dtype=float_type, init=make_literal()
-):  # TODO how to init with function call?
+default_literal = make_literal()
+
+
+def make_var_decl(name: str, dtype=float_type, init=default_literal):
     return sir.VarDeclStmt(
         data_type=sir.Type(data_type=dtype, is_const=False, is_volatile=False),
         name=name,
@@ -88,15 +89,22 @@ class FindNode(core.NodeVisitor):
         self.result = []
 
     def visit(self, node: core.Node, **kwargs) -> Any:
-        if isinstance(node, kwargs["search_node_type"]):
+        if kwargs["predicate"](node):
             self.result.append(node)
         self.generic_visit(node, **kwargs)
 
     @classmethod
-    def byType(cls, search_node_type, node: core.Node, **kwargs):
+    def byPredicate(cls, predicate, node: core.Node, **kwargs):
         visitor = FindNode()
-        visitor.visit(node, search_node_type=search_node_type)
+        visitor.visit(node, predicate=predicate)
         return visitor.result
+
+    @classmethod
+    def byType(cls, search_node_type, node: core.Node, **kwargs):
+        def typePredicate(node: core.Node):
+            return isinstance(node, search_node_type)
+
+        return cls.byPredicate(typePredicate, node)
 
 
 class TestPassLocalVarType:
@@ -108,9 +116,11 @@ class TestPassLocalVarType:
                 make_assign_to_local_var("local_var", make_field_acc("my_field")),
             ],
         )
-        PassLocalVarType.apply(stencil)
-        for s in FindNode.byType(sir.VarDeclStmt, stencil):
-            print(s.name)
+
+        result = PassLocalVarType.apply(stencil)
+
+        for vardecl in FindNode.byType(sir.VarDeclStmt, result):
+            assert vardecl.location_type == sir.LocationType.Cell
 
     def test_simple_assignment2(self):
         statements = [
