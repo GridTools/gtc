@@ -14,16 +14,15 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from typing import Any, Callable, Type
-
 import pytest
 
-from eve import core
 from gt_toolchain.unstructured import common, sir
 from gt_toolchain.unstructured.sir_passes.infer_local_variable_location_type import (
     InferLocalVariableLocationType,
     PassException,
 )
+
+from .util import FindNodes
 
 
 float_type = sir.BuiltinType(type_id=common.DataType.FLOAT32)
@@ -82,29 +81,6 @@ def make_stencil(fields, statements):
     ctrl_flow_ast = sir.AST(root=sir.BlockStmt(statements=[vert_decl_stmt]))
 
     return sir.Stencil(name="stencil", ast=ctrl_flow_ast, params=fields)
-
-
-# TODO move to a util module
-class FindNodes(core.NodeVisitor):
-    def __init__(self, **kwargs):
-        self.result = []
-
-    def visit(self, node: core.Node, **kwargs) -> Any:
-        if kwargs["predicate"](node):
-            self.result.append(node)
-        self.generic_visit(node, **kwargs)
-        return self.result
-
-    @classmethod
-    def by_predicate(cls, predicate: Callable[[core.Node], bool], node: core.Node, **kwargs):
-        return cls().visit(node, predicate=predicate)
-
-    @classmethod
-    def by_type(cls, node_type: Type[core.Node], node: core.Node, **kwargs):
-        def type_predicate(node: core.Node):
-            return isinstance(node, node_type)
-
-        return cls.by_predicate(type_predicate, node)
 
 
 class TestInferLocalVariableLocationType:
@@ -195,12 +171,3 @@ class TestInferLocalVariableLocationType:
 
         with pytest.raises(PassException):
             InferLocalVariableLocationType.apply(stencil)
-
-
-if __name__ == "__main__":
-    TestInferLocalVariableLocationType().test_simple_assignment()
-    TestInferLocalVariableLocationType().test_reduction()
-    TestInferLocalVariableLocationType().test_chain_assignment()
-    TestInferLocalVariableLocationType().test_var_type_not_deducible()
-    TestInferLocalVariableLocationType().test_cyclic_assignment()
-    TestInferLocalVariableLocationType().test_incompatible_location()
