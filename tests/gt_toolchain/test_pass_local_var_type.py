@@ -84,7 +84,8 @@ def make_stencil(fields, statements):
     return sir.Stencil(name="stencil", ast=ctrl_flow_ast, params=fields)
 
 
-class FindNode(core.NodeVisitor):
+# TODO move to a util module
+class FindNodes(core.NodeVisitor):
     def __init__(self, **kwargs):
         self.result = []
 
@@ -92,17 +93,16 @@ class FindNode(core.NodeVisitor):
         if kwargs["predicate"](node):
             self.result.append(node)
         self.generic_visit(node, **kwargs)
+        return self.result
 
     @classmethod
     def byPredicate(cls, predicate: Callable[[core.Node], bool], node: core.Node, **kwargs):
-        visitor = FindNode()
-        visitor.visit(node, predicate=predicate)
-        return visitor.result
+        return cls().visit(node, predicate=predicate)
 
     @classmethod
-    def byType(cls, search_node_type: Type[core.Node], node: core.Node, **kwargs):
+    def byType(cls, node_type: Type[core.Node], node: core.Node, **kwargs):
         def typePredicate(node: core.Node):
-            return isinstance(node, search_node_type)
+            return isinstance(node, node_type)
 
         return cls.byPredicate(typePredicate, node)
 
@@ -110,42 +110,64 @@ class FindNode(core.NodeVisitor):
 class TestPassLocalVarType:
     def test_simple_assignment(self):
         stencil = make_stencil(
-            fields=[make_field("my_field")],
+            fields=[make_field("field")],
             statements=[
-                make_var_decl(name="local_var"),
-                make_assign_to_local_var("local_var", make_field_acc("my_field")),
+                make_var_decl(name="var"),
+                make_assign_to_local_var("var", make_field_acc("field")),
             ],
         )
 
         result = PassLocalVarType.apply(stencil)
 
-        for vardecl in FindNode.byType(sir.VarDeclStmt, result):
-            assert vardecl.location_type == sir.LocationType.Cell
+        vardecl = FindNodes.byType(sir.VarDeclStmt, result)[0]
+        assert vardecl.location_type == sir.LocationType.Cell
 
-    def test_simple_assignment2(self):
-        statements = [
-            make_var_decl(name="local_var"),
-            make_assign_to_local_var("local_var", make_field_acc("my_field")),
-            # =======
-            make_var_decl(name="local_var2"),
-            make_assign_to_local_var(
-                "local_var2",
-                sir.ReductionOverNeighborExpr(
-                    op="+",
-                    rhs=make_field_acc("my_field"),
-                    init=make_literal(),
-                    chain=[sir.LocationType.Edge, sir.LocationType.Cell],
+    def test_reduction(self):
+        stencil = make_stencil(
+            fields=[make_field("field")],
+            statements=[
+                make_var_decl(name="var"),
+                make_assign_to_local_var(
+                    "var",
+                    sir.ReductionOverNeighborExpr(
+                        op="+",
+                        rhs=make_field_acc("my_field"),
+                        init=make_literal(),
+                        chain=[sir.LocationType.Edge, sir.LocationType.Cell],
+                    ),
                 ),
-            ),
-            # =======
-            make_var_decl(name="local_var3", dtype=float_type, init=make_var_acc("local_var2")),
-        ]
+            ],
+        )
 
-        fields = [make_field("my_field")]
+        result = PassLocalVarType.apply(stencil)
 
-        stencil = make_stencil(fields, statements)
-        PassLocalVarType.apply(stencil)
+        vardecl = FindNodes.byType(sir.VarDeclStmt, result)[0]
+        assert vardecl.location_type == sir.LocationType.Edge
+
+        # statements = [
+        #     # make_var_decl(name="local_var"),
+        #     # make_assign_to_local_var("local_var", make_field_acc("my_field")),
+        #     # # =======
+        #     make_var_decl(name="var"),
+        #     make_assign_to_local_var(
+        #         "var",
+        #         sir.ReductionOverNeighborExpr(
+        #             op="+",
+        #             rhs=make_field_acc("my_field"),
+        #             init=make_literal(),
+        #             chain=[sir.LocationType.Edge, sir.LocationType.Cell],
+        #         ),
+        #     ),
+        #     # =======
+        #     # make_var_decl(name="local_var3", dtype=float_type, init=make_var_acc("local_var2")),
+        # ]
+
+        # fields = [make_field("my_field")]
+
+        # stencil = make_stencil(fields, statements)
+        # PassLocalVarType.apply(stencil)
 
 
 if __name__ == "__main__":
     TestPassLocalVarType().test_simple_assignment()
+    TestPassLocalVarType().test_reduction()
