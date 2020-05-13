@@ -18,7 +18,7 @@ import pytest
 
 from gt_toolchain.unstructured import common, sir
 from gt_toolchain.unstructured.sir_passes.infer_local_variable_location_type import (
-    InferLocalVariableLocationType,
+    InferLocalVariableLocationTypeTransformation,
     PassException,
 )
 
@@ -93,7 +93,7 @@ class TestInferLocalVariableLocationType:
             ],
         )
 
-        result = InferLocalVariableLocationType.apply(stencil)
+        result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
         vardecl = FindNodes.by_type(sir.VarDeclStmt, result)[0]
         assert vardecl.location_type == sir.LocationType.Cell
@@ -115,7 +115,7 @@ class TestInferLocalVariableLocationType:
             ],
         )
 
-        result = InferLocalVariableLocationType.apply(stencil)
+        result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
         vardecl = FindNodes.by_type(sir.VarDeclStmt, result)[0]
         assert vardecl.location_type == sir.LocationType.Edge
@@ -130,7 +130,7 @@ class TestInferLocalVariableLocationType:
             ],
         )
 
-        result = InferLocalVariableLocationType.apply(stencil)
+        result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
         vardecls = FindNodes.by_type(sir.VarDeclStmt, result)
         assert len(vardecls) == 2
@@ -141,7 +141,7 @@ class TestInferLocalVariableLocationType:
         stencil = make_stencil(fields=[], statements=[make_var_decl(name="var")])
 
         with pytest.raises(PassException):
-            InferLocalVariableLocationType.apply(stencil)
+            InferLocalVariableLocationTypeTransformation.apply(stencil)
 
     def test_cyclic_assignment(self):
         stencil = make_stencil(
@@ -155,7 +155,7 @@ class TestInferLocalVariableLocationType:
         )
 
         with pytest.raises(PassException):
-            InferLocalVariableLocationType.apply(stencil)
+            InferLocalVariableLocationTypeTransformation.apply(stencil)
 
     def test_incompatible_location(self):
         stencil = make_stencil(
@@ -170,4 +170,4 @@ class TestInferLocalVariableLocationType:
         )
 
         with pytest.raises(PassException):
-            InferLocalVariableLocationType.apply(stencil)
+            InferLocalVariableLocationTypeTransformation.apply(stencil)

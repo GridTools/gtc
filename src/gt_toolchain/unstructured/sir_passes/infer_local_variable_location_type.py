@@ -14,8 +14,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import copy
-
 import eve  # noqa: F401
 from eve.core import Node, NodeTranslator, NodeVisitor
 
@@ -36,7 +34,7 @@ class PassException(Exception):
             return "PassException has been raised"
 
 
-class InferLocalVariableLocationType(NodeTranslator):
+class InferLocalVariableLocationTypeTransformation(NodeTranslator):
     """Returns a tree were local variables have location type set or raises an PassException if deduction failed.
 
     Usage: InferLocalVariableLocationType.apply(node)
@@ -44,22 +42,22 @@ class InferLocalVariableLocationType(NodeTranslator):
 
     @classmethod
     def apply(cls, root, **kwargs) -> Node:
-        inferred_location = _AnalyseLocationTypes.apply(root)
+        inferred_location = _LocationTypeAnalysis.apply(root)
         return cls().visit(root, inferred_location=inferred_location)
 
-    def visit_VarDeclStmt(self, node: sir.VarDeclStmt, **kwargs):
-        if node.name not in kwargs["inferred_location"] and node.location_type is None:
+    def visit_VarDeclStmt(self, node: sir.VarDeclStmt, *, inferred_location, **kwargs):
+        if node.name not in inferred_location and node.location_type is None:
             raise PassException("Cannot deduce location type for {}".format(node.name))
-        node.location_type = kwargs["inferred_location"][node.name]
+        node.location_type = inferred_location[node.name]
         return node
 
 
-class _AnalyseLocationTypes(NodeVisitor):
+class _LocationTypeAnalysis(NodeVisitor):
     """Analyse local variable usage and infers location type if possible.
 
     Result is a dict of variable names to LocationType.
 
-    Usage: _AnalyseLocationTypes.apply(root: Node)
+    Usage: _LocationTypeAnalysis.apply(root: Node)
 
     Can deduce by assignments from:
      - Reductions (as they have a fixed location type)
@@ -69,25 +67,36 @@ class _AnalyseLocationTypes(NodeVisitor):
 
     def __init__(self, **kwargs):
         super().__init__()
-        self.inferred_location = dict()
+        self.is_root = True
+
+        self.inferred_location = {}
         self.cur_var = None
-        self.var_dependencies = dict()  # depender -> set(dependees)
+        self.var_dependencies = {}  # depender -> set(dependees)
         # TODO replace naive symbol table
         self.sir_stencil_params = {}
 
     @classmethod
     def apply(cls, root, **kwargs) -> Node:
-        root_copy = copy.deepcopy(root)
+        return cls().visit(root, **kwargs)
 
-        instance = cls()
-        instance.visit(root_copy)
+    # entrypoint, do postprocessing of the result
+    def visit(self, node: Node, **kwargs):
+        if self.is_root:
+            self.is_root = False
+            super().visit(node, **kwargs)
 
-        for var_name in list(instance.inferred_location.keys()):
-            instance.propagate_location_type(var_name)
+            # propagate the inferred location type to dependencies
+            original_inferred_location_keys = list(self.inferred_location.keys())
+            for var_name in original_inferred_location_keys:
+                self._propagate_location_type(var_name)
 
-        return instance.inferred_location
+            result = dict(self.inferred_location)
+            self.__init__()  # reset visitor state
+            return result
+        else:
+            super().visit(node, **kwargs)
 
-    def propagate_location_type(self, var_name: str):
+    def _propagate_location_type(self, var_name: str):
         for dependee in self.var_dependencies[var_name]:
             if (
                 dependee in self.inferred_location
@@ -95,9 +104,9 @@ class _AnalyseLocationTypes(NodeVisitor):
             ):
                 raise PassException("Incompatible location type detected for {}".format(dependee))
             self.inferred_location[dependee] = self.inferred_location[var_name]
-            self.propagate_location_type(dependee)
+            self._propagate_location_type(dependee)
 
-    def set_location_type(self, cur_var_name: str, location_type: sir.LocationType):
+    def _set_location_type(self, cur_var_name: str, location_type: sir.LocationType):
         if cur_var_name in self.inferred_location:
             if self.inferred_location[cur_var_name] != location_type:
                 raise RuntimeError("Incompatible location types deduced for {cur_var_name}")
@@ -110,18 +119,18 @@ class _AnalyseLocationTypes(NodeVisitor):
         self.visit(node.ast)
 
     def visit_FieldAccessExpr(self, node: sir.FieldAccessExpr, **kwargs):
-        if self.cur_var:
+        if "cur_var" in kwargs:
             new_type = self.sir_stencil_params[
                 node.name
             ].field_dimensions.horizontal_dimension.dense_location_type  # TODO use symbol table
-            self.set_location_type(self.cur_var.name, new_type)
+            self._set_location_type(kwargs["cur_var"].name, new_type)
 
     def visit_VarAccessExpr(self, node: sir.VarAccessExpr, **kwargs):
-        if self.cur_var:
+        if "cur_var" in kwargs:
             # rhs of assignment/declaration
             if node.name not in self.var_dependencies:
                 raise RuntimeError("{node.name} was not declared")
-            self.var_dependencies[node.name].add(self.cur_var.name)
+            self.var_dependencies[node.name].add(kwargs["cur_var"].name)
 
     def visit_VarDeclStmt(self, node: sir.VarDeclStmt, **kwargs):
         if node.name in self.var_dependencies:
@@ -129,25 +138,18 @@ class _AnalyseLocationTypes(NodeVisitor):
         else:
             self.var_dependencies[node.name] = set()
 
-        self.cur_var = node
-
         assert len(node.init_list) == 1
-        self.visit(node.init_list[0])
-
-        self.cur_var = None
+        self.visit(node.init_list[0], cur_var=node)
 
     def visit_ReductionOverNeighborExpr(self, node: sir.ReductionOverNeighborExpr, **kwargs):
-        if self.cur_var:
-            self.set_location_type(self.cur_var.name, node.chain[0])
+        if "cur_var" in kwargs:
+            self._set_location_type(kwargs["cur_var"].name, node.chain[0])
 
     def visit_AssignmentExpr(self, node: sir.AssignmentExpr, **kwargs):
         if isinstance(node.left, sir.VarAccessExpr):
-            if self.cur_var:
+            if "cur_var" in kwargs:
                 raise RuntimeError(
                     "Variable assignment inside rhs of variable assignment is not supported."
                 )
-            self.cur_var = node.left
 
-            self.visit(node.right)
-
-            self.cur_var = None
+            self.visit(node.right, cur_var=node.left)
