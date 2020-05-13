@@ -70,7 +70,6 @@ class _LocationTypeAnalysis(NodeVisitor):
         self.is_root = True
 
         self.inferred_location = {}
-        self.cur_var = None
         self.var_dependencies = {}  # depender -> set(dependees)
         # TODO replace naive symbol table
         self.sir_stencil_params = {}
