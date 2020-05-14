@@ -16,38 +16,32 @@
 
 import eve  # noqa: F401
 from eve.core import Node, NodeTranslator, NodeVisitor
+from gt_toolchain.unstructured import sir
 
-from .. import sir
+
+class GTException(Exception):
+    pass
 
 
-class PassException(Exception):
-    def __init__(self, *args):
-        if args:
-            self.message = args[0]
-        else:
-            self.message = None
-
-    def __str__(self):
-        if self.message:
-            return "PassException, {0} ".format(self.message)
-        else:
-            return "PassException has been raised"
+class AnalysisException(GTException):
+    def __init__(self, message=None, **kwargs):
+        super().__init__(message)
 
 
 class InferLocalVariableLocationTypeTransformation(NodeTranslator):
-    """Returns a tree were local variables have location type set or raises an PassException if deduction failed.
+    """Returns a tree were local variables have location type set or raises an AnalysisException if deduction failed.
 
     Usage: InferLocalVariableLocationType.apply(node)
     """
 
     @classmethod
     def apply(cls, root, **kwargs) -> Node:
-        inferred_location = _LocationTypeAnalysis.apply(root)
+        inferred_location = _infer_location_type_of_local_variables(root)
         return cls().visit(root, inferred_location=inferred_location)
 
     def visit_VarDeclStmt(self, node: sir.VarDeclStmt, *, inferred_location, **kwargs):
         if node.name not in inferred_location and node.location_type is None:
-            raise PassException("Cannot deduce location type for {}".format(node.name))
+            raise AnalysisException("Cannot deduce location type for {}".format(node.name))
         node.location_type = inferred_location[node.name]
         return node
 
@@ -60,40 +54,25 @@ class _LocationTypeAnalysis(NodeVisitor):
     Usage: _LocationTypeAnalysis.apply(root: Node)
 
     Can deduce by assignments from:
-     - Reductions (as they have a fixed location type)
-     - Fields (as they have a fixed location type)
-     - Variables recursively (by building a dependency tree)
+    - Reductions (as they have a fixed location type)
+    - Fields (as they have a fixed location type)
+    - Variables recursively (by building a dependency tree)
     """
 
     def __init__(self, **kwargs):
         super().__init__()
-        self.is_root = True
-
         self.inferred_location = {}
         self.var_dependencies = {}  # depender -> set(dependees)
-        # TODO replace naive symbol table
-        self.sir_stencil_params = {}
+        self.sir_stencil_params = {}  # TODO symbol table: list of fields (stencil parameters)
 
     @classmethod
-    def apply(cls, root, **kwargs) -> Node:
-        return cls().visit(root, **kwargs)
-
-    # entrypoint, do postprocessing of the result
-    def visit(self, node: Node, **kwargs):
-        if self.is_root:
-            self.is_root = False
-            super().visit(node, **kwargs)
-
-            # propagate the inferred location type to dependencies
-            original_inferred_location_keys = list(self.inferred_location.keys())
-            for var_name in original_inferred_location_keys:
-                self._propagate_location_type(var_name)
-
-            result = dict(self.inferred_location)
-            self.__init__()  # reset visitor state
-            return result
-        else:
-            super().visit(node, **kwargs)
+    def infer_location_types(cls, root, **kwargs) -> Node:
+        instance = cls()
+        instance.visit(root, **kwargs)
+        original_inferred_location_keys = list(instance.inferred_location.keys())
+        for var_name in original_inferred_location_keys:
+            instance._propagate_location_type(var_name)
+        return instance.inferred_location
 
     def _propagate_location_type(self, var_name: str):
         for dependee in self.var_dependencies[var_name]:
@@ -101,7 +80,9 @@ class _LocationTypeAnalysis(NodeVisitor):
                 dependee in self.inferred_location
                 and self.inferred_location[dependee] != self.inferred_location[var_name]
             ):
-                raise PassException("Incompatible location type detected for {}".format(dependee))
+                raise AnalysisException(
+                    "Incompatible location type detected for {}".format(dependee)
+                )
             self.inferred_location[dependee] = self.inferred_location[var_name]
             self._propagate_location_type(dependee)
 
@@ -152,3 +133,7 @@ class _LocationTypeAnalysis(NodeVisitor):
                 )
 
             self.visit(node.right, cur_var=node.left)
+
+
+def _infer_location_type_of_local_variables(root: Node):
+    return _LocationTypeAnalysis().infer_location_types(root)

@@ -18,8 +18,8 @@ import pytest
 
 from gt_toolchain.unstructured import common, sir
 from gt_toolchain.unstructured.sir_passes.infer_local_variable_location_type import (
+    AnalysisException,
     InferLocalVariableLocationTypeTransformation,
-    PassException,
 )
 
 from .util import FindNodes
@@ -140,7 +140,7 @@ class TestInferLocalVariableLocationType:
     def test_var_type_not_deducible(self):
         stencil = make_stencil(fields=[], statements=[make_var_decl(name="var")])
 
-        with pytest.raises(PassException):
+        with pytest.raises(AnalysisException):
             InferLocalVariableLocationTypeTransformation.apply(stencil)
 
     def test_cyclic_assignment(self):
@@ -154,7 +154,7 @@ class TestInferLocalVariableLocationType:
             ],
         )
 
-        with pytest.raises(PassException):
+        with pytest.raises(AnalysisException):
             InferLocalVariableLocationTypeTransformation.apply(stencil)
 
     def test_incompatible_location(self):
@@ -169,5 +169,5 @@ class TestInferLocalVariableLocationType:
             ],
         )
 
-        with pytest.raises(PassException):
+        with pytest.raises(AnalysisException):
             InferLocalVariableLocationTypeTransformation.apply(stencil)
