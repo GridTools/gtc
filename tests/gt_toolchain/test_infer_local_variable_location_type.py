@@ -16,7 +16,7 @@
 
 import pytest
 
-from gt_toolchain.unstructured import common, sir
+from gt_toolchain import common, sir
 from gt_toolchain.unstructured.sir_passes.infer_local_variable_location_type import (
     AnalysisException,
     InferLocalVariableLocationTypeTransformation,

@@ -16,7 +16,7 @@
 
 import eve  # noqa: F401
 from eve.core import Node, NodeTranslator, NodeVisitor
-from gt_toolchain.unstructured import sir
+from gt_toolchain import sir
 
 
 class GTException(Exception):

@@ -21,8 +21,8 @@ from typing import ClassVar, Mapping
 from mako import template as mako_tpl
 
 from eve import codegen
+from gt_toolchain import common
 
-from . import common
 from .naive import LocationType
 
 
