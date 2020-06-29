@@ -36,16 +36,32 @@ class LocationType(enum.IntEnum):
     Edge = 3
 
 
-class Expr(Node):
-    location_type: Optional[LocationType]
+class SourceLocation(Node):
+    line: int
+    column: int
 
 
-class Stmt(Node):
+# helper (not part of dawn-SIR)
+class ExprCommon(Node):
     location_type: Optional[LocationType]
+    loc: Optional[SourceLocation]
+
+
+class Expr(ExprCommon):
+    pass
+
+
+class Stmt(ExprCommon):
+    pass
 
 
 class AST(Node):
     root: Stmt
+
+
+class CartesianDimension(Node):
+    mask_cart_i: int
+    mask_cart_j: int
 
 
 class UnstructuredDimension(Node):
@@ -54,12 +70,13 @@ class UnstructuredDimension(Node):
 
 
 class FieldDimensions(Node):
-    horizontal_dimension: Union[UnstructuredDimension]  # TODO CartesianDimension
-    # TODO mask_k: int
+    horizontal_dimension: Union[CartesianDimension, UnstructuredDimension]
+    mask_k: int = 1  # 1 == active
 
 
 class Field(Node):
     name: str
+    loc: Optional[SourceLocation]
     is_temporary: bool
     field_dimensions: FieldDimensions
 
@@ -69,16 +86,34 @@ class Field(Node):
 # TODO class StencilFunctionArg
 
 
+@enum.unique
+class SpecialLevel(enum.IntEnum):
+    Start = 0
+    End = 1
+
+
+# TODO maybe remove defaults
 class Interval(Node):
-    # TODO
-    pass
+    lower_level: Union[SpecialLevel, int] = SpecialLevel.Start
+    upper_level: Union[SpecialLevel, int] = SpecialLevel.End
+    lower_offset: int = 0
+    upper_offset: int = 0
 
 
 class BuiltinType(Node):
     type_id: common.DataType
 
 
-# TODO class Dimension
+@enum.unique
+class Direction(enum.IntEnum):
+    I_dir = 0
+    J_dir = 1
+    K_dir = 2
+    Invalid = 3
+
+
+class Dimension(Node):
+    direction: Direction
 
 
 class Type(Node):
@@ -87,30 +122,58 @@ class Type(Node):
     is_volatile: bool
 
 
+# TODO maybe remove defaults
 class VerticalRegion(Node):
     loop_order: common.LoopOrder
+    loc: Optional[SourceLocation]
     ast: AST
     interval: Interval
-    # i_range: Interval
-    # j_range: Interval
+    i_range: Interval = Interval()
+    j_range: Interval = Interval()
 
 
 # TODO class StencilCall
-# TODO class Extents
-# TODO class Accesses
 
-# = statements.proto = AST
+
+class Extent(Node):
+    minus: int
+    plus: int
+
+
+class CartesianExtent(Node):
+    i_extent: Extent
+    j_extent: Extent
+
+
+class UnstructedExtent(Node):
+    has_extent: bool
+
+
+class ZeroExtent(Node):
+    pass
+
+
+class Extents(Node):
+    horizontal_extent: Union[CartesianExtent, UnstructedExtent, ZeroExtent]
+    vertical_extent: Extent
+
+
+# TODO class Accesses (TODO is this IIR only?)
 
 
 class BlockStmt(Stmt):
     statements: List[Stmt]
 
 
+# TODO Loop stuff
+
+
 class ExprStmt(Stmt):
     expr: Expr
 
 
-# TODO class ReturnStmt(Stmt_
+class ReturnStmt(Stmt):
+    expr: Expr
 
 
 class VarDeclStmt(Stmt):
@@ -127,13 +190,17 @@ class VerticalRegionDeclStmt(Stmt):
 
 # TODO class StencilCallDeclStmt(Stmt)
 # TODO class BoundaryConditionDeclStmt(Stmt)
-# TODO class IfStmt(Stmt)
+
+
+class IfStmt(Stmt):
+    cond_part: ExprStmt
+    then_part: Stmt
+    else_part: Optional[Stmt]
 
 
 class UnaryOperator(Expr):
     op: str
     operand: Expr
-    right: Expr
 
 
 class BinaryOperator(Expr):
@@ -161,32 +228,35 @@ class TernaryOperator(Expr):
 
 class VarAccessExpr(Expr):
     name: str
-    # index: Expr # TODO
-    # is_external: bool # TODO
+    index: Optional[Expr]
+    is_external: bool = False
 
 
-class ZeroOffset(Node):
-    pass
+class CartesianOffset(Node):
+    i_offset: int
+    j_offset: int
 
 
 class UnstructuredOffset(Node):
     has_offset: bool
 
 
+class ZeroOffset(Node):
+    pass
+
+
 class FieldAccessExpr(Expr):
     name: str
     vertical_offset: int
-    horizontal_offset: Union[UnstructuredOffset, ZeroOffset]  # TODO CartesianOffset
+    horizontal_offset: Union[CartesianOffset, UnstructuredOffset, ZeroOffset]
     # TODO argument_map
     # TODO argument_offset
     # TODO negate_offset
-    # TODO AccessExprData and ID probably unused in SIR
 
 
 class LiteralAccessExpr(Expr):
     value: str
     data_type: BuiltinType
-    # TODO AccessExprData and ID probably unused in SIR
 
 
 class ReductionOverNeighborExpr(Expr):
@@ -211,7 +281,15 @@ class Stencil(Node):
 # TODO StencilFunction
 
 
+@enum.unique
+class GridType(enum.IntEnum):
+    GridTypeUnknown = 0
+    Unstructured = 1
+    Cartesian = 2
+
+
 class SIR(Node):
+    grid_type: GridType
     stencils: List[Stencil]
     filename: str
     # TODO stencil_functions
