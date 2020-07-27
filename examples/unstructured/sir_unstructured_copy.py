@@ -4,7 +4,8 @@
 from devtools import debug  # noqa: F401
 
 import eve  # noqa: F401
-from gt_toolchain.unstructured import common, naive_codegen, sir, sir_to_naive
+from gt_toolchain import common, sir
+from gt_toolchain.unstructured import naive_codegen, sir_to_naive
 
 
 field_acc_a = sir.FieldAccessExpr(

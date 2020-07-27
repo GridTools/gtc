@@ -4,7 +4,8 @@
 from devtools import debug  # noqa: F401
 
 import eve  # noqa: F401
-from gt_toolchain.unstructured import common, naive
+from gt_toolchain import common
+from gt_toolchain.unstructured import naive
 from gt_toolchain.unstructured.naive_codegen import NaiveCodeGenerator
 
 

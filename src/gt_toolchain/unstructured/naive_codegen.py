@@ -124,7 +124,7 @@ return lhs;
 void ${name}() {
 using dawn::deref;
 
-${ "\\n".join(declarations) }
+${ "\\n".join(declarations) if _this_node.declarations else ""}
 
 ${ "".join(k_loops) }
 }
