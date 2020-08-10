@@ -1,7 +1,7 @@
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/eth-cscs/eve_toolchain)
 
-Eve: A stencil DSL toolchain written in Python
-==============================================
+Eve: A framework for implementing DSL toolchains in Python
+==========================================================
 
 Installation instructions
 -------------------------
