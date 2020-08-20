@@ -207,14 +207,6 @@ class NirToUgpu(eve.NodeTranslator):
         return kernels, kernel_calls
 
     def visit_Stencil(self, node: nir.Stencil, **kwargs):
-        if "temporaries" not in kwargs:
-            # TODO own exception type
-            raise ValueError("Internal Error: field `temporaries` is missing")
-        for tmp in node.declarations or []:
-            converted_tmp = self.visit(tmp)
-            kwargs["temporaries"].append(converted_tmp)
-            self.fields[converted_tmp.name] = converted_tmp
-
         kernels = []
         kernel_calls = []
         for loop in node.vertical_loops:
@@ -224,17 +216,22 @@ class NirToUgpu(eve.NodeTranslator):
         return kernels, kernel_calls
 
     def visit_Computation(self, node: nir.Computation, **kwargs):
-        temporaries = []
         parameters = []
         for f in node.params:  # before visiting stencils!
             converted_param = self.visit(f)
             parameters.append(converted_param)
             self.fields[converted_param.name] = converted_param
 
+        temporaries = []
+        for tmp in node.declarations or []:
+            converted_tmp = self.visit(tmp)
+            temporaries.append(converted_tmp)
+            self.fields[converted_tmp.name] = converted_tmp
+
         kernels = []
         ctrlflow_ast = []
         for s in node.stencils:
-            kernel, kernel_call = self.visit(s, temporaries=temporaries)
+            kernel, kernel_call = self.visit(s)
             kernels.extend(kernel)
             ctrlflow_ast.extend(kernel_call)
 

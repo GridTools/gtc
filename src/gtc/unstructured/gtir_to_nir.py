@@ -200,15 +200,15 @@ class GtirToNir(eve.NodeTranslator):
         )
 
     def visit_Stencil(self, node: gtir.Stencil, **kwargs):
-        return nir.Stencil(
-            declarations=[self.visit(decl) for decl in node.declarations],
-            vertical_loops=[self.visit(loop) for loop in node.vertical_loops],
-        )
+        return nir.Stencil(vertical_loops=[self.visit(loop) for loop in node.vertical_loops],)
         # TODO
 
     def visit_Computation(self, node: gtir.Stencil, **kwargs):
         return nir.Computation(
             name=node.name,
             params=[self.visit(p) for p in node.params],
+            declarations=[self.visit(decl) for decl in node.declarations]
+            if node.declarations
+            else [],
             stencils=[self.visit(s) for s in node.stencils],
         )

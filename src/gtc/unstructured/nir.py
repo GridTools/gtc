@@ -204,10 +204,10 @@ class VerticalLoop(Node):
 
 class Stencil(Node):
     vertical_loops: List[VerticalLoop]
-    declarations: List[TemporaryField]
 
 
 class Computation(Node):
     name: Str
     params: List[UField]
     stencils: List[Stencil]
+    declarations: List[TemporaryField]

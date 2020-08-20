@@ -317,8 +317,12 @@ vertical_loops.append(
     )
 )
 
-nabla_stencil = Stencil(
-    vertical_loops=vertical_loops,
+nabla_stencil = Stencil(vertical_loops=vertical_loops)
+
+comp = Computation(
+    name="nabla",
+    params=fields,
+    stencils=[nabla_stencil],
     declarations=[
         TemporaryField(
             name="zavg_tmp",
@@ -327,8 +331,6 @@ nabla_stencil = Stencil(
         )
     ],
 )
-
-comp = Computation(name="nabla", params=fields, stencils=[nabla_stencil])
 
 nir_comp = GtirToNir().visit(comp)
 nir_comp = find_and_merge_horizontal_loops(nir_comp)
