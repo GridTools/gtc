@@ -216,7 +216,7 @@ class TestNIRMergeHorizontalLoops:
         vertical_loop_1 = make_vertical_loop([first_loop, second_loop])
         vertical_loop_2 = vertical_loop_1.copy(deep=True)
 
-        stencil = nir.Stencil(vertical_loops=[vertical_loop_1, vertical_loop_2], declarations=[])
+        stencil = nir.Stencil(vertical_loops=[vertical_loop_1, vertical_loop_2])
         result = find_and_merge_horizontal_loops(stencil)
 
         vloops = FindNodes().by_type(nir.VerticalLoop, result)
