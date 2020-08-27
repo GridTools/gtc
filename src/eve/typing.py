@@ -22,7 +22,7 @@ from typing import *  # isort:skip
 import sys  # isort:skip
 
 if sys.version_info < (3, 8):
-    from typing_extensions import Literal, Protocol, TypedDict  # type: ignore
+    from typing_extensions import Literal, Protocol, TypedDict
 
 del sys
 

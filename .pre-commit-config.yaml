@@ -31,9 +31,9 @@ repos:
           - id: flake8
             additional_dependencies:
                 [darglint, flake8-bugbear, flake8-builtins, flake8-docstrings]
-    # - repo: https://github.com/pre-commit/mirrors-mypy
-    #   rev: v0.761
-    #   hooks:
-    #       - id: mypy
-    #         additional_dependencies: [pydantic~=1.0]
-    #         exclude: "(examples|src/gtc|tests)/.*"
+    - repo: https://github.com/pre-commit/mirrors-mypy
+      rev: v0.761
+      hooks:
+          - id: mypy
+            additional_dependencies: [pydantic~=1.0]
+            exclude: "(examples|src/gtc|tests)/.*"
