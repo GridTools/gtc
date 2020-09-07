@@ -31,17 +31,19 @@ void nabla(Mesh &&mesh,
     pnabla_MYY_t &&pnabla_MYY,
     vol_t &&vol,
     sign_t &&sign) {
-    namespace tu = gridtools::tuple_util;
+    using namespace gridtools;
+    using namespace next;
+    namespace tu = tuple_util;
 
-    static_assert(gridtools::is_sid<S_MXX_t>{});
-    static_assert(gridtools::is_sid<S_MYY_t>{});
-    static_assert(gridtools::is_sid<zavgS_MXX_t>{});
-    static_assert(gridtools::is_sid<zavgS_MYY_t>{});
-    static_assert(gridtools::is_sid<pp_t>{});
-    static_assert(gridtools::is_sid<pnabla_MXX_t>{});
-    static_assert(gridtools::is_sid<pnabla_MYY_t>{});
-    static_assert(gridtools::is_sid<vol_t>{});
-    static_assert(gridtools::is_sid<sign_t>{});
+    static_assert(is_sid<S_MXX_t>{});
+    static_assert(is_sid<S_MYY_t>{});
+    static_assert(is_sid<zavgS_MXX_t>{});
+    static_assert(is_sid<zavgS_MYY_t>{});
+    static_assert(is_sid<pp_t>{});
+    static_assert(is_sid<pnabla_MXX_t>{});
+    static_assert(is_sid<pnabla_MYY_t>{});
+    static_assert(is_sid<vol_t>{});
+    static_assert(is_sid<sign_t>{});
 
     { // first edge loop (this is the fused version without temporary)
         // ===
@@ -61,41 +63,37 @@ void nabla(Mesh &&mesh,
         //         S_MYY(deref(LibTag{}, t), k) * zavg;
         //   }
         // ===
-        auto e2v = gridtools::next::mesh::connectivity<std::tuple<edge, vertex>>(mesh);
-        static_assert(gridtools::is_sid<decltype(gridtools::next::connectivity::neighbor_table(e2v))>{});
+        auto e2v = mesh::connectivity<edge, vertex>(mesh);
 
-        auto edge_fields = tu::make<gridtools::sid::composite::
-                keys<connectivity_tag, S_MXX_tag, S_MYY_tag, zavgS_MXX_tag, zavgS_MYY_tag>::values>(
-            gridtools::next::connectivity::neighbor_table(e2v), S_MXX, S_MYY, zavgS_MXX, zavgS_MYY);
-        static_assert(gridtools::sid::concept_impl_::is_sid<decltype(edge_fields)>{});
+        auto edge_fields = tu::make<
+            sid::composite::keys<connectivity_tag, S_MXX_tag, S_MYY_tag, zavgS_MXX_tag, zavgS_MYY_tag>::values>(
+            connectivity::neighbor_table(e2v), S_MXX, S_MYY, zavgS_MXX, zavgS_MYY);
 
-        auto ptrs = gridtools::sid::get_origin(edge_fields)();
-        auto strides = gridtools::sid::get_strides(edge_fields);
-        for (std::size_t i = 0; i < gridtools::next::connectivity::size(e2v); ++i) {
+        auto ptrs = sid::get_origin(edge_fields)();
+        auto strides = sid::get_strides(edge_fields);
+        for (std::size_t i = 0; i < next::connectivity::size(e2v); ++i) {
             double acc = 0.;
             { // reduce
-                for (int neigh = 0; neigh < static_cast<int>(gridtools::next::connectivity::max_neighbors(e2v));
-                     ++neigh) {
+                for (int neigh = 0; neigh < static_cast<int>(next::connectivity::max_neighbors(e2v)); ++neigh) {
                     // body
-                    auto absolute_neigh_index = *gridtools::at_key<connectivity_tag>(ptrs);
+                    auto absolute_neigh_index = *at_key<connectivity_tag>(ptrs);
 
-                    auto pp_ptr = gridtools::sid::get_origin(pp)();
-                    gridtools::sid::shift(
-                        pp_ptr, gridtools::at_key<vertex>(gridtools::sid::get_strides(pp)), absolute_neigh_index);
+                    auto pp_ptr = sid::get_origin(pp)();
+                    sid::shift(pp_ptr, at_key<vertex>(sid::get_strides(pp)), absolute_neigh_index);
                     acc += *pp_ptr;
                     // body end
 
-                    gridtools::sid::shift(ptrs, gridtools::at_key<neighbor>(strides), 1);
+                    sid::shift(ptrs, at_key<neighbor>(strides), 1);
                 }
-                gridtools::sid::shift(ptrs,
-                    gridtools::at_key<neighbor>(strides),
-                    -gridtools::next::connectivity::max_neighbors(e2v)); // or reset ptr to origin and shift ?
+                sid::shift(ptrs,
+                    at_key<neighbor>(strides),
+                    -connectivity::max_neighbors(e2v)); // or reset ptr to origin and shift ?
             }
             double zavg = 0.5 * acc;
-            *gridtools::at_key<zavgS_MXX_tag>(ptrs) = *gridtools::at_key<S_MXX_tag>(ptrs) * zavg;
-            *gridtools::at_key<zavgS_MYY_tag>(ptrs) = *gridtools::at_key<S_MYY_tag>(ptrs) * zavg;
+            *at_key<zavgS_MXX_tag>(ptrs) = *at_key<S_MXX_tag>(ptrs) * zavg;
+            *at_key<zavgS_MYY_tag>(ptrs) = *at_key<S_MYY_tag>(ptrs) * zavg;
 
-            gridtools::sid::shift(ptrs, gridtools::at_key<edge>(strides), 1);
+            sid::shift(ptrs, at_key<edge>(strides), 1);
         }
     }
     {
@@ -124,74 +122,65 @@ void nabla(Mesh &&mesh,
         //                return lhs;
         //              }));
         //   }
-        auto v2e = gridtools::next::mesh::connectivity<std::tuple<vertex, edge>>(mesh);
-        static_assert(gridtools::is_sid<decltype(gridtools::next::connectivity::neighbor_table(v2e))>{});
+        auto v2e = mesh::connectivity<vertex, edge>(mesh);
 
-        auto vertex_fields = tu::make<gridtools::sid::composite::
-                keys<connectivity_tag, pnabla_MXX_tag, pnabla_MYY_tag, sign_tag, vol_tag>::values>(
-            gridtools::next::connectivity::neighbor_table(v2e), pnabla_MXX, pnabla_MYY, sign, vol);
-        static_assert(gridtools::sid::concept_impl_::is_sid<decltype(vertex_fields)>{});
+        auto vertex_fields =
+            tu::make<sid::composite::keys<connectivity_tag, pnabla_MXX_tag, pnabla_MYY_tag, sign_tag, vol_tag>::values>(
+                connectivity::neighbor_table(v2e), pnabla_MXX, pnabla_MYY, sign, vol);
 
-        auto ptrs = gridtools::sid::get_origin(vertex_fields)();
-        auto strides = gridtools::sid::get_strides(vertex_fields);
+        auto ptrs = sid::get_origin(vertex_fields)();
+        auto strides = sid::get_strides(vertex_fields);
 
-        for (std::size_t i = 0; i < gridtools::next::connectivity::size(v2e); ++i) {
-            *gridtools::at_key<pnabla_MXX_tag>(ptrs) = 0.;
+        for (std::size_t i = 0; i < connectivity::size(v2e); ++i) {
+            *at_key<pnabla_MXX_tag>(ptrs) = 0.;
             { // reduce
-                for (int neigh = 0; neigh < static_cast<int>(gridtools::next::connectivity::max_neighbors(v2e));
-                     ++neigh) {
+                for (int neigh = 0; neigh < static_cast<int>(connectivity::max_neighbors(v2e)); ++neigh) {
                     // body
-                    auto absolute_neigh_index = *gridtools::at_key<connectivity_tag>(ptrs);
-                    if (absolute_neigh_index != gridtools::next::connectivity::skip_value(v2e)) {
+                    auto absolute_neigh_index = *at_key<connectivity_tag>(ptrs);
+                    if (absolute_neigh_index != connectivity::skip_value(v2e)) {
 
-                        auto zavgS_MXX_ptr = gridtools::sid::get_origin(zavgS_MXX)();
-                        gridtools::sid::shift(zavgS_MXX_ptr,
-                            gridtools::at_key<edge>(gridtools::sid::get_strides(zavgS_MXX)),
-                            absolute_neigh_index);
+                        auto zavgS_MXX_ptr = sid::get_origin(zavgS_MXX)();
+                        sid::shift(zavgS_MXX_ptr, at_key<edge>(sid::get_strides(zavgS_MXX)), absolute_neigh_index);
                         auto zavgS_MXX_value = *zavgS_MXX_ptr;
 
-                        auto sign_ptr = gridtools::at_key<sign_tag>(ptrs); // if the sparse dimension is tagged with
-                                                                           // neighbor, the ptr is already correct
+                        auto sign_ptr = at_key<sign_tag>(ptrs); // if the sparse dimension is tagged with
+                                                                // neighbor, the ptr is already correct
                         auto sign_value = *sign_ptr;
 
-                        *gridtools::at_key<pnabla_MXX_tag>(ptrs) += zavgS_MXX_value * sign_value;
+                        *at_key<pnabla_MXX_tag>(ptrs) += zavgS_MXX_value * sign_value;
                         // body end
                     }
-                    gridtools::sid::shift(ptrs, gridtools::at_key<neighbor>(strides), 1);
+                    sid::shift(ptrs, at_key<neighbor>(strides), 1);
                 }
-                gridtools::sid::shift(ptrs,
-                    gridtools::at_key<neighbor>(strides),
-                    -gridtools::next::connectivity::max_neighbors(v2e)); // or reset ptr to origin and shift ?
+                sid::shift(ptrs,
+                    at_key<neighbor>(strides),
+                    -connectivity::max_neighbors(v2e)); // or reset ptr to origin and shift ?
             }
-            *gridtools::at_key<pnabla_MYY_tag>(ptrs) = 0.;
+            *at_key<pnabla_MYY_tag>(ptrs) = 0.;
             { // reduce
-                for (int neigh = 0; neigh < static_cast<int>(gridtools::next::connectivity::max_neighbors(v2e));
-                     ++neigh) {
+                for (int neigh = 0; neigh < static_cast<int>(connectivity::max_neighbors(v2e)); ++neigh) {
                     // body
-                    auto absolute_neigh_index = *gridtools::at_key<connectivity_tag>(ptrs);
-                    if (absolute_neigh_index != gridtools::next::connectivity::skip_value(v2e)) {
+                    auto absolute_neigh_index = *at_key<connectivity_tag>(ptrs);
+                    if (absolute_neigh_index != connectivity::skip_value(v2e)) {
 
-                        auto zavgS_MYY_ptr = gridtools::sid::get_origin(zavgS_MYY)();
-                        gridtools::sid::shift(zavgS_MYY_ptr,
-                            gridtools::at_key<edge>(gridtools::sid::get_strides(zavgS_MYY)),
-                            absolute_neigh_index);
+                        auto zavgS_MYY_ptr = sid::get_origin(zavgS_MYY)();
+                        sid::shift(zavgS_MYY_ptr, at_key<edge>(sid::get_strides(zavgS_MYY)), absolute_neigh_index);
                         auto zavgS_YY_value = *zavgS_MYY_ptr;
 
                         // if the sparse dimension is tagged with `neighbor`, the ptr is
                         // already correct
-                        auto sign_ptr = gridtools::at_key<sign_tag>(ptrs);
+                        auto sign_ptr = at_key<sign_tag>(ptrs);
                         auto sign_value = *sign_ptr;
 
-                        *gridtools::at_key<pnabla_MYY_tag>(ptrs) += zavgS_YY_value * sign_value;
+                        *at_key<pnabla_MYY_tag>(ptrs) += zavgS_YY_value * sign_value;
                         // body end
                     }
-                    gridtools::sid::shift(ptrs, gridtools::at_key<neighbor>(strides), 1);
+                    sid::shift(ptrs, at_key<neighbor>(strides), 1);
                 }
                 // the following or reset ptr to origin and shift ?
-                gridtools::sid::shift(
-                    ptrs, gridtools::at_key<neighbor>(strides), -gridtools::next::connectivity::max_neighbors(v2e));
+                sid::shift(ptrs, at_key<neighbor>(strides), -connectivity::max_neighbors(v2e));
             }
-            gridtools::sid::shift(ptrs, gridtools::at_key<vertex>(strides), 1);
+            sid::shift(ptrs, at_key<vertex>(strides), 1);
         }
     }
 
@@ -204,9 +193,8 @@ void nabla(Mesh &&mesh,
     //   end do
     // ===
     //   {
-    //     auto pe2v = gridtools::next::mesh::connectivity<
-    //         std::tuple<atlas::pole_edge, vertex>>(mesh);
-    //     for (int i = 0; i < gridtools::next::connectivity::size(pe2v);
+    //     auto pe2v = mesh::connectivity<atlas::pole_edge, vertex>(mesh);
+    //     for (int i = 0; i < connectivity::size(pe2v);
     //          ++i) {
     //     }
     //   }
@@ -219,21 +207,19 @@ void nabla(Mesh &&mesh,
         //     pnabla_MYY(deref(LibTag{}, t), k) =
         //         pnabla_MYY(deref(LibTag{}, t), k) / vol(deref(LibTag{}, t), k);
         //   }
-        auto v2e = gridtools::next::mesh::connectivity<std::tuple<vertex, edge>>(mesh);
-        static_assert(gridtools::is_sid<decltype(gridtools::next::connectivity::neighbor_table(v2e))>{});
+        auto v2e = mesh::connectivity<vertex, edge>(mesh);
 
-        auto vertex_fields = tu::make<gridtools::sid::composite::
-                keys<connectivity_tag, pnabla_MXX_tag, pnabla_MYY_tag, sign_tag, vol_tag>::values>(
-            gridtools::next::connectivity::neighbor_table(v2e), pnabla_MXX, pnabla_MYY, sign, vol);
-        static_assert(gridtools::sid::concept_impl_::is_sid<decltype(vertex_fields)>{});
+        auto vertex_fields =
+            tu::make<sid::composite::keys<connectivity_tag, pnabla_MXX_tag, pnabla_MYY_tag, sign_tag, vol_tag>::values>(
+                connectivity::neighbor_table(v2e), pnabla_MXX, pnabla_MYY, sign, vol);
 
-        auto ptrs = gridtools::sid::get_origin(vertex_fields)();
-        auto strides = gridtools::sid::get_strides(vertex_fields);
+        auto ptrs = sid::get_origin(vertex_fields)();
+        auto strides = sid::get_strides(vertex_fields);
 
-        for (std::size_t i = 0; i < gridtools::next::connectivity::size(v2e); ++i) {
-            *gridtools::at_key<pnabla_MXX_tag>(ptrs) /= *gridtools::at_key<vol_tag>(ptrs);
-            *gridtools::at_key<pnabla_MYY_tag>(ptrs) /= *gridtools::at_key<vol_tag>(ptrs);
-            gridtools::sid::shift(ptrs, gridtools::at_key<vertex>(strides), 1);
+        for (std::size_t i = 0; i < connectivity::size(v2e); ++i) {
+            *at_key<pnabla_MXX_tag>(ptrs) /= *at_key<vol_tag>(ptrs);
+            *at_key<pnabla_MYY_tag>(ptrs) /= *at_key<vol_tag>(ptrs);
+            sid::shift(ptrs, at_key<vertex>(strides), 1);
         }
     }
 }

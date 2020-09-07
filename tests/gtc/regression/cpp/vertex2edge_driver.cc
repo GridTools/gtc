@@ -17,7 +17,7 @@ using namespace gridtools::next;
 TEST(regression, vertex2edge) {
   test_helper::simple_mesh mesh;
 
-  auto e2v = mesh::connectivity<std::tuple<edge, vertex>>(mesh);
+  auto e2v = mesh::connectivity<edge, vertex>(mesh);
 
   auto in = test_helper::make_field<double, vertex>(mesh);
 

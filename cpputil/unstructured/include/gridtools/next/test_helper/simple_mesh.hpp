@@ -52,14 +52,14 @@ namespace gridtools {
                 struct regular_connectivity {
                     struct builder {
                         auto operator()(std::size_t size) {
-                            return gridtools::storage::builder<storage_trait>.template type<int>().template layout<0, 1>().template dimensions(
-                    size, std::integral_constant<std::size_t, MaxNeighbors>{});
+                            return storage::builder<storage_trait>.template type<int>().template layout<0, 1>().template dimensions(
+                                size, std::integral_constant<std::size_t, MaxNeighbors>{});
                         }
                     };
 
                     decltype(builder{}(0)()) tbl_;
                     std::size_t size_;
-                    static constexpr gridtools::int_t missing_value_ = -1;
+                    static constexpr int_t missing_value_ = -1;
 
                     regular_connectivity(std::vector<std::array<int, MaxNeighbors>> tbl)
                         : tbl_{builder{}(tbl.size()).initializer([&tbl](std::size_t primary, std::size_t neigh) {
@@ -81,24 +81,20 @@ namespace gridtools {
                     }
 
                     friend auto connectivity_neighbor_table(regular_connectivity const &conn) {
-                        return gridtools::sid::rename_numbered_dimensions<LocationType, neighbor>(conn.tbl_);
+                        return sid::rename_numbered_dimensions<LocationType, neighbor>(conn.tbl_);
                     }
                 };
 
-                template <template <class...> class L>
-                friend decltype(auto) mesh_connectivity(L<vertex>, simple_mesh const &) {
+                friend decltype(auto) mesh_connectivity(simple_mesh const &, vertex) {
                     return primary_connectivity<vertex>{9};
                 }
-                template <template <class...> class L>
-                friend decltype(auto) mesh_connectivity(L<edge>, simple_mesh const &) {
+                friend decltype(auto) mesh_connectivity(simple_mesh const &, edge) {
                     return primary_connectivity<edge>{18};
                 }
-                template <template <class...> class L>
-                friend decltype(auto) mesh_connectivity(L<cell>, simple_mesh const &) {
+                friend decltype(auto) mesh_connectivity(simple_mesh const &, cell) {
                     return primary_connectivity<cell>{9};
                 }
-                template <template <class...> class L>
-                friend decltype(auto) mesh_connectivity(L<cell, cell>, simple_mesh const &) {
+                friend decltype(auto) mesh_connectivity(simple_mesh const &, cell, cell) {
                     return regular_connectivity<cell, 4>{{
                         {6, 1, 3, 2}, // 0
                         {7, 2, 4, 0}, // 1
@@ -111,8 +107,7 @@ namespace gridtools {
                         {5, 6, 2, 7}  // 8
                     }};
                 }
-                template <template <class...> class L>
-                friend decltype(auto) mesh_connectivity(L<edge, vertex>, simple_mesh const &) {
+                friend decltype(auto) mesh_connectivity(simple_mesh const &, edge, vertex) {
                     return regular_connectivity<edge, 2>{{
                         {0, 1}, // 0
                         {1, 2},

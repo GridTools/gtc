@@ -16,7 +16,7 @@ using namespace gridtools::next;
 TEST(regression, cell2cell) {
   test_helper::simple_mesh mesh;
 
-  auto c2c = mesh::connectivity<std::tuple<cell, cell>>(mesh);
+  auto c2c = mesh::connectivity<cell, cell>(mesh);
 
   auto in = test_helper::make_field<double, cell>(mesh);
 

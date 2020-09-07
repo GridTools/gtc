@@ -65,28 +65,26 @@ namespace gridtools {
             struct not_provided;
             not_provided mesh_connectivity(...);
 
-            // Models gridtools::hymaps as mesh
-            template <class Key,
-                class Mesh,
-                class K = meta::rename<meta::list, Key>,
-                class Res = decltype(mesh_connectivity(K(), std::declval<Mesh const &>())),
-                std::enable_if_t< //
-                    std::is_same_v<Res, not_provided>
-                    /* && is_connectivity_v<decltype(at_key<K>(std::declval<Mesh const&>()))> */,
-                    int> = 0>
-            auto connectivity(Mesh const &mesh) -> decltype(at_key<K>(mesh)) {
-                return at_key<K>(mesh);
-            }
+            template <class... Keys>
+            struct connectivity_f {
+                template <class Mesh,
+                    class Res = decltype(mesh_connectivity(std::declval<Mesh const &>(), Keys()...)),
+                    std::enable_if_t<!std::is_same<Res, not_provided>::value, int> = 0>
+                Res operator()(Mesh const &mesh) const {
+                    return mesh_connectivity(mesh, Keys()...);
+                }
 
-            template <class Key,
-                class Mesh,
-                // rename to meta::list avoids requiring keys to be defined if incoming list is, e.g., std::tuple
-                class K = meta::rename<meta::list, Key>,
-                class Res = decltype(mesh_connectivity(K(), std::declval<Mesh const &>())),
-                std::enable_if_t<!std::is_same<Res, not_provided>::value, int> = 0>
-            Res connectivity(Mesh const &mesh) {
-                return mesh_connectivity(K(), mesh);
-            }
+                template <class Mesh,
+                    class Res = decltype(mesh_connectivity(std::declval<Mesh const &>(), Keys()...)),
+                    std::enable_if_t<std::is_same<Res, not_provided>::value, int> = 0>
+                auto operator()(Mesh const &mesh) const -> decltype(at_key<meta::list<Keys...>>(mesh)) {
+                    return at_key<meta::list<Keys...>>(mesh);
+                }
+            };
+
+            template <class... Keys>
+            constexpr connectivity_f<Keys...> connectivity = {};
+
         } // namespace mesh
 
     } // namespace next

@@ -29,6 +29,6 @@ namespace gridtools::next::test_helper {
     auto make_field(Mesh const &mesh) {
         // TODO seems it would be nice if we can adapt the data_store builder to create SIDs with named dimension
         return sid::rename_numbered_dimensions<Location> // TODO
-            (make_field_impl_::builder<T>{}(connectivity::size(mesh::connectivity<meta::list<Location>>(mesh)))());
+            (make_field_impl_::builder<T>{}(connectivity::size(mesh::connectivity<Location>(mesh)))());
     }
 } // namespace gridtools::next::test_helper

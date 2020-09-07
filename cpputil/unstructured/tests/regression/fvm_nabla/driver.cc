@@ -1,26 +1,25 @@
 #include <fstream>
 #include <limits>
+#include <tuple>
 
-#include "atlas/functionspace/EdgeColumns.h"
-#include "atlas/functionspace/NodeColumns.h"
-#include "atlas/grid.h"
-#include "atlas/mesh/actions/BuildCellCentres.h"
-#include "atlas/mesh/actions/BuildDualMesh.h"
-#include "atlas/mesh/actions/BuildEdges.h"
-#include "atlas/meshgenerator.h"
-#include "atlas/option/Options.h"
-#include "atlas/output/Gmsh.h"
-#include "gridtools/next/mesh.hpp"
 #include <atlas/array.h>
+#include <atlas/functionspace/EdgeColumns.h>
+#include <atlas/functionspace/NodeColumns.h>
+#include <atlas/grid.h>
 #include <atlas/mesh.h>
 #include <atlas/mesh/Nodes.h>
-
-#include <gridtools/sid/composite.hpp>
+#include <atlas/mesh/actions/BuildCellCentres.h>
+#include <atlas/mesh/actions/BuildDualMesh.h>
+#include <atlas/mesh/actions/BuildEdges.h>
+#include <atlas/meshgenerator.h>
+#include <atlas/option/Options.h>
+#include <atlas/output/Gmsh.h>
 
 #include <gridtools/next/atlas_adapter.hpp>
 #include <gridtools/next/atlas_array_view_adapter.hpp>
 #include <gridtools/next/atlas_field_util.hpp>
-#include <tuple>
+#include <gridtools/next/mesh.hpp>
+#include <gridtools/sid/composite.hpp>
 
 #include <gtest/gtest.h>
 
@@ -33,6 +32,9 @@
 #endif
 
 namespace {
+    using namespace gridtools;
+    using namespace next;
+
     template <typename DS>
     std::tuple<double, double, double> min_max(DS const &field) {
         double min = std::numeric_limits<double>::max();
@@ -248,10 +250,10 @@ TEST(FVM, nabla) {
     //   gmesh.write(m_pp);
 
     auto edge_sid = [](auto &&field) {
-        return gridtools::next::atlas_util::as_data_store<edge, dim::k>::with_type<double>{}(field);
+        return next::atlas_util::as_data_store<edge, dim::k>::with_type<double>{}(field);
     };
     auto node_sid = [](auto &&field) {
-        return gridtools::next::atlas_util::as_data_store<vertex, dim::k>::with_type<double>{}(field);
+        return next::atlas_util::as_data_store<vertex, dim::k>::with_type<double>{}(field);
     };
 
     auto S_MXX_ds = edge_sid(driver.S_MXX());
@@ -262,8 +264,7 @@ TEST(FVM, nabla) {
     auto m_pnabla_MXX_ds = node_sid(m_pnabla_MXX);
     auto m_pnabla_MYY_ds = node_sid(m_pnabla_MYY);
     auto vol_ds = node_sid(driver.vol());
-    auto sign_ds =
-        gridtools::next::atlas_util::as_data_store<vertex, dim::k, neighbor>::with_type<double>{}(driver.sign());
+    auto sign_ds = next::atlas_util::as_data_store<vertex, dim::k, neighbor>::with_type<double>{}(driver.sign());
 
     nabla(driver.mesh(),
         S_MXX_ds,

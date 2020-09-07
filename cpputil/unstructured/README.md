@@ -9,13 +9,13 @@
 
 ### _Mesh_
 
-- `mesh::connectivity<NeighborChain>(Mesh)` and `mesh::connectivity<LocationType>(Mesh)` return an object modeling the _Connectivity_ concept
+- `mesh::connectivity<NeighborChain...>(Mesh)` and `mesh::connectivity<LocationType>(Mesh)` return an object modeling the _Connectivity_ concept
 <!-- - `mesh::connectivity<LocationType>(Mesh)` returns an object modeling the _Location_ concept \[TODO: not a good name...\] -->
 <!-- - `mesh::get_size<LocationType>(Mesh)` returns the number of elements of this LocationType (as `std::size_t`) \[Consider compile time sizes as well.\] -->
 Notes:
 
 - Only Neighbor Chains which are used in the computation need to be available.
-- If a `NeighborChain` is present, we can provide a default implementation for the first element of the neighbor chain, e.g. if  `mesh::connectivity<std::tuple<edge, vertex>>(mesh)` is available, we can provide `mesh::connectivity<edge>>(mesh)` for free
+- If a `NeighborChain` is present, we can provide a default implementation for the first element of the neighbor chain, e.g. if  `mesh::connectivity<edge, vertex>>(mesh)` is available, we can provide `mesh::connectivity<edge>>(mesh)` for free
 - Mesh has a default implementation using hymap in unstructured_helper.hpp
 - TODO: probably split the 2 concepts of real connectivity and primary location.
 

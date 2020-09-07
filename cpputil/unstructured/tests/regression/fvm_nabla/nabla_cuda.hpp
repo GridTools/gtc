@@ -171,8 +171,7 @@ __global__ void nabla_vertex_2(ConnInfoV2E v2e,
 //   end do
 // ===
 //   {
-//     auto pe2v = gridtools::next::mesh::connectivity<
-//         std::tuple<atlas::pole_edge, vertex>>(mesh);
+//     auto pe2v = gridtools::next::mesh::connectivity<atlas::pole_edge, vertex>(mesh);
 //     for (int i = 0; i < gridtools::next::connectivity::size(pe2v);
 //          ++i) {
 //     }
@@ -227,7 +226,7 @@ void nabla(Mesh &&mesh,
     sign_t &&sign) {
     namespace tu = gridtools::tuple_util;
     {
-        auto e2v = gridtools::next::mesh::connectivity<std::tuple<edge, vertex>>(mesh);
+        auto e2v = gridtools::next::mesh::connectivity<edge, vertex>(mesh);
         static_assert(gridtools::is_sid<decltype(gridtools::next::connectivity::neighbor_table(e2v))>{});
 
         int k_size = 1; // TODO
@@ -257,7 +256,7 @@ void nabla(Mesh &&mesh,
         GT_CUDA_CHECK(cudaDeviceSynchronize());
     } // namespace gridtools::tuple_util;
     {
-        auto v2e = gridtools::next::mesh::connectivity<std::tuple<vertex, edge>>(mesh);
+        auto v2e = gridtools::next::mesh::connectivity<vertex, edge>(mesh);
         static_assert(gridtools::is_sid<decltype(gridtools::next::connectivity::neighbor_table(v2e))>{});
 
         auto vertex_fields = tu::make<gridtools::sid::composite::
@@ -279,7 +278,7 @@ void nabla(Mesh &&mesh,
         GT_CUDA_CHECK(cudaDeviceSynchronize());
     }
     {
-        auto vertices = gridtools::next::mesh::connectivity<std::tuple<vertex>>(mesh);
+        auto vertices = gridtools::next::mesh::connectivity<vertex>(mesh);
 
         auto vertex_fields = tu::make<gridtools::sid::composite::keys<pnabla_MXX_tag, pnabla_MYY_tag, vol_tag>::values>(
             pnabla_MXX, pnabla_MYY, vol);

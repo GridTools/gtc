@@ -25,7 +25,6 @@ using storage_trait = gridtools::storage::cpu_ifirst;
 
 namespace gridtools::next::atlas_wrappers {
     // not really a connectivity
-    template <class LocationType>
     struct primary_connectivity {
         std::size_t size_;
 
@@ -36,14 +35,14 @@ namespace gridtools::next::atlas_wrappers {
     struct regular_connectivity {
         struct builder {
             auto operator()(std::size_t size) {
-                return gridtools::storage::builder<storage_trait>.template type<int>().template layout<0, 1>().template dimensions(
+                return storage::builder<storage_trait>.template type<int>().template layout<0, 1>().template dimensions(
                     size, std::integral_constant<std::size_t, MaxNeighbors>{});
             }
         };
 
         decltype(builder{}(std::size_t{})()) tbl_;
         const atlas::idx_t missing_value_; // TODO Not sure if we can leave the type open
-        const gridtools::uint_t size_;
+        const uint_t size_;
 
         regular_connectivity(atlas::mesh::IrregularConnectivity const &conn)
             : tbl_{builder{}(conn.rows()).initializer([&conn](std::size_t row, std::size_t col) {
@@ -71,28 +70,37 @@ namespace gridtools::next::atlas_wrappers {
         }
     };
 
+    template <class Location, class MaxNeighbors>
+    regular_connectivity<Location, MaxNeighbors::value> make_regular_connectivity(
+        atlas::mesh::IrregularConnectivity const &src, Location, MaxNeighbors) {
+        return {src};
+    }
+
+    template <class Location, class MaxNeighbors>
+    regular_connectivity<Location, MaxNeighbors::value> make_regular_connectivity(
+        atlas::mesh::MultiBlockConnectivity const &src, Location, MaxNeighbors) {
+        return {src};
+    }
+
 } // namespace gridtools::next::atlas_wrappers
 
 namespace atlas {
-    template <template <class...> class L>
-    decltype(auto) mesh_connectivity(L<vertex, edge>, const Mesh &mesh) {
-        return gridtools::next::atlas_wrappers::regular_connectivity<vertex, 7
-            // TODO this number must passed by the user (probably wrap atlas mesh)
-            >{mesh.nodes().edge_connectivity()};
+    decltype(auto) mesh_connectivity(const Mesh &mesh, ::gridtools::next::vertex from, ::gridtools::next::edge) {
+        using namespace gridtools::literals;
+        // TODO this number must passed by the user (probably wrap atlas mesh)
+        return gridtools::next::atlas_wrappers::make_regular_connectivity(mesh.nodes().edge_connectivity(), from, 7_c);
     }
 
-    template <template <class...> class L>
-    decltype(auto) mesh_connectivity(L<edge, vertex>, Mesh const &mesh) {
-        return gridtools::next::atlas_wrappers::regular_connectivity<edge, 2>{mesh.edges().node_connectivity()};
+    decltype(auto) mesh_connectivity(Mesh const &mesh, ::gridtools::next::edge from, ::gridtools::next::vertex) {
+        using namespace gridtools::literals;
+        return gridtools::next::atlas_wrappers::make_regular_connectivity(mesh.edges().node_connectivity(), from, 2_c);
     }
 
-    template <template <class...> class L>
-    decltype(auto) mesh_connectivity(L<edge>, Mesh const &mesh) {
-        return gridtools::next::atlas_wrappers::primary_connectivity<edge>{std::size_t(mesh.edges().size())};
+    decltype(auto) mesh_connectivity(Mesh const &mesh, ::gridtools::next::edge) {
+        return gridtools::next::atlas_wrappers::primary_connectivity{std::size_t(mesh.edges().size())};
     }
 
-    template <template <class...> class L>
-    decltype(auto) mesh_connectivity(L<vertex>, Mesh const &mesh) {
-        return gridtools::next::atlas_wrappers::primary_connectivity<vertex>{std::size_t(mesh.nodes().size())};
+    decltype(auto) mesh_connectivity(Mesh const &mesh, ::gridtools::next::vertex) {
+        return gridtools::next::atlas_wrappers::primary_connectivity{std::size_t(mesh.nodes().size())};
     }
 } // namespace atlas
