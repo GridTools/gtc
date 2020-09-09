@@ -1,6 +1,5 @@
 #pragma once
 
-// TODO namespace?
 namespace gridtools {
     namespace next {
         namespace topology {

@@ -48,7 +48,7 @@ int main() {
     for (std::size_t v = 0; v < connectivity::size(v2e); ++v) {
         auto ptr = sid::get_origin(v2e_tbl)();
         sid::shift(ptr, at_key<vertex>(strides), v);
-        for (std::size_t i = 0; i < next::connectivity::max_neighbors(v2e); ++i) {
+        for (int i = 0; i != next::connectivity::max_neighbors(v2e); ++i) {
             sid::shift(ptr, at_key<neighbor>(strides), 1);
         }
     }
