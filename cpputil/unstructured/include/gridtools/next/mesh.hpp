@@ -1,12 +1,12 @@
 #pragma once
 
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
-#include "unstructured.hpp"
+#include <gridtools/common/host_device.hpp>
 #include <gridtools/common/hymap.hpp>
-#include <gridtools/common/integral_constant.hpp>
-#include <gridtools/sid/concept.hpp>
+#include <gridtools/meta.hpp>
 
 namespace gridtools {
     namespace next {
