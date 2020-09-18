@@ -39,7 +39,6 @@ The following functions are defined
 
 For _NeighborChain_ _Connectivities_ (i.e. length > 1, not pure _LocationTypes_), additionally the following functions are defined
 - `connectivity::max_neighbors(Connectivity)` returns a `std::integral_constant<std::size_t, N>` with `N` representing the maximal number of neighbors.
-- `connectivity::skip_value(Connectivity)` returns the element signaling a non-existent value in a regular neighbor table
 - `connectivity::neighbor_table(Connectivity)` returns a two dimensional SID with dimensions _LocationType_ and `neighbor` (TODO better name)
 
 ### _Computation_ has

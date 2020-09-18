@@ -1,9 +1,10 @@
-#include "atlas/grid.h"
-#include "atlas/mesh/actions/BuildCellCentres.h"
-#include "atlas/mesh/actions/BuildDualMesh.h"
-#include "atlas/mesh/actions/BuildEdges.h"
-#include "atlas/meshgenerator.h"
-#include "gridtools/common/integral_constant.hpp"
+#include <type_traits>
+
+#include <atlas/grid.h>
+#include <atlas/mesh/actions/BuildCellCentres.h>
+#include <atlas/mesh/actions/BuildDualMesh.h>
+#include <atlas/mesh/actions/BuildEdges.h>
+#include <atlas/meshgenerator.h>
 #include <array_fwd.h>
 #include <atlas/array.h>
 #include <atlas/grid/StructuredGrid.h>
@@ -11,32 +12,32 @@
 #include <atlas/option.h>
 #include <field/Field.h>
 #include <functionspace/EdgeColumns.h>
-#include <type_traits>
 
-#include "gridtools/next/atlas_array_view_adapter.hpp"
+#include <gridtools/common/integral_constant.hpp>
+#include <gridtools/next/atlas_array_view_adapter.hpp>
 #include <gridtools/next/atlas_adapter.hpp>
 #include <gridtools/next/atlas_field_util.hpp>
 #include <gridtools/next/mesh.hpp>
+#include <gridtools/next/unstructured.hpp>
 #include <gridtools/sid/synthetic.hpp>
 
 #include "tests/include/util/atlas_util.hpp"
 
-namespace dim {
-    struct k;
-} // namespace dim
+using namespace gridtools;
+using namespace next;
 
 template <class Ptr, class Strides, class UpperBounds>
 __global__ void kernel(Ptr ptr_holder, Strides strides, UpperBounds upper_bounds) {
     auto ptr = ptr_holder();
-    gridtools::sid::shift(ptr, gridtools::device::at_key<edge>(strides), threadIdx.x);
-    for (int i = 0; i < gridtools::device::at_key<dim::k>(upper_bounds); ++i) {
+    sid::shift(ptr, device::at_key<edge>(strides), threadIdx.x);
+    for (int i = 0; i < device::at_key<dim::k>(upper_bounds); ++i) {
         printf("%f\n", *ptr);
-        gridtools::sid::shift(ptr, gridtools::device::at_key<dim::k>(strides), 1);
+        sid::shift(ptr, device::at_key<dim::k>(strides), 1);
     }
 }
 
 int main() {
-    auto mesh = atlas_util::make_mesh();
+    auto mesh = ::atlas_util::make_mesh();
     atlas::mesh::actions::build_edges(mesh);
 
     int nb_levels = 5;
@@ -51,11 +52,11 @@ int main() {
             view(i, k) = i * 10 + k;
 
     auto my_field_as_data_store =
-        gridtools::next::atlas_util::as_data_store<edge, dim::k>::with_type<double>{}(my_field);
-    static_assert(gridtools::is_sid<decltype(my_field_as_data_store)>{});
+        next::atlas_util::as_data_store<edge, dim::k>::with_type<double>{}(my_field);
+    static_assert(is_sid<decltype(my_field_as_data_store)>{});
 
-    kernel<<<1, fs_edges.size()>>>(gridtools::sid::get_origin(my_field_as_data_store),
-        gridtools::sid::get_strides(my_field_as_data_store),
-        gridtools::sid::get_upper_bounds(my_field_as_data_store));
+    kernel<<<1, fs_edges.size()>>>(sid::get_origin(my_field_as_data_store),
+        sid::get_strides(my_field_as_data_store),
+        sid::get_upper_bounds(my_field_as_data_store));
     cudaDeviceSynchronize();
 }

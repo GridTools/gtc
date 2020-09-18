@@ -1,117 +1,72 @@
 #include <iostream>
-#include <tuple>
-#include <vector>
 
-#include <gridtools/common/hymap.hpp>
 #include <gridtools/common/tuple_util.hpp>
 #include <gridtools/next/mesh.hpp>
 #include <gridtools/next/unstructured.hpp>
 #include <gridtools/sid/composite.hpp>
 #include <gridtools/sid/concept.hpp>
+#include <gridtools/sid/loop.hpp>
+#include <gridtools/sid/rename_dimensions.hpp>
 #include <gridtools/sid/synthetic.hpp>
 
 using namespace gridtools;
 using namespace next;
-
 namespace tu = tuple_util;
 
-using vertex2edge = meta::list<vertex, edge>;
-using edge2vertex = meta::list<edge, vertex>;
-using cell2vertex = meta::list<cell, vertex>;
-
 namespace my_personal_connectivity {
-    template <std::size_t MaxNeighbors, class LocationType>
-    struct myCon {
-        using location = LocationType;
-        static constexpr std::size_t neighs = MaxNeighbors;
-        std::vector<std::array<int, MaxNeighbors>> neighborTable;
+    struct myNeighbors {
+        int m_vals[4];
     };
 
-    template <std::size_t MaxNeighbors, class LocationType>
-    auto connectivity_max_neighbors(myCon<MaxNeighbors, LocationType> const &) {
-        return std::integral_constant<std::size_t, MaxNeighbors>{};
+    template <class Fun>
+    GT_FUNCTION void mesh_for_each_neighbor(myNeighbors obj, Fun fun) {
+        for (int i : obj.m_vals)
+            fun(i);
     }
 
-    template <std::size_t MaxNeighbors, class LocationType>
-    std::size_t connectivity_size(myCon<MaxNeighbors, LocationType> const &conn) {
-        return conn.neighborTable.size();
-    }
+    struct myMesh {};
 
-    template <std::size_t MaxNeighbors, class LocationType>
-    auto connectivity_neighbor_table(myCon<MaxNeighbors, LocationType> const &conn) {
+    int mesh_get_location_size(myMesh, cell) { return 4; }
 
-        using strides_t = typename hymap::keys<LocationType,
-            neighbor>::template values<std::integral_constant<size_t, MaxNeighbors>, std::integral_constant<size_t, 1>>;
-
-        return sid::synthetic()
-            .set<sid::property::origin>(
-                sid::make_simple_ptr_holder(reinterpret_cast<const int *>(conn.neighborTable.data())))
-            .template set<sid::property::strides>(
-                strides_t(std::integral_constant<size_t, MaxNeighbors>{}, std::integral_constant<size_t, 1>{}))
-            .template set<sid::property::strides_kind, strides_t>();
+    auto mesh_get_neighbor_table(myMesh, cell, vertex) {
+        static const myNeighbors table[4] = {{{0, 1, 3, 4}}, {{1, 2, 4, 5}}, {{3, 4, 6, 7}}, {{4, 5, 7, 8}}};
+        return sid::rename_numbered_dimensions<cell>(table);
     }
 } // namespace my_personal_connectivity
+using my_personal_connectivity::myMesh;
 
 struct in_tag;
 struct out_tag;
 struct connectivity_tag;
 
-template <class SID, class NeighPtrT>
-auto indirect_access(SID &&field, NeighPtrT const &neighptr) {
-    auto ptr = sid::get_origin(field)();
-    sid::shift(ptr, sid::get_stride<vertex>(sid::get_strides(field)), *neighptr);
-    return ptr;
+template <class SID, class Offset>
+auto indirect_access(SID &&field, Offset offset) {
+    return sid::shifted(sid::get_origin(field)(), sid::get_stride<vertex>(sid::get_strides(field)), offset);
 }
 
 template <class Mesh, class In, class Out>
 void sum_vertex_to_cell(Mesh const &mesh, In &&in, Out &&out) {
-    auto n_cells = connectivity::size(at_key<cell2vertex>(mesh));
-
-    auto cell2vertex_conn = mesh::connectivity<cell, vertex>(mesh);
-    auto cell_to_vertex = connectivity::neighbor_table(cell2vertex_conn);
-
-    static_assert(sid::concept_impl_::is_sid<decltype(cell_to_vertex)>{});
-
+    auto n_cells = mesh::get_location_size<cell>(mesh);
+    auto cell_to_vertex = mesh::get_neighbor_table<cell, vertex>(mesh);
+    static_assert(is_sid<decltype(cell_to_vertex)>());
     auto cells = tu::make<sid::composite::keys<out_tag, connectivity_tag>::values>(out, cell_to_vertex);
-
-    static_assert(sid::concept_impl_::is_sid<decltype(cells)>{});
-
-    auto ptr = sid::get_origin(cells)();
-    for (std::size_t i = 0; i < n_cells; ++i) {
+    static_assert(is_sid<decltype(cells)>());
+    sid::make_loop<cell>(n_cells)([&](auto ptr, auto &&) {
         std::cout << "cell: " << *at_key<out_tag>(ptr) << std::endl;
         int sum = 0;
-        auto neigh_ptr = at_key<connectivity_tag>(ptr);
-        for (std::size_t neigh_vertex = 0; neigh_vertex < next::connectivity::max_neighbors(at_key<cell2vertex>(mesh));
-             ++neigh_vertex) {
-            auto absolute_neigh_index = *neigh_ptr;
+        mesh::for_each_neighbor(*at_key<connectivity_tag>(ptr), [&](auto neighbor) {
+            auto absolute_neigh_index = mesh::get_neighbor_index(neighbor);
             std::cout << absolute_neigh_index << " ";
-
-            auto in_ptr = indirect_access(in, neigh_ptr);
-
+            auto in_ptr = indirect_access(in, absolute_neigh_index);
             std::cout << *in_ptr << std::endl;
-
             sum += *in_ptr;
-
-            // last thing in the loop: shift
-            sid::shift(neigh_ptr, sid::get_stride<neighbor>(sid::get_strides(cell_to_vertex)), 1);
-        }
+        });
         *at_key<out_tag>(ptr) = sum;
-        sid::shift(ptr, sid::get_stride<cell>(sid::get_strides(cells)), 1); // TODO sid::loop
-    }
-}
-
-auto make_cell_to_vertex_connectivity() {
-    std::vector<std::array<int, 4>> res;
-    res.emplace_back(std::array{0, 1, 3, 4});
-    res.emplace_back(std::array{1, 2, 4, 5});
-    res.emplace_back(std::array{3, 4, 6, 7});
-    res.emplace_back(std::array{4, 5, 7, 8});
-    return res;
+    })(sid::get_origin(cells)(), sid::get_strides(cells));
 }
 
 int main() {
-    auto mesh = tu::make<hymap::keys<cell2vertex>::values>(
-        my_personal_connectivity::myCon<4, cell>{make_cell_to_vertex_connectivity()});
+    myMesh mesh;
 
     using namespace literals;
 
@@ -131,19 +86,17 @@ int main() {
                    .set<sid::property::upper_bounds>(tu::make<hymap::keys<cell>::values>((size - 1) * (size - 1)));
 
     for (int i = 0; auto &&row : in_array)
-        for (auto &&val : row) {
+        for (auto &&val : row)
             val = i++;
-        }
+
     for (int i = 0; auto &&row : out_array)
-        for (auto &&val : row) {
+        for (auto &&val : row)
             val = i++;
-        }
 
     sum_vertex_to_cell(mesh, in, out);
 
     std::cout << "=== result ===" << std::endl;
     for (auto &&row : out_array)
-        for (auto &&val : row) {
+        for (auto &&val : row)
             std::cout << val << std::endl;
-        }
 }

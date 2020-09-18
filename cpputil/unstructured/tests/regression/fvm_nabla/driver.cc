@@ -18,8 +18,6 @@
 #include <gridtools/next/atlas_adapter.hpp>
 #include <gridtools/next/atlas_array_view_adapter.hpp>
 #include <gridtools/next/atlas_field_util.hpp>
-#include <gridtools/next/mesh.hpp>
-#include <gridtools/sid/composite.hpp>
 
 #include <gtest/gtest.h>
 
@@ -51,15 +49,13 @@ namespace {
         }
         return {min, max, avg / (double)first_length};
     }
-} // namespace
 
-namespace {
     const double rpi = 2.0 * std::asin(1.0);
     const double radius = 6371.22e+03;
     const double deg2rad = 2. * rpi / 360.;
 
-    const int MXX = 0;
-    const int MYY = 1;
+    constexpr int MXX = 0;
+    constexpr int MYY = 1;
 } // namespace
 
 class FVMDriver {
@@ -73,7 +69,6 @@ class FVMDriver {
     atlas::Field m_S_MYY;
 
     atlas::Field m_vol;
-    atlas::Field m_sign;
 
   public:
     constexpr static int edges_per_node = 7;
@@ -98,29 +93,21 @@ class FVMDriver {
               atlas::option::levels(nb_levels) | atlas::option::halo(1)), //
           nb_levels_(nb_levels), m_S_MXX(fs_edges_.createField<double>(atlas::option::name("S_MXX"))),
           m_S_MYY(fs_edges_.createField<double>(atlas::option::name("S_MYY"))),
-          m_vol(fs_nodes_.createField<double>(atlas::option::name("vol"))),
-          m_sign(fs_nodes_.createField<double>(
-              atlas::option::name("m_sign") | atlas::option::variables(FVMDriver::edges_per_node))) {
+          m_vol(fs_nodes_.createField<double>(atlas::option::name("vol"))) {
         atlas::mesh::actions::build_edges(mesh_);
         atlas::mesh::actions::build_node_to_edge_connectivity(mesh_);
         atlas::mesh::actions::build_median_dual_mesh(mesh_);
 
         initialize_S();
-        // print_min_max(m_S_MXX);
-        // print_min_max(m_S_MYY);
-        initialize_sign();
         initialize_vol();
-        // print_min_max(m_vol);
     }
 
   private:
     void initialize_vol() {
-        // print_min_max_1d(mesh_.nodes().field("dual_volumes"));
-        const auto vol_atlas = atlas::array::make_view<double, 1>(mesh_.nodes().field("dual_volumes"));
-        auto vol = atlas::array::make_view<double, 2>(m_vol);
-        for (int i = 0, size = vol_atlas.size(); i < size; ++i) {
+        auto &&vol_atlas = atlas::array::make_view<double, 1>(mesh_.nodes().field("dual_volumes"));
+        auto &&vol = atlas::array::make_view<double, 2>(m_vol);
+        for (int i = 0, size = vol_atlas.size(); i < size; ++i)
             vol(i, 0) = vol_atlas(i) * (std::pow(deg2rad, 2) * std::pow(radius, 2));
-        }
     }
     void initialize_S() {
         // all fields supported by dawn are 2 (or 3 with sparse) dimensional:
@@ -138,31 +125,6 @@ class FVMDriver {
         }
     }
 
-    void initialize_sign() {
-        auto node2edge_sign = atlas::array::make_view<double, 3>(m_sign);
-
-        auto edge_flags = atlas::array::make_view<int, 1>(mesh_.edges().flags());
-        using Topology = atlas::mesh::Nodes::Topology;
-        auto is_pole_edge = [&](size_t e) { return Topology::check(edge_flags(e), Topology::POLE); };
-
-        for (atlas::idx_t jnode = 0; jnode < mesh_.nodes().size(); ++jnode) {
-            auto const &node_edge_connectivity = mesh_.nodes().edge_connectivity();
-            auto const &edge_node_connectivity = mesh_.edges().node_connectivity();
-            for (atlas::idx_t jedge = 0; jedge < node_edge_connectivity.cols(jnode); ++jedge) {
-                auto iedge = node_edge_connectivity(jnode, jedge);
-                auto ip1 = edge_node_connectivity(iedge, 0);
-                if (jnode == ip1) {
-                    node2edge_sign(jnode, 0, jedge) = 1.;
-                } else {
-                    node2edge_sign(jnode, 0, jedge) = -1.;
-                    if (is_pole_edge(iedge)) {
-                        node2edge_sign(jnode, 0, jedge) = 1.;
-                    }
-                }
-            }
-        }
-    }
-
   public:
     atlas::Mesh const &mesh() const { return mesh_; }
     atlas::Mesh &mesh() { return mesh_; }
@@ -172,7 +134,6 @@ class FVMDriver {
     atlas::Field &S_MXX() { return m_S_MXX; }
     atlas::Field &S_MYY() { return m_S_MYY; }
     atlas::Field &vol() { return m_vol; }
-    atlas::Field &sign() { return m_sign; }
 
     // TODO ask Christian for a proper name for this input data
     void fillInputData(atlas::Field &field) const {
@@ -264,7 +225,6 @@ TEST(FVM, nabla) {
     auto m_pnabla_MXX_ds = node_sid(m_pnabla_MXX);
     auto m_pnabla_MYY_ds = node_sid(m_pnabla_MYY);
     auto vol_ds = node_sid(driver.vol());
-    auto sign_ds = next::atlas_util::as_data_store<vertex, dim::k, neighbor>::with_type<double>{}(driver.sign());
 
     nabla(driver.mesh(),
         S_MXX_ds,
@@ -274,8 +234,7 @@ TEST(FVM, nabla) {
         m_pp_ds,
         m_pnabla_MXX_ds,
         m_pnabla_MYY_ds,
-        vol_ds,
-        sign_ds);
+        vol_ds);
 
     //   gmesh.write(m_pnabla_MXX);
 

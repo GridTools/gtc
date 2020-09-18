@@ -179,7 +179,7 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
         %>
         for (int neigh = 0; neigh < gridtools::next::connectivity::max_neighbors(${ conn_deref.name }); ++neigh) {
             auto absolute_neigh_index = *gridtools::device::at_key<${ conn_deref.neighbor_tbl_tag }>(${ outer_sid_deref.ptr_name});
-            if (absolute_neigh_index != gridtools::next::connectivity::skip_value(${ conn_deref.name })) {
+            if (absolute_neigh_index >= 0) {
                 % if sid_deref:
                     auto ${ sid_deref.ptr_name } = ${ sid_deref.origin_name }();
                     gridtools::sid::shift(
@@ -288,7 +288,7 @@ class UsidGpuCodeGenerator(UsidCodeGenerator):
 
             ${ ''.join(sids) }
 
-            auto [blocks, threads_per_block] = gridtools::next::cuda_util::cuda_setup(gridtools::next::connectivity::size(${ primary_connectivity.name }));
+            auto [blocks, threads_per_block] = gridtools::next::cuda_setup(gridtools::next::connectivity::size(${ primary_connectivity.name }));
             ${ name }<<<blocks, threads_per_block>>>(${','.join(args)});
             GT_CUDA_CHECK(cudaDeviceSynchronize());
         }

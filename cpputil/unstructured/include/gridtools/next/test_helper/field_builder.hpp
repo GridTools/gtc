@@ -16,7 +16,7 @@ using storage_trait = gridtools::storage::cpu_ifirst;
 namespace gridtools::next::test_helper {
     template <class T, class Location, class Mesh>
     auto make_field(Mesh const &mesh) {
-        return sid::rename_numbered_dimensions<Location>(storage::builder<storage_trait>.template type<T>().dimensions(
-            connectivity::size(mesh::connectivity<Location>(mesh))).build());
+        return sid::rename_numbered_dimensions<Location>(
+            storage::builder<storage_trait>.template type<T>().dimensions(mesh::get_location_size<Location>(mesh))());
     }
 } // namespace gridtools::next::test_helper

@@ -19,97 +19,96 @@
  *
  */
 
-#include "../mesh.hpp"
-#include "../unstructured.hpp"
-#include <cstddef>
-#include <gridtools/sid/rename_dimensions.hpp>
-#include <gridtools/storage/builder.hpp>
-#include <gridtools/storage/sid.hpp>
 #include <type_traits>
 
-#ifdef __CUDACC__ // TODO proper handling
-#include <gridtools/storage/gpu.hpp>
-using storage_trait = gridtools::storage::gpu;
-#else
-#include <gridtools/storage/cpu_ifirst.hpp>
-using storage_trait = gridtools::storage::cpu_ifirst;
-#endif
+#include <gridtools/common/generic_metafunctions/utility.hpp>
+#include <gridtools/common/hymap.hpp>
+#include <gridtools/common/integral_constant.hpp>
+#include <gridtools/sid/concept.hpp>
+
+#include "../unstructured.hpp"
 
 namespace gridtools {
     namespace next {
         namespace test_helper {
-            struct simple_mesh {
-                template <class LocationType>
-                struct primary_connectivity {
-                    std::size_t size_;
+            namespace simple_mesh_impl_ {
+                template <auto TablePtr>
+                struct neighbors {
+                    int m_index;
 
-                    GT_FUNCTION friend std::size_t connectivity_size(primary_connectivity const &conn) {
-                        return conn.size_;
-                    }
+                    neighbors operator*() const { return *this; }
+                    GT_FUNCTION neighbors operator()() const { return *this; }
                 };
 
-                template <class LocationType, std::size_t MaxNeighbors>
-                struct regular_connectivity {
-                    struct builder {
-                        auto operator()(std::size_t size) {
-                            return storage::builder<storage_trait>.template type<int>().template layout<0, 1>().template dimensions(
-                                size, std::integral_constant<std::size_t, MaxNeighbors>{});
-                        }
-                    };
+                template <auto TablePtr>
+                GT_FUNCTION neighbors<TablePtr> operator+(neighbors<TablePtr> obj, int diff) {
+                    return {obj.m_index};
+                }
 
-                    decltype(builder{}(0)()) tbl_;
-                    std::size_t size_;
-                    static constexpr int_t missing_value_ = -1;
+                struct neighbors_stride {};
 
-                    regular_connectivity(std::vector<std::array<int, MaxNeighbors>> tbl)
-                        : tbl_{builder{}(tbl.size()).initializer([&tbl](std::size_t primary, std::size_t neigh) {
-                              return tbl[primary][neigh];
-                          })()},
-                          size_{tbl.size()} {}
+                template <auto TablePtr, class Offset>
+                GT_FUNCTION void sid_shift(neighbors<TablePtr> &obj, neighbors_stride, Offset offset) {
+                    obj.m_index += offset;
+                }
 
-                    GT_FUNCTION friend std::size_t connectivity_size(regular_connectivity const &conn) {
-                        return conn.size_;
-                    }
+                template <class Offset>
+                GT_FUNCTION void sid_shift(int &obj, neighbors_stride, Offset offset) {
+                    obj += offset;
+                }
 
-                    GT_FUNCTION friend std::integral_constant<std::size_t, MaxNeighbors> connectivity_max_neighbors(
-                        regular_connectivity const &) {
+                template <auto TablePtr, class Fun>
+                GT_FUNCTION void mesh_for_each_neighbor(neighbors<TablePtr> neighbors, Fun &&fun) {
+                    for (auto &&item : (*TablePtr)[neighbors.m_index])
+                        wstd::forward<Fun>(fun)(item);
+                }
+
+                template <class Dim, auto TablePtr>
+                struct neighbors_table {
+                    friend neighbors<TablePtr> sid_get_origin(neighbors_table) { return {0}; }
+                    friend typename hymap::keys<Dim>::template values<neighbors_stride> sid_get_strides(
+                        neighbors_table) {
                         return {};
                     }
-
-                    GT_FUNCTION friend int connectivity_skip_value(regular_connectivity const &conn) {
-                        return conn.missing_value_;
+                    friend int sid_get_ptr_diff(neighbors_table) { return {}; }
+                    friend typename hymap::keys<Dim>::template values<integral_constant<int, 0>> sid_get_lower_bounds(
+                        neighbors_table) {
+                        return {};
                     }
-
-                    friend auto connectivity_neighbor_table(regular_connectivity const &conn) {
-                        return sid::rename_numbered_dimensions<LocationType, neighbor>(conn.tbl_);
+                    friend typename hymap::keys<Dim>::template values<
+                        integral_constant<int, std::extent_v<std::remove_pointer<decltype(TablePtr)>>>>
+                    sid_get_upper_bounds(neighbors_table) {
+                        return {};
                     }
                 };
 
-                friend decltype(auto) mesh_connectivity(simple_mesh const &, vertex) {
-                    return primary_connectivity<vertex>{9};
+                struct simple_mesh {};
+
+                inline integral_constant<int, 9> mesh_get_location_size(simple_mesh, vertex) { return {}; }
+                inline integral_constant<int, 18> mesh_get_location_size(simple_mesh, edge) { return {}; }
+                inline integral_constant<int, 9> mesh_get_location_size(simple_mesh, cell) { return {}; }
+
+                auto mesh_get_neighbor_table(simple_mesh, cell, cell) {
+                    static constexpr int table[][4] = {
+                        //
+                        {6, 1, 3, 2},
+                        {7, 2, 4, 0},
+                        {8, 0, 5, 1},
+                        {0, 4, 6, 5},
+                        {1, 5, 7, 3},
+                        {2, 3, 8, 4},
+                        {3, 7, 0, 8},
+                        {4, 8, 1, 6},
+                        {5, 6, 2, 7} //
+                    };
+                    return neighbors_table<cell, &table>{};
                 }
-                friend decltype(auto) mesh_connectivity(simple_mesh const &, edge) {
-                    return primary_connectivity<edge>{18};
-                }
-                friend decltype(auto) mesh_connectivity(simple_mesh const &, cell) {
-                    return primary_connectivity<cell>{9};
-                }
-                friend decltype(auto) mesh_connectivity(simple_mesh const &, cell, cell) {
-                    return regular_connectivity<cell, 4>{{
-                        {6, 1, 3, 2}, // 0
-                        {7, 2, 4, 0}, // 1
-                        {8, 0, 5, 1}, // 2
-                        {0, 4, 6, 5}, // 3
-                        {1, 5, 7, 3}, // 4
-                        {2, 3, 8, 4}, // 5
-                        {3, 7, 0, 8}, // 6
-                        {4, 8, 1, 6}, // 7
-                        {5, 6, 2, 7}  // 8
-                    }};
-                }
-                friend decltype(auto) mesh_connectivity(simple_mesh const &, edge, vertex) {
-                    return regular_connectivity<edge, 2>{{
-                        {0, 1}, // 0
+                static_assert(is_sid<decltype(mesh_get_neighbor_table(simple_mesh(), cell(), cell()))>());
+
+                auto mesh_get_neighbor_table(simple_mesh, edge, vertex) {
+                    static constexpr int table[][2] = {
+                        //
+                        {0, 1},
                         {1, 2},
                         {2, 0},
                         {3, 4},
@@ -118,7 +117,7 @@ namespace gridtools {
                         {6, 7},
                         {7, 8},
                         {8, 6},
-                        {0, 3}, // 9
+                        {0, 3},
                         {1, 4},
                         {2, 5},
                         {3, 6},
@@ -126,10 +125,13 @@ namespace gridtools {
                         {5, 8},
                         {6, 0},
                         {7, 1},
-                        {8, 2},
-                    }};
+                        {8, 2} //
+                    };
+                    return neighbors_table<cell, &table>{};
                 }
-            };
+                static_assert(is_sid<decltype(mesh_get_neighbor_table(simple_mesh(), edge(), vertex()))>());
+            } // namespace simple_mesh_impl_
+            using simple_mesh_impl_::simple_mesh;
         } // namespace test_helper
     }     // namespace next
 } // namespace gridtools

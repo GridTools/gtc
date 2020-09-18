@@ -1,21 +1,15 @@
 #pragma once
 
 #include <cassert>
-#include <cstddef>
 
 #include <atlas/mesh.h>
 #include <mesh/Connectivity.h>
 
-#include <gridtools/common/hymap.hpp>
-#include <gridtools/common/integral_constant.hpp>
-#include <gridtools/meta.hpp>
-#include <gridtools/next/atlas_field_util.hpp>
-#include <gridtools/sid/concept.hpp>
+#include <gridtools/common/array.hpp>
 #include <gridtools/sid/rename_dimensions.hpp>
 #include <gridtools/storage/builder.hpp>
 #include <gridtools/storage/sid.hpp>
 
-#include "gridtools/meta/st_contains.hpp"
 #include "unstructured.hpp"
 
 #ifdef __CUDACC__ // TODO proper handling
@@ -26,106 +20,85 @@ using storage_trait = gridtools::storage::gpu;
 using storage_trait = gridtools::storage::cpu_ifirst;
 #endif
 
-namespace gridtools::next::atlas_wrappers {
-    // not really a connectivity
-    struct primary_connectivity {
-        std::size_t size_;
-
-        friend std::size_t connectivity_size(primary_connectivity const &conn) { return conn.size_; }
-    };
-
-    template <class Table>
-    struct regular_connectivity {
-        static_assert(is_sid<Table>());
-
-        Table table_;
-
-        friend integral_constant<int, -1> connectivity_skip_value(regular_connectivity const &) { return {}; }
-        friend Table const &connectivity_neighbor_table(regular_connectivity const &obj) { return obj.table_; }
-    };
-
-    template <class Table>
-    auto connectivity_size(regular_connectivity<Table> const &obj) {
-        return tuple_util::get<0>(sid::get_upper_bounds(obj.table_));
-    }
-
-    template <class Table>
-    auto connectivity_max_neighbors(regular_connectivity<Table> const &obj) {
-        return sid::get_upper_bound<neighbor>(sid::get_upper_bounds(obj.table_));
-    }
-
-    template <class Src, class Location, class MaxNeighbors>
-    auto make_regular_connectivity(Src const &src, Location, MaxNeighbors max_neighbors) {
-        assert(src.missing_value() == -1);
-        auto init = [&](auto row, auto col) { return col < src.cols(row) ? src.row(row)(col) : -1; };
-        auto ds =
-            storage::builder<storage_trait>.template type<int>().dimensions(src.rows(), max_neighbors).initializer(init)();
-        auto table = sid::rename_numbered_dimensions<Location, neighbor>(std::move(ds));
-        using table_t = decltype(table);
-        return regular_connectivity<table_t>{std::move(table)};
-    }
-} // namespace gridtools::next::atlas_wrappers
-
 namespace atlas {
     namespace gridtools_next_impl_ {
         using namespace gridtools;
         using namespace next;
 
-        // not really a connectivity
-        struct primary_connectivity {
-            std::size_t size_;
-
-            friend std::size_t connectivity_size(primary_connectivity const &conn) { return conn.size_; }
+        struct edge_vertex_neighbors {
+            int m_val[2];
         };
 
-        template <class Table>
-        struct regular_connectivity {
-            static_assert(is_sid<Table>());
+        template <class Fun>
+        GT_FUNCTION void mesh_for_each_neighbor(edge_vertex_neighbors obj, Fun &&fun) {
+            fun(obj.m_val[0]);
+            fun(obj.m_val[1]);
+        }
 
-            Table table_;
+        inline auto get_edge_vertex_neighbor_table(Mesh const &mesh) {
+            auto &&src = mesh.edges().node_connectivity();
+            auto init = [&](auto row) -> edge_vertex_neighbors {
+                assert(src.cols(row) == 2);
+                return {src.row(row)(0), src.row(row)(1)};
+            };
+            return sid::rename_numbered_dimensions<::gridtools::next::edge>(
+                storage::builder<storage_trait>.template type<edge_vertex_neighbors>().dimensions(src.rows()).initializer(init)());
+        }
 
-            friend integral_constant<int, -1> connectivity_skip_value(regular_connectivity const &) { return {}; }
-            friend Table const &connectivity_neighbor_table(regular_connectivity const &obj) { return obj.table_; }
+        struct vertex_edge_neighbor {
+            int index;
+            int sign;
         };
 
-        template <class Table>
-        auto connectivity_size(regular_connectivity<Table> const &obj) {
-            return tuple_util::get<0>(sid::get_upper_bounds(obj.table_));
+        GT_FUNCTION int mesh_get_neighbor_index(vertex_edge_neighbor src) { return src.index; }
+        GT_FUNCTION int mesh_get_neighbor_sign(vertex_edge_neighbor src) { return src.sign; }
+
+        using vertex_edge_neighbors = ::gridtools::array<vertex_edge_neighbor, 7>;
+
+        template <class Fun>
+        GT_FUNCTION void mesh_for_each_neighbor(vertex_edge_neighbors const &obj, Fun &&fun) {
+            for (auto &&item : obj) {
+                if (item.index < 0)
+                    continue;
+                fun(item);
+            }
         }
 
-        template <class Table>
-        auto connectivity_max_neighbors(regular_connectivity<Table> const &obj) {
-            return sid::get_upper_bound<neighbor>(sid::get_upper_bounds(obj.table_));
-        }
-
-        template <class Src, class Location, class MaxNeighbors>
-        auto make_regular_connectivity(Src const &src, Location, MaxNeighbors max_neighbors) {
+        inline auto get_vertex_edge_neighbor_table(Mesh const &mesh) {
+            auto &&src = mesh.nodes().edge_connectivity();
+            auto &&e2v = mesh.edges().node_connectivity();
             assert(src.missing_value() == -1);
-            auto init = [&](auto row, auto col) { return col < src.cols(row) ? src.row(row)(col) : -1; };
-            auto ds =
-                storage::builder<storage_trait>.template type<int>().dimensions(src.rows(), max_neighbors).initializer(init)();
-            auto table = sid::rename_numbered_dimensions<Location, neighbor>(std::move(ds));
-            using table_t = decltype(table);
-            return regular_connectivity<table_t>{std::move(table)};
+            assert(src.maxcols() <= 7);
+            auto init = [&, is_pole_edge = [edge_flags = array::make_view<int, 1>(mesh.edges().flags())](auto e) {
+                using topology_t = atlas::mesh::Nodes::Topology;
+                return topology_t::check(edge_flags(e), topology_t::POLE);
+            }](auto row) -> vertex_edge_neighbors {
+                vertex_edge_neighbors res;
+                for (int i = 0; i < 7; ++i) {
+                    if (i >= src.cols(row)) {
+                        res[i] = {-1, 1};
+                        continue;
+                    }
+                    auto index = src(row, i);
+                    res[i] = {index, row == e2v(index, 0) || is_pole_edge(index) ? 1 : -1};
+                }
+                return res;
+            };
+            return sid::rename_numbered_dimensions<::gridtools::next::vertex>(
+                storage::builder<storage_trait>.template type<vertex_edge_neighbors>().dimensions(src.rows()).initializer(init)());
         }
+
     } // namespace gridtools_next_impl_
 
-    inline auto mesh_connectivity(const Mesh &mesh, ::gridtools::next::vertex from, gridtools::next::edge) {
-        using namespace gridtools::literals;
-        // TODO this number must passed by the user (probably wrap atlas mesh)
-        return gridtools_next_impl_::make_regular_connectivity(mesh.nodes().edge_connectivity(), from, 7_c);
+    inline auto mesh_get_neighbor_table(Mesh const &mesh, ::gridtools::next::edge, ::gridtools::next::vertex) {
+        return gridtools_next_impl_::get_edge_vertex_neighbor_table(mesh);
     }
 
-    inline auto mesh_connectivity(Mesh const &mesh, ::gridtools::next::edge from, ::gridtools::next::vertex) {
-        using namespace gridtools::literals;
-        return gridtools_next_impl_::make_regular_connectivity(mesh.edges().node_connectivity(), from, 2_c);
+    inline auto mesh_get_neighbor_table(Mesh const &mesh, ::gridtools::next::vertex, ::gridtools::next::edge) {
+        return gridtools_next_impl_::get_vertex_edge_neighbor_table(mesh);
     }
 
-    inline auto mesh_connectivity(Mesh const &mesh, ::gridtools::next::edge) {
-        return gridtools_next_impl_::primary_connectivity{std::size_t(mesh.edges().size())};
-    }
+    inline auto mesh_get_location_size(Mesh const &mesh, ::gridtools::next::edge) { return mesh.edges().size(); }
 
-    inline auto mesh_connectivity(Mesh const &mesh, ::gridtools::next::vertex) {
-        return gridtools_next_impl_::primary_connectivity{std::size_t(mesh.nodes().size())};
-    }
+    inline auto mesh_get_location_size(Mesh const &mesh, ::gridtools::next::vertex) { return mesh.nodes().size(); }
 } // namespace atlas
