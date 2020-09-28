@@ -1,20 +1,22 @@
 #pragma once
 
+#include <gridtools/common/integral_constant.hpp>
+
 namespace gridtools {
     namespace next {
-        namespace topology {
-            struct vertex {};
-            struct edge {};
-            struct cell {};
-        } // namespace topology
-        using topology::cell;
-        using topology::edge;
-        using topology::vertex;
+        struct vertex {};
+        struct edge {};
+        struct cell {};
 
+        template <class...>
         struct neighbor {};
 
         namespace dim {
-            struct k {};
+            using horizontal = integral_constant<int, 0>;
+            using vertical = integral_constant<int, 1>;
+            using h = horizontal;
+            using v = vertical;
+            using k = vertical;
         } // namespace dim
     }     // namespace next
 } // namespace gridtools
