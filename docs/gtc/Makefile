@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-SRCDIR        = ../../src/eve
+SRCDIR        = ../../src/gtc
 AUTODOCDIR    = _source
 BUILDDIR      = _build
 
