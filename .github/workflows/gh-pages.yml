@@ -56,12 +56,16 @@ jobs:
               id: check_if_most_recent_upstream
               run: |
                 REMOTE_URL=$(git remote get-url origin)
-                LATEST_UPSTREAM_COMMIT=$(git ls-remote $REMOTE_URL | grep $GITHUB_REF | cut -f 1)
+                LATEST_UPSTREAM_COMMIT=$(git ls-remote $REMOTE_URL | grep $GITHUB_REF\$ | cut -f 1)
                 CURRENT_COMMIT=$(git rev-parse HEAD)
-                if [ "$LATEST_UPSTREAM_COMMIT" = "$CURRENT_COMMIT" ]; then echo "::set-output name=is_most_recent::true"; fi
-            - name: Print warning if deployment skipped
-              run: echo "::warning::Documentation deployment skipped since the current commit is not the most recent of this branch"
-              if: steps.check_if_most_recent_upstream.outputs.is_most_recent != 'true'
+                echo $(git ls-remote $REMOTE_URL | grep $GITHUB_REF)
+                echo bla
+                echo $(git ls-remote $REMOTE_URL)
+                if [ "$LATEST_UPSTREAM_COMMIT" = "$CURRENT_COMMIT" ]; then
+                  echo "::set-output name=is_most_recent::true"
+                else
+                  echo "::warning::Documentation deployment skipped since the current commit ($CURRENT_COMMIT) is not the most recent of this branch ($LATEST_UPSTREAM_COMMIT)"
+                fi
             - name: Assemble target folder
               id: target_folder
               shell: bash
