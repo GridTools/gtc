@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.gtir &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.gtir</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.gtir</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+<span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">devtools</span> <span class="kn">import</span> <span class="n">debug</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">validator</span>
+
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Str</span><span class="p">,</span> <span class="n">StrEnum</span>
+<span class="kn">from</span> <span class="nn">gtc</span> <span class="kn">import</span> <span class="n">common</span>
+
+
+<div class="viewcode-block" id="Expr"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Expr">[docs]</a><span class="k">class</span> <span class="nc">Expr</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">location_type</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Stmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Stmt">[docs]</a><span class="k">class</span> <span class="nc">Stmt</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">location_type</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Literal"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Literal">[docs]</a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span></div>
+
+
+<div class="viewcode-block" id="NeighborChain"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.NeighborChain">[docs]</a><span class="k">class</span> <span class="nc">NeighborChain</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">]</span>
+
+<div class="viewcode-block" id="NeighborChain.not_empty"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.NeighborChain.not_empty">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;elements&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">not_empty</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">elements</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NeighborChain must contain at least one locations&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">elements</span></div></div>
+
+
+<div class="viewcode-block" id="ReduceOperator"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.ReduceOperator">[docs]</a><span class="nd">@enum</span><span class="o">.</span><span class="n">unique</span>
+<span class="k">class</span> <span class="nc">ReduceOperator</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reduction operator identifier.&quot;&quot;&quot;</span>
+
+    <span class="n">ADD</span> <span class="o">=</span> <span class="s2">&quot;ADD&quot;</span>
+    <span class="n">MUL</span> <span class="o">=</span> <span class="s2">&quot;MUL&quot;</span>
+    <span class="n">MAX</span> <span class="o">=</span> <span class="s2">&quot;MAX&quot;</span>
+    <span class="n">MIN</span> <span class="o">=</span> <span class="s2">&quot;MIN&quot;</span></div>
+
+
+<div class="viewcode-block" id="Domain"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Domain">[docs]</a><span class="k">class</span> <span class="nc">Domain</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="LocationRef"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.LocationRef">[docs]</a><span class="k">class</span> <span class="nc">LocationRef</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+<div class="viewcode-block" id="LocationComprehension"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.LocationComprehension">[docs]</a><span class="k">class</span> <span class="nc">LocationComprehension</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">chain</span><span class="p">:</span> <span class="n">NeighborChain</span>
+    <span class="n">of</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">LocationRef</span><span class="p">,</span> <span class="n">Domain</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="NeighborReduce"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.NeighborReduce">[docs]</a><span class="k">class</span> <span class="nc">NeighborReduce</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">operand</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">op</span><span class="p">:</span> <span class="n">ReduceOperator</span>
+    <span class="n">neighbors</span><span class="p">:</span> <span class="n">LocationComprehension</span>
+
+<div class="viewcode-block" id="NeighborReduce.check_location_type"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.NeighborReduce.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;neighbors&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;operand&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span></div></div>
+
+
+<div class="viewcode-block" id="FieldAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.FieldAccess">[docs]</a><span class="k">class</span> <span class="nc">FieldAccess</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># via symbol table</span>
+    <span class="n">subscript</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LocationRef</span><span class="p">]</span>  <span class="c1"># maybe remove the separate LocationRef</span></div>
+
+
+<div class="viewcode-block" id="AssignStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.AssignStmt">[docs]</a><span class="k">class</span> <span class="nc">AssignStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">FieldAccess</span>  <span class="c1"># there are no local variables in gtir, only fields</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span>
+
+<div class="viewcode-block" id="AssignStmt.check_location_type"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.AssignStmt.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;location_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+        <span class="k">elif</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">values</span></div></div>
+
+
+<div class="viewcode-block" id="BinaryOp"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.BinaryOp">[docs]</a><span class="k">class</span> <span class="nc">BinaryOp</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">op</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span>
+
+<div class="viewcode-block" id="BinaryOp.check_location_type"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.BinaryOp.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;location_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+        <span class="k">elif</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">values</span></div></div>
+
+
+<div class="viewcode-block" id="VerticalDimension"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.VerticalDimension">[docs]</a><span class="k">class</span> <span class="nc">VerticalDimension</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="HorizontalDimension"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.HorizontalDimension">[docs]</a><span class="k">class</span> <span class="nc">HorizontalDimension</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">primary</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span>
+    <span class="n">secondary</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NeighborChain</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Dimensions"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Dimensions">[docs]</a><span class="k">class</span> <span class="nc">Dimensions</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">horizontal</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">HorizontalDimension</span><span class="p">]</span>
+    <span class="n">vertical</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VerticalDimension</span><span class="p">]</span></div>
+    <span class="c1"># other: TODO</span>
+
+
+<div class="viewcode-block" id="UField"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.UField">[docs]</a><span class="k">class</span> <span class="nc">UField</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span>
+    <span class="n">dimensions</span><span class="p">:</span> <span class="n">Dimensions</span></div>
+
+
+<div class="viewcode-block" id="TemporaryField"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.TemporaryField">[docs]</a><span class="k">class</span> <span class="nc">TemporaryField</span><span class="p">(</span><span class="n">UField</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="HorizontalLoop"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.HorizontalLoop">[docs]</a><span class="k">class</span> <span class="nc">HorizontalLoop</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">stmt</span><span class="p">:</span> <span class="n">Stmt</span>
+    <span class="n">location</span><span class="p">:</span> <span class="n">LocationComprehension</span>
+
+<div class="viewcode-block" id="HorizontalLoop.check_location_type"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.HorizontalLoop.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="c1"># Don&#39;t infer here! The location type of the loop should always come from the frontend!</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;LocationComprehension on HorizontalLoop must have NeighborChain of length 1&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;stmt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span></div></div>
+
+
+<div class="viewcode-block" id="VerticalLoop"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.VerticalLoop">[docs]</a><span class="k">class</span> <span class="nc">VerticalLoop</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="c1"># each statement inside a `with location_type` is interpreted as a full horizontal loop (see parallel model of SIR)</span>
+    <span class="n">horizontal_loops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">HorizontalLoop</span><span class="p">]</span>
+    <span class="n">loop_order</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LoopOrder</span></div>
+
+
+<div class="viewcode-block" id="Stencil"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Stencil">[docs]</a><span class="k">class</span> <span class="nc">Stencil</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">vertical_loops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VerticalLoop</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Computation"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Computation">[docs]</a><span class="k">class</span> <span class="nc">Computation</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UField</span><span class="p">]</span>
+    <span class="n">declarations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">TemporaryField</span><span class="p">]]</span>
+    <span class="n">stencils</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stencil</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

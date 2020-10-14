@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.sir_passes.infer_local_variable_location_type &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.sir_passes.infer_local_variable_location_type</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.sir_passes.infer_local_variable_location_type</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+<span class="kn">import</span> <span class="nn">eve</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeTranslator</span><span class="p">,</span> <span class="n">NodeVisitor</span>
+<span class="kn">from</span> <span class="nn">gtc</span> <span class="kn">import</span> <span class="n">sir</span>
+
+
+<div class="viewcode-block" id="GTException"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type.GTException">[docs]</a><span class="k">class</span> <span class="nc">GTException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="AnalysisException"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type.AnalysisException">[docs]</a><span class="k">class</span> <span class="nc">AnalysisException</span><span class="p">(</span><span class="n">GTException</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InferLocalVariableLocationTypeTransformation"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type.InferLocalVariableLocationTypeTransformation">[docs]</a><span class="k">class</span> <span class="nc">InferLocalVariableLocationTypeTransformation</span><span class="p">(</span><span class="n">NodeTranslator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Visitor for updating LocationTypes from a dict of variable names to LocationTypes.</span>
+
+<span class="sd">    The list of inferred LocationTypes is generated by the _LocationTypeAnalysis visitor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="InferLocalVariableLocationTypeTransformation.apply"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type.InferLocalVariableLocationTypeTransformation.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Runs the  _LocationTypeAnalysis and updates VarDeclStmts with the result.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            New tree where all VarDeclStmts have a LocationType set</span>
+<span class="sd">            or raises an exception if the LocationType couldn&#39;t be inferred.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inferred_location</span> <span class="o">=</span> <span class="n">_infer_location_type_of_local_variables</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">inferred_location</span><span class="o">=</span><span class="n">inferred_location</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="InferLocalVariableLocationTypeTransformation.visit_VarDeclStmt"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type.InferLocalVariableLocationTypeTransformation.visit_VarDeclStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VarDeclStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">VarDeclStmt</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">inferred_location</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">inferred_location</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">location_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AnalysisException</span><span class="p">(</span><span class="s2">&quot;Cannot deduce location type for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">location_type</span> <span class="o">=</span> <span class="n">inferred_location</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">node</span></div></div>
+
+
+<div class="viewcode-block" id="_LocationTypeAnalysis"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type._LocationTypeAnalysis">[docs]</a><span class="k">class</span> <span class="nc">_LocationTypeAnalysis</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Analyse local variable usage and infers location type if possible.</span>
+
+<span class="sd">    Result of `infer_location_types()` is a dict of variable names to LocationType.</span>
+
+<span class="sd">    Can deduce variable LocationTypes by assignments from:</span>
+<span class="sd">    - Reductions (as they have a fixed location type)</span>
+<span class="sd">    - Fields (as they have a fixed location type)</span>
+<span class="sd">    - Variables recursively (by building a dependency tree)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_dependencies</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># depender -&gt; set(dependees)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sir_stencil_params</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># TODO symbol table: list of fields (stencil parameters)</span>
+
+<div class="viewcode-block" id="_LocationTypeAnalysis.infer_location_types"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type._LocationTypeAnalysis.infer_location_types">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">infer_location_types</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Node</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Runs the visitor to directly infer LocationTypes and propagates to dependent variables.</span>
+
+<span class="sd">        The visitor pass infers LocationTypes from direct assignments and builds up a dependency graph of</span>
+<span class="sd">        variable assignments. In postprocessing with `_propagate_location_type()` the directly inferred LocationType</span>
+<span class="sd">        is propagated to other variables using the dependency graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">original_inferred_location_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">inferred_location</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">original_inferred_location_keys</span><span class="p">:</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">_propagate_location_type</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">inferred_location</span></div>
+
+    <span class="k">def</span> <span class="nf">_propagate_location_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">dependee</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_dependencies</span><span class="p">[</span><span class="n">var_name</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">dependee</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span><span class="p">[</span><span class="n">dependee</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="n">AnalysisException</span><span class="p">(</span>
+                    <span class="s2">&quot;Incompatible location type detected for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dependee</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span><span class="p">[</span><span class="n">dependee</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_location_type</span><span class="p">(</span><span class="n">dependee</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_location_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cur_var_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">location_type</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">LocationType</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">cur_var_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span><span class="p">[</span><span class="n">cur_var_name</span><span class="p">]</span> <span class="o">!=</span> <span class="n">location_type</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Incompatible location types deduced for </span><span class="si">{cur_var_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inferred_location</span><span class="p">[</span><span class="n">cur_var_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">location_type</span>
+
+<div class="viewcode-block" id="_LocationTypeAnalysis.visit_Stencil"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type._LocationTypeAnalysis.visit_Stencil">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Stencil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">Stencil</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sir_stencil_params</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ast</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="_LocationTypeAnalysis.visit_FieldAccessExpr"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type._LocationTypeAnalysis.visit_FieldAccessExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_FieldAccessExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">FieldAccessExpr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;cur_var&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">new_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sir_stencil_params</span><span class="p">[</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">dense_location_type</span>  <span class="c1"># TODO use symbol table</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_location_type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;cur_var&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">new_type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="_LocationTypeAnalysis.visit_VarAccessExpr"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type._LocationTypeAnalysis.visit_VarAccessExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VarAccessExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">VarAccessExpr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;cur_var&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="c1"># rhs of assignment/declaration</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_dependencies</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{node.name}</span><span class="s2"> was not declared&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_dependencies</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;cur_var&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="_LocationTypeAnalysis.visit_VarDeclStmt"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type._LocationTypeAnalysis.visit_VarDeclStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VarDeclStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">VarDeclStmt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_dependencies</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Redeclaration of variable&quot;</span><span class="p">)</span>  <span class="c1"># TODO symbol table will take care</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_dependencies</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">init_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">init_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cur_var</span><span class="o">=</span><span class="n">node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="_LocationTypeAnalysis.visit_ReductionOverNeighborExpr"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type._LocationTypeAnalysis.visit_ReductionOverNeighborExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_ReductionOverNeighborExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">ReductionOverNeighborExpr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;cur_var&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_location_type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;cur_var&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">chain</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="_LocationTypeAnalysis.visit_AssignmentExpr"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.sir_passes.html#gtc.unstructured.sir_passes.infer_local_variable_location_type._LocationTypeAnalysis.visit_AssignmentExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_AssignmentExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">AssignmentExpr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">sir</span><span class="o">.</span><span class="n">VarAccessExpr</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">&quot;cur_var&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Variable assignment inside rhs of variable assignment is not supported.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">cur_var</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_infer_location_type_of_local_variables</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_LocationTypeAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">infer_location_types</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

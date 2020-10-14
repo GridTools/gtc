@@ -1,0 +1,497 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>eve.concepts &mdash; Eve 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> Eve
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eve</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>eve.concepts</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for eve.concepts</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+<span class="sd">&quot;&quot;&quot;Definitions of basic Eve concepts.&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">boltons.typeutils</span>
+<span class="kn">import</span> <span class="nn">pydantic</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">typing</span>
+<span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">PositiveInt</span><span class="p">,</span> <span class="n">Str</span><span class="p">,</span> <span class="n">StrEnum</span>
+<span class="kn">from</span> <span class="nn">.typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">AnyNoArgCallable</span><span class="p">,</span>
+    <span class="n">ClassVar</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Final</span><span class="p">,</span>
+    <span class="n">Generator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">TypedDict</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1">#: Marker value used to avoid confusion with `None`</span>
+<span class="c1">#: (specially in contexts where `None` could be a valid value)</span>
+<span class="n">NOTHING</span> <span class="o">=</span> <span class="n">boltons</span><span class="o">.</span><span class="n">typeutils</span><span class="o">.</span><span class="n">make_sentinel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;NOTHING&quot;</span><span class="p">,</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;NOTHING&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="FieldKind"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FieldKind">[docs]</a><span class="k">class</span> <span class="nc">FieldKind</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+    <span class="n">INPUT</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span>
+    <span class="n">OUTPUT</span> <span class="o">=</span> <span class="s2">&quot;output&quot;</span>
+    <span class="n">SYMBOL</span> <span class="o">=</span> <span class="s2">&quot;symbol&quot;</span></div>
+
+
+<div class="viewcode-block" id="FieldConstraintsDict"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FieldConstraintsDict">[docs]</a><span class="k">class</span> <span class="nc">FieldConstraintsDict</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;VType&quot;</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="s2">&quot;VType&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="FieldMetadataDict"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FieldMetadataDict">[docs]</a><span class="k">class</span> <span class="nc">FieldMetadataDict</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">FieldKind</span>
+    <span class="n">constraints</span><span class="p">:</span> <span class="n">FieldConstraintsDict</span></div>
+
+
+<span class="n">NodeMetadataDict</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">FieldMetadataDict</span><span class="p">]</span>
+
+
+<span class="n">_EVE_METADATA_KEY</span> <span class="o">=</span> <span class="s2">&quot;_EVE_META_&quot;</span>
+
+
+<div class="viewcode-block" id="field"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.field">[docs]</a><span class="k">def</span> <span class="nf">field</span><span class="p">(</span>
+    <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">default_factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AnyNoArgCallable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FieldKind</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">constraints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FieldConstraintsDict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">schema_config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">FieldInfo</span><span class="p">:</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;kind&quot;</span><span class="p">,</span> <span class="s2">&quot;constraints&quot;</span><span class="p">]:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="n">schema_config</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="n">_EVE_METADATA_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span>
+
+    <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">NOTHING</span><span class="p">:</span>
+        <span class="n">field_info</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">default_factory</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">field_info</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="n">default_factory</span><span class="o">=</span><span class="n">default_factory</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">typing</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">FieldInfo</span><span class="p">,</span> <span class="n">field_info</span><span class="p">)</span></div>
+
+
+<span class="n">in_field</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">FieldKind</span><span class="o">.</span><span class="n">INPUT</span><span class="p">)</span>
+<span class="n">out_field</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">FieldKind</span><span class="o">.</span><span class="n">OUTPUT</span><span class="p">)</span>
+<span class="n">symbol_field</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">FieldKind</span><span class="o">.</span><span class="n">SYMBOL</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BaseModelConfig"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseModelConfig">[docs]</a><span class="k">class</span> <span class="nc">BaseModelConfig</span><span class="p">:</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;forbid&quot;</span></div>
+
+
+<div class="viewcode-block" id="FrozenModelConfig"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FrozenModelConfig">[docs]</a><span class="k">class</span> <span class="nc">FrozenModelConfig</span><span class="p">(</span><span class="n">BaseModelConfig</span><span class="p">):</span>
+    <span class="n">allow_mutation</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.Config"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.Model.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">BaseModelConfig</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="FrozenModel"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FrozenModel">[docs]</a><span class="k">class</span> <span class="nc">FrozenModel</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="FrozenModel.Config"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FrozenModel.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">FrozenModelConfig</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="Trait"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.Trait">[docs]</a><span class="k">class</span> <span class="nc">Trait</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="n">REGISTRY</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="s2">&quot;Trait&quot;</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="n">Trait</span><span class="o">.</span><span class="n">REGISTRY</span><span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
+
+<div class="viewcode-block" id="Trait.process_namespace"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.Trait.process_namespace">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">process_namespace</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">namespace</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">trait_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">meta_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="o">...</span></div>
+
+<div class="viewcode-block" id="Trait.process_class"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.Trait.process_class">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">process_class</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">node_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="s2">&quot;Node&quot;</span><span class="p">],</span> <span class="n">trait_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">meta_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="o">...</span></div></div>
+
+
+<span class="n">_EVE_NODE_IMPL_SUFFIX</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span>
+
+<span class="n">_EVE_NODE_ATTR_SUFFIX</span> <span class="o">=</span> <span class="s2">&quot;_attr_&quot;</span>
+
+
+<div class="viewcode-block" id="NodeMetaclass"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.NodeMetaclass">[docs]</a><span class="k">class</span> <span class="nc">NodeMetaclass</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">ModelMetaclass</span><span class="p">):</span>
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">no_type_check</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Apply traits to the namespace and the class</span>
+        <span class="n">trait_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Trait</span><span class="p">]]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;traits&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">traits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">trait_names</span><span class="p">:</span>
+            <span class="n">trait</span> <span class="o">=</span> <span class="n">Trait</span><span class="o">.</span><span class="n">REGISTRY</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">trait</span><span class="o">.</span><span class="n">process_namespace</span><span class="p">(</span><span class="n">namespace</span><span class="p">,</span> <span class="n">trait_names</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">traits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trait</span><span class="p">)</span>
+
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">trait</span> <span class="ow">in</span> <span class="n">traits</span><span class="p">:</span>
+            <span class="n">trait</span><span class="o">.</span><span class="n">process_class</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">trait_names</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Add custom class members</span>
+        <span class="n">fields_metadata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__fields__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_ATTR_SUFFIX</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">)):</span>
+                <span class="n">fields_metadata</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">field_info</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_EVE_METADATA_KEY</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__node_metadata__</span> <span class="o">=</span> <span class="n">fields_metadata</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__node_traits__</span> <span class="o">=</span> <span class="n">trait_names</span>
+
+        <span class="k">return</span> <span class="bp">cls</span></div>
+
+
+<span class="n">AnyNode</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;AnyNode&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s2">&quot;BaseNode&quot;</span><span class="p">)</span>
+<span class="n">ValueNode</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]</span>
+<span class="n">LeafNode</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">AnyNode</span><span class="p">,</span> <span class="n">ValueNode</span><span class="p">]</span>
+<span class="n">TreeNode</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">AnyNode</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">LeafNode</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">LeafNode</span><span class="p">],</span> <span class="n">Set</span><span class="p">[</span><span class="n">LeafNode</span><span class="p">]]]</span>
+
+
+<div class="viewcode-block" id="BaseNode"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode">[docs]</a><span class="k">class</span> <span class="nc">BaseNode</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">NodeMetaclass</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class representing an IR node.</span>
+
+<span class="sd">    Field values should be either:</span>
+
+<span class="sd">        * builtin types: `bool`, `bytes`, `int`, `float`, `str`</span>
+<span class="sd">        * other :class:`Node` subclasses</span>
+<span class="sd">        * other :class:`pydantic.BaseModel` subclasses</span>
+<span class="sd">        * supported collections (:class:`List`, :class:`Dict`, :class:`Set`)</span>
+<span class="sd">            of any of the previous items</span>
+
+<span class="sd">    Field names may not start with &quot;_&quot;. Field names ending with &quot;_&quot; are</span>
+<span class="sd">    considered implementation helpers and will not appear in the node iterators.</span>
+<span class="sd">    Field names ending with &quot;_attr_&quot; are considered meta-attributes of the node,</span>
+<span class="sd">    not children.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__node_metadata__</span><span class="p">:</span> <span class="n">NodeMetadataDict</span>
+
+    <span class="c1"># Node fields</span>
+    <span class="c1">#: Unique node-id (meta-attribute)</span>
+    <span class="n">id_attr_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@pydantic</span><span class="o">.</span><span class="n">validator</span><span class="p">(</span><span class="s2">&quot;id_attr_&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_id_attr_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">AnyNode</span><span class="p">],</span> <span class="n">v</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># type: ignore  # validators are classmethods</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">UIDGenerator</span><span class="o">.</span><span class="n">get_unique_id</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__qualname__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;id_attr_ is not an &#39;str&#39; instance (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span>
+
+<div class="viewcode-block" id="BaseNode.iter_attributes"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.iter_attributes">[docs]</a>    <span class="k">def</span> <span class="nf">iter_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_ATTR_SUFFIX</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseNode.iter_children"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.iter_children">[docs]</a>    <span class="k">def</span> <span class="nf">iter_children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_ATTR_SUFFIX</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">)):</span>
+                <span class="k">yield</span> <span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseNode.select"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.select">[docs]</a>    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FieldKind</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_ATTR_SUFFIX</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">kind</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__node_metadata__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kind&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="n">kind</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseNode.Config"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">BaseModelConfig</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">BaseNode</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="FrozenNode"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FrozenNode">[docs]</a><span class="k">class</span> <span class="nc">FrozenNode</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base inmutable node class.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FrozenNode.Config"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FrozenNode.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">FrozenModelConfig</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="VType"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.VType">[docs]</a><span class="k">class</span> <span class="nc">VType</span><span class="p">(</span><span class="n">FrozenModel</span><span class="p">):</span>
+
+    <span class="c1"># VType fields</span>
+    <span class="c1">#: Unique name</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceLocation"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.SourceLocation">[docs]</a><span class="k">class</span> <span class="nc">SourceLocation</span><span class="p">(</span><span class="n">FrozenModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Source code location (line, column, source).&quot;&quot;&quot;</span>
+
+    <span class="n">line</span><span class="p">:</span> <span class="n">PositiveInt</span>
+    <span class="n">column</span><span class="p">:</span> <span class="n">PositiveInt</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Str</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">line</span><span class="o">=</span><span class="n">line</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">column</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s2">: Line </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">line</span><span class="si">}</span><span class="s2">, Col </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
+
+
+<div class="viewcode-block" id="UIDGenerator"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.UIDGenerator">[docs]</a><span class="k">class</span> <span class="nc">UIDGenerator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Simple unique id generator using a counter.&quot;&quot;&quot;</span>
+
+    <span class="c1">#: Constantly increasing counter for generation of unique ids</span>
+    <span class="n">__counter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UIDGenerator.get_unique_id"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.UIDGenerator.get_unique_id">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_unique_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a new globally unique id (for the current session).&quot;&quot;&quot;</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">__counter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">prefix</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+<div class="viewcode-block" id="UIDGenerator.reset"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.UIDGenerator.reset">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reset global generator counter.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            If the new start value is lower than the last generated UID, new</span>
+<span class="sd">            IDs are not longer guaranteed to be unique.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="nb">next</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">__counter</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Unsafe reset of global UIDGenerator&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__counter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">start</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

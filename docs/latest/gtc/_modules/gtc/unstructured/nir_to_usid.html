@@ -1,0 +1,446 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.nir_to_usid &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.nir_to_usid</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.nir_to_usid</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+
+<span class="kn">from</span> <span class="nn">devtools</span> <span class="kn">import</span> <span class="n">debug</span>  <span class="c1"># noqa: F401</span>
+
+<span class="kn">import</span> <span class="nn">eve</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span> <span class="nn">gtc</span> <span class="kn">import</span> <span class="n">common</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured</span> <span class="kn">import</span> <span class="n">nir</span><span class="p">,</span> <span class="n">usid</span>
+
+
+<div class="viewcode-block" id="location_type_from_dimensions"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.location_type_from_dimensions">[docs]</a><span class="k">def</span> <span class="nf">location_type_from_dimensions</span><span class="p">(</span><span class="n">dimensions</span><span class="p">):</span>
+    <span class="n">location_type</span> <span class="o">=</span> <span class="p">[</span><span class="n">dim</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">dimensions</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">location_type</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">location_type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">location_type</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid!&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NirToUsid"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid">[docs]</a><span class="k">class</span> <span class="nc">NirToUsid</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">NodeTranslator</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">memo</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">memo</span><span class="o">=</span><span class="n">memo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># poor man symbol table</span>
+
+<div class="viewcode-block" id="NirToUsid.convert_dimensions"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.convert_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">convert_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dims</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">Dimensions</span><span class="p">):</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">dims</span><span class="o">.</span><span class="n">horizontal</span><span class="p">:</span>
+            <span class="n">horizontal</span> <span class="o">=</span> <span class="n">dims</span><span class="o">.</span><span class="n">horizontal</span>
+            <span class="n">dimensions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">horizontal</span><span class="o">.</span><span class="n">primary</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">horizontal</span><span class="o">.</span><span class="n">secondary</span><span class="p">:</span>
+                <span class="n">dimensions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">horizontal</span><span class="o">.</span><span class="n">secondary</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">dims</span><span class="o">.</span><span class="n">vertical</span><span class="p">:</span>
+            <span class="n">dimensions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">dims</span><span class="o">.</span><span class="n">vertical</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">dimensions</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_NeighborChain"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_NeighborChain">[docs]</a>    <span class="k">def</span> <span class="nf">visit_NeighborChain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="n">location</span> <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">elements</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_VerticalDimension"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_VerticalDimension">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VerticalDimension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalDimension</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">VerticalDimension</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_UField"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_UField">[docs]</a>    <span class="k">def</span> <span class="nf">visit_UField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">UField</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">UField</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">vtype</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">convert_dimensions</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_TemporaryField"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_TemporaryField">[docs]</a>    <span class="k">def</span> <span class="nf">visit_TemporaryField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">TemporaryField</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">Temporary</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">vtype</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">convert_dimensions</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_BinaryOp"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_BinaryOp">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BinaryOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">BinaryOp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">BinaryOp</span><span class="p">(</span>
+            <span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+            <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+            <span class="n">op</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_Literal"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_Literal">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">Literal</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">vtype</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_NeighborLoop"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_NeighborLoop">[docs]</a>    <span class="k">def</span> <span class="nf">visit_NeighborLoop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">NeighborLoop</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">NeighborLoop</span><span class="p">(</span>
+            <span class="n">outer_sid</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sids_tbl&quot;</span><span class="p">][</span><span class="n">usid</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">])]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">connectivity</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;conn_tbl&quot;</span><span class="p">][</span><span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">sid</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sids_tbl&quot;</span><span class="p">][</span><span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">neighbors</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sids_tbl&quot;</span><span class="p">]</span>
+            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
+            <span class="n">body_location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_FieldAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_FieldAccess">[docs]</a>    <span class="k">def</span> <span class="nf">visit_FieldAccess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">FieldAccess</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">FieldAccess</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">sid</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sids_tbl&quot;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">primary</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_VarAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_VarAccess">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VarAccess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">VarAccess</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">VarAccess</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_AssignStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_AssignStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_AssignStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">AssignStmt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">AssignStmt</span><span class="p">(</span>
+            <span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+            <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_BlockStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_BlockStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BlockStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">BlockStmt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">statements</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">decl</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">declarations</span><span class="p">:</span>
+            <span class="n">statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">usid</span><span class="o">.</span><span class="n">VarDecl</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">decl</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">init</span><span class="o">=</span><span class="n">usid</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span>
+                        <span class="n">value</span><span class="o">=</span><span class="s2">&quot;0.0&quot;</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="n">decl</span><span class="o">.</span><span class="n">vtype</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span>
+                    <span class="p">),</span>
+                    <span class="n">vtype</span><span class="o">=</span><span class="n">decl</span><span class="o">.</span><span class="n">vtype</span><span class="p">,</span>
+                    <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">stmt</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">statements</span><span class="p">:</span>
+            <span class="n">statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">statements</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_HorizontalLoop"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_HorizontalLoop">[docs]</a>    <span class="k">def</span> <span class="nf">visit_HorizontalLoop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">location_type_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">primary_connectivity</span> <span class="o">=</span> <span class="n">location_type_str</span> <span class="o">+</span> <span class="s2">&quot;_conn&quot;</span>
+        <span class="n">connectivities</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">connectivities</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">usid</span><span class="o">.</span><span class="n">Connectivity</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">primary_connectivity</span><span class="p">,</span> <span class="n">chain</span><span class="o">=</span><span class="n">usid</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">])</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">field_accesses</span> <span class="o">=</span> <span class="n">eve</span><span class="o">.</span><span class="n">FindNodes</span><span class="p">()</span><span class="o">.</span><span class="n">by_type</span><span class="p">(</span><span class="n">nir</span><span class="o">.</span><span class="n">FieldAccess</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">stmt</span><span class="p">)</span>
+
+        <span class="n">other_sids_entries</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">primary_sid_entries</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">acc</span> <span class="ow">in</span> <span class="n">field_accesses</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">acc</span><span class="o">.</span><span class="n">primary</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">acc</span><span class="o">.</span><span class="n">primary</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">location_type</span>
+                <span class="n">primary_sid_entries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">usid</span><span class="o">.</span><span class="n">SidCompositeEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">acc</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">acc</span><span class="o">.</span><span class="n">primary</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+                <span class="p">)</span>  <span class="c1"># TODO cannot deal with more than one level of nesting</span>
+                <span class="n">secondary_loc</span> <span class="o">=</span> <span class="n">acc</span><span class="o">.</span><span class="n">primary</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span>
+                    <span class="o">-</span><span class="mi">1</span>
+                <span class="p">]</span>  <span class="c1"># TODO change if we have more than one level of nesting</span>
+                <span class="k">if</span> <span class="n">secondary_loc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other_sids_entries</span><span class="p">:</span>
+                    <span class="n">other_sids_entries</span><span class="p">[</span><span class="n">secondary_loc</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">other_sids_entries</span><span class="p">[</span><span class="n">secondary_loc</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">usid</span><span class="o">.</span><span class="n">SidCompositeEntry</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">acc</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">neighloops</span> <span class="o">=</span> <span class="n">eve</span><span class="o">.</span><span class="n">FindNodes</span><span class="p">()</span><span class="o">.</span><span class="n">by_type</span><span class="p">(</span><span class="n">nir</span><span class="o">.</span><span class="n">NeighborLoop</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">stmt</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">neighloops</span><span class="p">:</span>
+            <span class="n">transformed_neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">loop</span><span class="o">.</span><span class="n">neighbors</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">connectivity_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">transformed_neighbors</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_conn&quot;</span>
+            <span class="n">connectivities</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">usid</span><span class="o">.</span><span class="n">Connectivity</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">connectivity_name</span><span class="p">,</span> <span class="n">chain</span><span class="o">=</span><span class="n">transformed_neighbors</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">primary_sid_entries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">usid</span><span class="o">.</span><span class="n">SidCompositeNeighborTableEntry</span><span class="p">(</span><span class="n">connectivity</span><span class="o">=</span><span class="n">connectivity_name</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">primary_sid</span> <span class="o">=</span> <span class="n">location_type_str</span>
+        <span class="n">sids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">usid</span><span class="o">.</span><span class="n">SidComposite</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">primary_sid</span><span class="p">,</span>
+                <span class="n">entries</span><span class="o">=</span><span class="n">primary_sid_entries</span><span class="p">,</span>
+                <span class="n">location</span><span class="o">=</span><span class="n">usid</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">]),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">other_sids_entries</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span> <span class="n">k</span><span class="p">])</span>
+            <span class="n">sids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">usid</span><span class="o">.</span><span class="n">SidComposite</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">chain</span><span class="p">),</span> <span class="n">entries</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">chain</span><span class="p">)</span>
+            <span class="p">)</span>  <span class="c1"># TODO _conn via property</span>
+
+        <span class="n">kernel_name</span> <span class="o">=</span> <span class="s2">&quot;kernel_&quot;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">id_attr_</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">Kernel</span><span class="p">(</span>
+            <span class="n">ast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">stmt</span><span class="p">,</span>
+                <span class="n">sids_tbl</span><span class="o">=</span><span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">location</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sids</span><span class="p">},</span>
+                <span class="n">conn_tbl</span><span class="o">=</span><span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">chain</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">connectivities</span><span class="p">},</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">kernel_name</span><span class="p">,</span>
+            <span class="n">primary_connectivity</span><span class="o">=</span><span class="n">primary_connectivity</span><span class="p">,</span>
+            <span class="n">primary_sid</span><span class="o">=</span><span class="n">primary_sid</span><span class="p">,</span>
+            <span class="n">connectivities</span><span class="o">=</span><span class="n">connectivities</span><span class="p">,</span>
+            <span class="n">sids</span><span class="o">=</span><span class="n">sids</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">usid</span><span class="o">.</span><span class="n">KernelCall</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">kernel_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_VerticalLoop"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_VerticalLoop">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VerticalLoop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># TODO I am completely ignoring k loops at this point!</span>
+        <span class="n">kernels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kernel_calls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">horizontal_loops</span><span class="p">:</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">kernels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="n">kernel_calls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kernels</span><span class="p">,</span> <span class="n">kernel_calls</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_Stencil"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_Stencil">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Stencil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">Stencil</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kernels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">kernel_calls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">vertical_loops</span><span class="p">:</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">kernels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="n">kernel_calls</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kernels</span><span class="p">,</span> <span class="n">kernel_calls</span></div>
+
+<div class="viewcode-block" id="NirToUsid.visit_Computation"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir_to_usid.NirToUsid.visit_Computation">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Computation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">Computation</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>  <span class="c1"># before visiting stencils!</span>
+            <span class="n">converted_param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">converted_param</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">converted_param</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">converted_param</span>
+
+        <span class="n">temporaries</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tmp</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">declarations</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">converted_tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+            <span class="n">temporaries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">converted_tmp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">converted_tmp</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">converted_tmp</span>
+
+        <span class="n">kernels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ctrlflow_ast</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">stencils</span><span class="p">:</span>
+            <span class="n">kernel</span><span class="p">,</span> <span class="n">kernel_call</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">kernels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+            <span class="n">ctrlflow_ast</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">kernel_call</span><span class="p">)</span>
+
+        <span class="n">debug</span><span class="p">(</span><span class="n">kernels</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">usid</span><span class="o">.</span><span class="n">Computation</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+            <span class="n">temporaries</span><span class="o">=</span><span class="n">temporaries</span><span class="p">,</span>
+            <span class="n">kernels</span><span class="o">=</span><span class="n">kernels</span><span class="p">,</span>
+            <span class="n">ctrlflow_ast</span><span class="o">=</span><span class="n">ctrlflow_ast</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

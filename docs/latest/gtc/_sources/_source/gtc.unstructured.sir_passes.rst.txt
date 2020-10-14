@@ -1,0 +1,21 @@
+gtc.unstructured.sir\_passes package
+====================================
+
+Submodules
+----------
+
+gtc.unstructured.sir\_passes.infer\_local\_variable\_location\_type module
+--------------------------------------------------------------------------
+
+.. automodule:: gtc.unstructured.sir_passes.infer_local_variable_location_type
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: gtc.unstructured.sir_passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,437 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gt_frontend.py_to_gtscript &mdash; gt_frontend 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> gt_frontend
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/fvm/fvm.html">Finite-Volume-Method on Median-Dual Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../language_reference.html">Language Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gt_frontend</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>gt_frontend.py_to_gtscript</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gt_frontend.py_to_gtscript</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="kn">import</span> <span class="nn">typing_inspect</span>
+
+<span class="kn">import</span> <span class="nn">gtc.common</span>
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">UIDGenerator</span><span class="p">,</span> <span class="n">type_definitions</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">ast_node_matcher</span> <span class="k">as</span> <span class="n">anm</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">gtscript_ast</span>
+<span class="kn">from</span> <span class="nn">.ast_node_matcher</span> <span class="kn">import</span> <span class="n">Capture</span>
+
+
+<div class="viewcode-block" id="PyToGTScript"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.py_to_gtscript.PyToGTScript">[docs]</a><span class="k">class</span> <span class="nc">PyToGTScript</span><span class="p">:</span>
+<div class="viewcode-block" id="PyToGTScript._all_subclasses"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.py_to_gtscript.PyToGTScript._all_subclasses">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_all_subclasses</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return all subclasses of a given type.</span>
+
+<span class="sd">        The type must be one of</span>
+
+<span class="sd">         - :class:`GTScriptAstNode` (returns all subclasses of the given class)</span>
+<span class="sd">         - :class:`Union` (return the subclasses of the united)</span>
+<span class="sd">         - :class:`ForwardRef` (resolve the reference given the specified module and return its subclasses)</span>
+<span class="sd">         - built-in python type: :class:`str`, :class:`int`, `type(None)` (return as is)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">gtscript_ast</span><span class="o">.</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">typ</span><span class="p">,</span>
+                <span class="o">*</span><span class="n">typ</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">(),</span>
+                <span class="o">*</span><span class="p">[</span>
+                    <span class="n">s</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">typ</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">PyToGTScript</span><span class="o">.</span><span class="n">_all_subclasses</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isabstract</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="p">],</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">elif</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span> <span class="ow">and</span> <span class="n">typ</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="n">gtc</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">AssignmentKind</span><span class="p">,</span>
+            <span class="n">gtc</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">UnaryOperator</span><span class="p">,</span>
+            <span class="n">gtc</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="c1"># note: other types in gtc.common, e.g. gtc.common.DataType are not valid leaf nodes here as they</span>
+            <span class="c1">#  map to symbols in the gtscript ast and are resolved there</span>
+            <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">typ</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="n">typing_inspect</span><span class="o">.</span><span class="n">is_union_type</span><span class="p">(</span><span class="n">typ</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="n">sub_cls</span>
+                <span class="k">for</span> <span class="n">el_cls</span> <span class="ow">in</span> <span class="n">typing_inspect</span><span class="o">.</span><span class="n">get_args</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">sub_cls</span> <span class="ow">in</span> <span class="n">PyToGTScript</span><span class="o">.</span><span class="n">_all_subclasses</span><span class="p">(</span><span class="n">el_cls</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">ForwardRef</span><span class="p">):</span>
+            <span class="n">type_name</span> <span class="o">=</span> <span class="n">typing_inspect</span><span class="o">.</span><span class="n">get_forward_arg</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">type_name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Reference to type `</span><span class="si">{</span><span class="n">type_name</span><span class="si">}</span><span class="s2">` in `ForwardRef` not found in module </span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">PyToGTScript</span><span class="o">.</span><span class="n">_all_subclasses</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">type_name</span><span class="p">),</span> <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">typ</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="n">type_definitions</span><span class="o">.</span><span class="n">StrictStr</span><span class="p">,</span>
+            <span class="n">type_definitions</span><span class="o">.</span><span class="n">StrictInt</span><span class="p">,</span>
+            <span class="n">type_definitions</span><span class="o">.</span><span class="n">StrictFloat</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">,</span>
+            <span class="nb">float</span><span class="p">,</span>
+            <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+        <span class="p">]:</span>  <span class="c1"># TODO(tehrengruber): enhance</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">typ</span><span class="p">}</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid field type </span><span class="si">{</span><span class="n">typ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PyToGTScript.Patterns"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.py_to_gtscript.PyToGTScript.Patterns">[docs]</a>    <span class="k">class</span> <span class="nc">Patterns</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stores the pattern nodes / templates to be used extracting information from the Python ast.</span>
+
+<span class="sd">        Patterns are a 1-to-1 mapping from context and Python ast node to GTScript ast node. Context is encoded in the</span>
+<span class="sd">        field types and all understood sementic is encoded in the structure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Symbol</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">))</span>
+
+        <span class="n">IterationOrder</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">withitem</span><span class="p">(</span>
+            <span class="n">context_expr</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">(</span>
+                <span class="n">func</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;computation&quot;</span><span class="p">),</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">))]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">Constant</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">))</span>
+
+        <span class="n">Interval</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">withitem</span><span class="p">(</span>
+            <span class="n">context_expr</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">(</span>
+                <span class="n">func</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;interval&quot;</span><span class="p">),</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">),</span> <span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;stop&quot;</span><span class="p">)]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># TODO(tehrengruber): this needs to be a function, since the uid must be generated each time</span>
+        <span class="n">LocationSpecification</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">withitem</span><span class="p">(</span>
+            <span class="n">context_expr</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">(</span>
+                <span class="n">func</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s2">&quot;location&quot;</span><span class="p">),</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;location_type&quot;</span><span class="p">))]</span>
+            <span class="p">),</span>
+            <span class="n">optional_vars</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">UIDGenerator</span><span class="o">.</span><span class="n">get_unique_id</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;location&quot;</span><span class="p">))</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">SubscriptSingle</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Subscript</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">),</span> <span class="nb">slice</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">)))</span>
+        <span class="p">)</span>
+
+        <span class="n">SubscriptMultiple</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Subscript</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">),</span> <span class="nb">slice</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Tuple</span><span class="p">(</span><span class="n">elts</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;indices&quot;</span><span class="p">)))</span>
+        <span class="p">)</span>
+
+        <span class="n">BinaryOp</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;op&quot;</span><span class="p">),</span> <span class="n">left</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">),</span> <span class="n">right</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">))</span>
+
+        <span class="n">Call</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">),</span> <span class="n">func</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;func&quot;</span><span class="p">)))</span>
+
+        <span class="n">LocationComprehension</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">comprehension</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">),</span> <span class="nb">iter</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;iterator&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">Generator</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">GeneratorExp</span><span class="p">(</span><span class="n">generators</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;generators&quot;</span><span class="p">),</span> <span class="n">elt</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;elt&quot;</span><span class="p">))</span>
+
+        <span class="n">Assign</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">))</span>
+
+        <span class="n">Stencil</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">With</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;iteration_spec&quot;</span><span class="p">),</span> <span class="n">body</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">))</span>
+
+        <span class="n">Pass</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Pass</span><span class="p">()</span>
+
+        <span class="n">Argument</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">arg</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span> <span class="n">annotation</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;type_&quot;</span><span class="p">))</span>
+
+        <span class="n">Computation</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">FunctionDef</span><span class="p">(</span>
+            <span class="n">args</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">arguments</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;arguments&quot;</span><span class="p">)),</span>
+            <span class="n">body</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;stencils&quot;</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">Capture</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+    <span class="n">leaf_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Mult</span><span class="p">:</span> <span class="n">gtc</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="o">.</span><span class="n">MUL</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span> <span class="n">gtc</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Div</span><span class="p">:</span> <span class="n">gtc</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="o">.</span><span class="n">DIV</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Pass</span><span class="p">:</span> <span class="n">gtscript_ast</span><span class="o">.</span><span class="n">Pass</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># todo(tehrengruber): enhance docstring describing the algorithm</span>
+<div class="viewcode-block" id="PyToGTScript.transform"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.py_to_gtscript.PyToGTScript.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">eligible_node_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform python ast into GTScript ast recursively.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">eligible_node_types</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">eligible_node_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">gtscript_ast</span><span class="o">.</span><span class="n">Computation</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">):</span>
+            <span class="n">is_leaf_node</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">iter_fields</span><span class="p">(</span><span class="n">node</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">is_leaf_node</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">leaf_map</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Leaf node of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s2">, found in the python ast, can not be mapped.&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">leaf_map</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># visit node fields and transform</span>
+                <span class="c1"># TODO(tehrengruber): check if multiple nodes match and throw an error in that case</span>
+                <span class="c1"># disadvantage: templates can be ambiguous</span>
+                <span class="k">for</span> <span class="n">node_type</span> <span class="ow">in</span> <span class="n">eligible_node_types</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Patterns</span><span class="p">,</span> <span class="n">node_type</span><span class="o">.</span><span class="vm">__name__</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="n">captures</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">anm</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+                        <span class="n">node</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Patterns</span><span class="p">,</span> <span class="n">node_type</span><span class="o">.</span><span class="vm">__name__</span><span class="p">),</span> <span class="n">captures</span><span class="o">=</span><span class="n">captures</span>
+                    <span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="n">module</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">node_type</span><span class="o">.</span><span class="vm">__module__</span><span class="p">]</span>
+                    <span class="n">transformed_captures</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">capture</span> <span class="ow">in</span> <span class="n">captures</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">assert</span> <span class="p">(</span>
+                            <span class="n">name</span> <span class="ow">in</span> <span class="n">node_type</span><span class="o">.</span><span class="vm">__annotations__</span>
+                        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Invalid capture. No field named `</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">` in `</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">node_type</span><span class="p">)</span><span class="si">}</span><span class="s2">`&quot;</span>
+                        <span class="n">field_type</span> <span class="o">=</span> <span class="n">node_type</span><span class="o">.</span><span class="vm">__annotations__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">typing_inspect</span><span class="o">.</span><span class="n">get_origin</span><span class="p">(</span><span class="n">field_type</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+                            <span class="c1"># determine eligible capture types</span>
+                            <span class="n">el_type</span> <span class="o">=</span> <span class="n">typing_inspect</span><span class="o">.</span><span class="n">get_args</span><span class="p">(</span><span class="n">field_type</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">eligible_capture_types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_subclasses</span><span class="p">(</span><span class="n">el_type</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
+
+                            <span class="c1"># transform captures recursively</span>
+                            <span class="n">transformed_captures</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                            <span class="k">for</span> <span class="n">child_capture</span> <span class="ow">in</span> <span class="n">capture</span><span class="p">:</span>
+                                <span class="n">transformed_captures</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">child_capture</span><span class="p">,</span> <span class="n">eligible_capture_types</span><span class="p">)</span>
+                                <span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># determine eligible capture types</span>
+                            <span class="n">eligible_capture_types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_subclasses</span><span class="p">(</span><span class="n">field_type</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
+                            <span class="c1"># transform captures recursively</span>
+                            <span class="n">transformed_captures</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+                                <span class="n">capture</span><span class="p">,</span> <span class="n">eligible_capture_types</span>
+                            <span class="p">)</span>
+                    <span class="k">return</span> <span class="n">node_type</span><span class="p">(</span><span class="o">**</span><span class="n">transformed_captures</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Expected a node of type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">ent</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">eligible_node_types</span><span class="p">])</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">in</span> <span class="n">eligible_node_types</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected a node of type </span><span class="si">{}</span><span class="s2">, but got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="p">{</span><span class="o">*</span><span class="n">eligible_node_types</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">},</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

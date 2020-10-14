@@ -1,0 +1,474 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.usid &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.usid</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.usid</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">devtools</span> <span class="kn">import</span> <span class="n">debug</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">validator</span>
+
+<span class="kn">import</span> <span class="nn">eve</span>
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Str</span>
+<span class="kn">from</span> <span class="nn">gtc</span> <span class="kn">import</span> <span class="n">common</span>
+
+
+<div class="viewcode-block" id="Expr"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Expr">[docs]</a><span class="k">class</span> <span class="nc">Expr</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">location_type</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span></div>
+
+
+<div class="viewcode-block" id="Stmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Stmt">[docs]</a><span class="k">class</span> <span class="nc">Stmt</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">location_type</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span></div>
+
+
+<div class="viewcode-block" id="NeighborChain"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.NeighborChain">[docs]</a><span class="k">class</span> <span class="nc">NeighborChain</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+<div class="viewcode-block" id="NeighborChain.Config"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.NeighborChain.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">concepts</span><span class="o">.</span><span class="n">FrozenModelConfig</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># TODO see https://github.com/eth-cscs/eve_toolchain/issues/40</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">elements</span>
+
+<div class="viewcode-block" id="NeighborChain.not_empty"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.NeighborChain.not_empty">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;elements&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">not_empty</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">elements</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NeighborChain must contain at least one locations&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">elements</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="FieldAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.FieldAccess">[docs]</a><span class="k">class</span> <span class="nc">FieldAccess</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref to SidCompositeEntry</span>
+    <span class="n">sid</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref</span></div>
+
+
+<div class="viewcode-block" id="VarDecl"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.VarDecl">[docs]</a><span class="k">class</span> <span class="nc">VarDecl</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">init</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span></div>
+
+
+<div class="viewcode-block" id="Literal"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Literal">[docs]</a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">BuiltInLiteral</span><span class="p">,</span> <span class="n">Str</span><span class="p">]</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span></div>
+
+
+<div class="viewcode-block" id="VarAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.VarAccess">[docs]</a><span class="k">class</span> <span class="nc">VarAccess</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># via symbol table</span>
+    <span class="n">dummy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+        <span class="n">Str</span>
+    <span class="p">]</span>  <span class="c1"># to distinguish from FieldAccess, see https://github.com/eth-cscs/eve_toolchain/issues/34</span></div>
+
+
+<div class="viewcode-block" id="AssignStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.AssignStmt">[docs]</a><span class="k">class</span> <span class="nc">AssignStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">FieldAccess</span><span class="p">,</span> <span class="n">VarAccess</span><span class="p">]</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span>
+
+<div class="viewcode-block" id="AssignStmt.check_location_type"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.AssignStmt.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;location_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+        <span class="k">elif</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">==</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+
+        <span class="k">return</span> <span class="n">values</span></div></div>
+
+
+<div class="viewcode-block" id="BinaryOp"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.BinaryOp">[docs]</a><span class="k">class</span> <span class="nc">BinaryOp</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">op</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span>
+
+<div class="viewcode-block" id="BinaryOp.check_location_type"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.BinaryOp.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;location_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+        <span class="k">elif</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">==</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+
+        <span class="k">return</span> <span class="n">values</span></div></div>
+
+
+<div class="viewcode-block" id="Connectivity"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Connectivity">[docs]</a><span class="k">class</span> <span class="nc">Connectivity</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol name</span>
+    <span class="n">chain</span><span class="p">:</span> <span class="n">NeighborChain</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">neighbor_tbl_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_neighbor_tbl_tag&quot;</span>
+
+<div class="viewcode-block" id="Connectivity.Config"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Connectivity.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">concepts</span><span class="o">.</span><span class="n">FrozenModelConfig</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># TODO see https://github.com/eth-cscs/eve_toolchain/issues/40</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chain</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">chain</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">chain</span></div>
+
+
+<div class="viewcode-block" id="SidCompositeEntry"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.SidCompositeEntry">[docs]</a><span class="k">class</span> <span class="nc">SidCompositeEntry</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol decl (TODO ensure field exists via symbol table)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tag_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_tag&quot;</span>
+
+<div class="viewcode-block" id="SidCompositeEntry.Config"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.SidCompositeEntry.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">concepts</span><span class="o">.</span><span class="n">FrozenModelConfig</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># TODO see https://github.com/eth-cscs/eve_toolchain/issues/40</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="SidCompositeNeighborTableEntry"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.SidCompositeNeighborTableEntry">[docs]</a><span class="k">class</span> <span class="nc">SidCompositeNeighborTableEntry</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">connectivity</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">connectivity_deref_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+        <span class="n">Connectivity</span>
+    <span class="p">]</span>  <span class="c1"># TODO temporary workaround for symbol tbl reference</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tag_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectivity_deref_</span><span class="o">.</span><span class="n">neighbor_tbl_tag</span>
+
+<div class="viewcode-block" id="SidCompositeNeighborTableEntry.Config"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.SidCompositeNeighborTableEntry.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">concepts</span><span class="o">.</span><span class="n">FrozenModelConfig</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># TODO see https://github.com/eth-cscs/eve_toolchain/issues/40</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connectivity</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectivity</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">connectivity</span></div>
+
+
+<div class="viewcode-block" id="SidComposite"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.SidComposite">[docs]</a><span class="k">class</span> <span class="nc">SidComposite</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol</span>
+    <span class="n">location</span><span class="p">:</span> <span class="n">NeighborChain</span>
+    <span class="n">entries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span>
+        <span class="n">Union</span><span class="p">[</span><span class="n">SidCompositeEntry</span><span class="p">,</span> <span class="n">SidCompositeNeighborTableEntry</span><span class="p">]</span>
+    <span class="p">]</span>  <span class="c1"># TODO ensure tags are unique</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">with_connectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">SidCompositeNeighborTableEntry</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># node private symbol table to entries</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbol_tbl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">SidCompositeEntry</span><span class="p">)}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">field_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_fields&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ptr_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_ptrs&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">origin_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_origins&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">strides_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_strides&quot;</span>
+
+<div class="viewcode-block" id="SidComposite.not_empty"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.SidComposite.not_empty">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s2">&quot;entries&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">not_empty</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">entries</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SidComposite must contain at least one entry&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">entries</span></div></div>
+
+
+<div class="viewcode-block" id="NeighborLoop"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.NeighborLoop">[docs]</a><span class="k">class</span> <span class="nc">NeighborLoop</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">body_location_type</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stmt</span><span class="p">]</span>
+    <span class="n">connectivity</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref to Connectivity</span>
+    <span class="n">outer_sid</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref to SidComposite where the neighbor tables lives (and sparse fields)</span>
+    <span class="n">sid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+        <span class="n">Str</span>
+    <span class="p">]</span>  <span class="c1"># symbol ref to SidComposite where the fields of the loop body live (None if only sparse fields are accessed)</span></div>
+
+
+<div class="viewcode-block" id="Kernel"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Kernel">[docs]</a><span class="k">class</span> <span class="nc">Kernel</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="c1"># location_type: common.LocationType</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol decl table</span>
+    <span class="n">connectivities</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Connectivity</span><span class="p">]</span>
+    <span class="n">sids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SidComposite</span><span class="p">]</span>
+
+    <span class="n">primary_connectivity</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref to the above</span>
+    <span class="n">primary_sid</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref to the above</span>
+    <span class="n">ast</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stmt</span><span class="p">]</span>
+
+    <span class="c1"># private symbol table</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbol_tbl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sids</span><span class="p">},</span> <span class="o">**</span><span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectivities</span><span class="p">}}</span></div>
+
+
+<div class="viewcode-block" id="KernelCall"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.KernelCall">[docs]</a><span class="k">class</span> <span class="nc">KernelCall</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref</span></div>
+
+
+<div class="viewcode-block" id="VerticalDimension"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.VerticalDimension">[docs]</a><span class="k">class</span> <span class="nc">VerticalDimension</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="UField"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.UField">[docs]</a><span class="k">class</span> <span class="nc">UField</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span>
+    <span class="n">dimensions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">,</span> <span class="n">NeighborChain</span><span class="p">,</span> <span class="n">VerticalDimension</span><span class="p">]]</span>  <span class="c1"># Set?</span></div>
+
+
+<div class="viewcode-block" id="Temporary"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Temporary">[docs]</a><span class="k">class</span> <span class="nc">Temporary</span><span class="p">(</span><span class="n">UField</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Computation"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Computation">[docs]</a><span class="k">class</span> <span class="nc">Computation</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UField</span><span class="p">]</span>
+    <span class="n">temporaries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Temporary</span><span class="p">]</span>
+    <span class="n">kernels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Kernel</span><span class="p">]</span>
+    <span class="n">ctrlflow_ast</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">KernelCall</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

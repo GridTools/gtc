@@ -1,0 +1,29 @@
+gtc.unstructured.nir\_passes package
+====================================
+
+Submodules
+----------
+
+gtc.unstructured.nir\_passes.field\_dependency\_graph module
+------------------------------------------------------------
+
+.. automodule:: gtc.unstructured.nir_passes.field_dependency_graph
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.nir\_passes.merge\_horizontal\_loops module
+------------------------------------------------------------
+
+.. automodule:: gtc.unstructured.nir_passes.merge_horizontal_loops
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: gtc.unstructured.nir_passes
+   :members:
+   :undoc-members:
+   :show-inheritance:

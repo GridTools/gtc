@@ -1,0 +1,775 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>eve.codegen &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>eve.codegen</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for eve.codegen</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+<span class="sd">&quot;&quot;&quot;Tools for source code generation.&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">collections.abc</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">PIPE</span><span class="p">,</span> <span class="n">Popen</span>
+
+<span class="kn">import</span> <span class="nn">black</span>
+<span class="kn">import</span> <span class="nn">jinja2</span>
+<span class="kn">from</span> <span class="nn">mako</span> <span class="kn">import</span> <span class="n">template</span> <span class="k">as</span> <span class="n">mako_tpl</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">typing</span><span class="p">,</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.concepts</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">TreeNode</span>
+<span class="kn">from</span> <span class="nn">.typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">ClassVar</span><span class="p">,</span>
+    <span class="n">Collection</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.visitors</span> <span class="kn">import</span> <span class="n">NodeVisitor</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">clang_format</span>
+
+    <span class="n">_CLANG_FORMAT_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">del</span> <span class="n">clang_format</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">_CLANG_FORMAT_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="n">SourceFormatter</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>
+
+<span class="c1">#: Global dict storing registered formatters</span>
+<span class="n">SOURCE_FORMATTERS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SourceFormatter</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">register_formatter</span><span class="p">(</span><span class="n">language</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SourceFormatter</span><span class="p">],</span> <span class="n">SourceFormatter</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Decorator to register source code formatters for specific languages.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_decorator</span><span class="p">(</span><span class="n">formatter</span><span class="p">:</span> <span class="n">SourceFormatter</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceFormatter</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">SOURCE_FORMATTERS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Another formatter for language &#39;</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&#39; already exists&quot;</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+        <span class="n">SOURCE_FORMATTERS</span><span class="p">[</span><span class="n">language</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatter</span>
+
+        <span class="k">return</span> <span class="n">formatter</span>
+
+    <span class="k">return</span> <span class="n">_decorator</span>
+
+
+<span class="nd">@register_formatter</span><span class="p">(</span><span class="s2">&quot;python&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">format_python_source</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">line_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">target_versions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">string_normalization</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Format Python source code using black formatter.&quot;&quot;&quot;</span>
+
+    <span class="n">target_versions</span> <span class="o">=</span> <span class="n">target_versions</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span><span class="si">}{</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">target_versions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">black</span><span class="o">.</span><span class="n">TargetVersion</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;PY</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">target_versions</span><span class="p">)</span>
+
+    <span class="n">formatted_source</span> <span class="o">=</span> <span class="n">black</span><span class="o">.</span><span class="n">format_str</span><span class="p">(</span>
+        <span class="n">source</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="n">black</span><span class="o">.</span><span class="n">FileMode</span><span class="p">(</span>
+            <span class="n">line_length</span><span class="o">=</span><span class="n">line_length</span><span class="p">,</span>
+            <span class="n">target_versions</span><span class="o">=</span><span class="n">target_versions</span><span class="p">,</span>
+            <span class="n">string_normalization</span><span class="o">=</span><span class="n">string_normalization</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">formatted_source</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">formatted_source</span>
+
+
+<span class="k">if</span> <span class="n">_CLANG_FORMAT_AVAILABLE</span><span class="p">:</span>
+
+    <span class="nd">@register_formatter</span><span class="p">(</span><span class="s2">&quot;cpp&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">format_cpp_source</span><span class="p">(</span>
+        <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fallback_style</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sort_includes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Format C++ source code using clang-format.&quot;&quot;&quot;</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;clang-format&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">style</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--style=</span><span class="si">{</span><span class="n">style</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fallback_style</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--fallback-style=</span><span class="si">{</span><span class="n">style</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sort_includes</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--sort-includes&quot;</span><span class="p">)</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span>
+        <span class="n">formatted_source</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">formatted_source</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">formatted_source</span>
+
+
+<span class="k">def</span> <span class="nf">format_source</span><span class="p">(</span><span class="n">language</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">skip_errors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Format source code if a formatter exists for the specific language.&quot;&quot;&quot;</span>
+
+    <span class="n">formatter</span> <span class="o">=</span> <span class="n">SOURCE_FORMATTERS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">formatter</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">formatter</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># type: ignore # Callable does not support **kwargs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing formatter for &#39;</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&#39; language&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">skip_errors</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">source</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Something went wrong when trying to format &#39;</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&#39; source code&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+
+<span class="k">class</span> <span class="nc">Name</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Text formatter with different case styles for symbol names in source code.&quot;&quot;&quot;</span>
+
+    <span class="n">words</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">case_style</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">CaseStyleConverter</span><span class="o">.</span><span class="n">CASE_STYLE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Name&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">CaseStyleConverter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">case_style</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">words</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">AnyWordsIterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="n">words</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Identifier definition (&#39;</span><span class="si">{</span><span class="n">words</span><span class="si">}</span><span class="s2">&#39;) type is not a valid sequence of words&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">words</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">words</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Identifier definition (&#39;</span><span class="si">{</span><span class="n">words</span><span class="si">}</span><span class="s2">&#39;) type is not a valid sequence of words&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">words</span> <span class="o">=</span> <span class="n">words</span>
+
+    <span class="k">def</span> <span class="nf">as_case</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">case_style</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">CaseStyleConverter</span><span class="o">.</span><span class="n">CASE_STYLE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">CaseStyleConverter</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">words</span><span class="p">,</span> <span class="n">case_style</span><span class="p">)</span>
+
+
+<span class="n">AnyTextSequence</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="s2">&quot;TextBlock&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">TextBlock</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A block of source code represented as a sequence of text lines.</span>
+
+<span class="sd">    Check the provided context manager creator method (:meth:`indented`)</span>
+<span class="sd">    for simple `indent - append - dedent` workflows.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        indent_level: Initial indentation level.</span>
+<span class="sd">        indent_size: Number of characters per indentation level.</span>
+<span class="sd">        indent_char: Character used in the indentation.</span>
+<span class="sd">        end_line: Character or string used as new-line separator.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">indent_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">indent_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="n">indent_char</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span>
+        <span class="n">end_line</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indent_char</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">indent_char</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;indent_char&#39; must be a single-character string&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end_line</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;end_line&#39; must be a string&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent_level</span> <span class="o">=</span> <span class="n">indent_level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent_size</span> <span class="o">=</span> <span class="n">indent_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent_char</span> <span class="o">=</span> <span class="n">indent_char</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_line</span> <span class="o">=</span> <span class="n">end_line</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_line</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">update_indent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TextBlock&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">update_indent</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">update_indent</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">update_indent</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="o">-</span><span class="n">update_indent</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indent_str</span> <span class="o">+</span> <span class="n">new_line</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_lines</span><span class="p">:</span> <span class="n">AnyTextSequence</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">dedent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TextBlock&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_lines</span><span class="p">,</span> <span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">TextBlock</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">dedent</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_lines</span><span class="p">,</span> <span class="n">TextBlock</span><span class="p">):</span>
+                <span class="n">new_lines</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="n">new_lines</span><span class="o">.</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_lines</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_lines</span><span class="p">))</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_lines</span><span class="p">,</span> <span class="n">TextBlock</span><span class="p">):</span>
+            <span class="n">new_lines</span> <span class="o">=</span> <span class="n">new_lines</span><span class="o">.</span><span class="n">lines</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">new_lines</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">empty_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TextBlock&quot;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">count</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">indent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TextBlock&quot;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent_level</span> <span class="o">+=</span> <span class="n">steps</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">dedent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TextBlock&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent_level</span> <span class="o">&gt;=</span> <span class="n">steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent_level</span> <span class="o">-=</span> <span class="n">steps</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+    <span class="k">def</span> <span class="nf">indented</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="s2">&quot;TextBlock&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Context manager creator for temporary indentation of sources.</span>
+
+<span class="sd">        This context manager simplifies the usage of indent/dedent in</span>
+<span class="sd">        common `indent - append - dedent` workflows.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; block = TextBlock();</span>
+<span class="sd">            &gt;&gt;&gt; block.append(&#39;first line&#39;)  # doctest: +ELLIPSIS</span>
+<span class="sd">            &lt;...&gt;</span>
+<span class="sd">            &gt;&gt;&gt; with block.indented():</span>
+<span class="sd">            ...     block.append(&#39;second line&#39;);  # doctest: +ELLIPSIS</span>
+<span class="sd">            &lt;...&gt;</span>
+<span class="sd">            &gt;&gt;&gt; block.append(&#39;third line&#39;)  # doctest: +ELLIPSIS</span>
+<span class="sd">            &lt;...&gt;</span>
+<span class="sd">            &gt;&gt;&gt; print(block.text)</span>
+<span class="sd">            first line</span>
+<span class="sd">                second line</span>
+<span class="sd">            third line</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="bp">self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Single string with the whole block contents.&quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">line</span><span class="p">])</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_line</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">indent_str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Indentation string for new lines (in the current state).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent_char</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indent_level</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_line</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AnyTextSequence</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;TextBlock&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_line</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_line</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">source_line</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span>
+
+
+<span class="n">TemplateT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TemplateT&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s2">&quot;Template&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Template</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class defining the Template interface.</span>
+
+<span class="sd">    Subclassess adapting this interface to different template engines will</span>
+<span class="sd">    only need to implement the abstract methods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">TemplateT</span><span class="p">],</span> <span class="n">file_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Template&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="n">Template</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This method can only be called in concrete Template subclasses&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">definition</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">definition</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Render the template.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mapping: A mapping whose keys match the template placeholders.</span>
+<span class="sd">            **kwargs: placeholder values might be also provided as</span>
+<span class="sd">                keyword arguments, and they will take precedence over ``mapping``</span>
+<span class="sd">                values for duplicated keys.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mapping</span><span class="p">:</span>
+            <span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">mapping</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span><span class="o">**</span><span class="n">mapping</span><span class="p">)</span>
+
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">definition</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">render_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">FormatTemplate</span><span class="p">(</span><span class="n">Template</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Template adapter for :class:`StringFormatter`.&quot;&quot;&quot;</span>
+
+    <span class="n">definition</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="n">_formatter_</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">string</span><span class="o">.</span><span class="n">Formatter</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">XStringFormatter</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">definition</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">definition</span>
+
+    <span class="k">def</span> <span class="nf">render_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_formatter_</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">StringTemplate</span><span class="p">(</span><span class="n">Template</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Template adapter for `string.Template`.&quot;&quot;&quot;</span>
+
+    <span class="n">definition</span><span class="p">:</span> <span class="n">string</span><span class="o">.</span><span class="n">Template</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">definition</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">string</span><span class="o">.</span><span class="n">Template</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">definition</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">definition</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">definition</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">definition</span><span class="p">,</span> <span class="n">string</span><span class="o">.</span><span class="n">Template</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">definition</span>
+
+    <span class="k">def</span> <span class="nf">render_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">JinjaTemplate</span><span class="p">(</span><span class="n">Template</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Template adapter for `jinja2.Template`.&quot;&quot;&quot;</span>
+
+    <span class="n">definition</span><span class="p">:</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">definition</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">definition</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">definition</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">definition</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">definition</span><span class="p">,</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">definition</span>
+
+    <span class="k">def</span> <span class="nf">render_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MakoTemplate</span><span class="p">(</span><span class="n">Template</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Template adapter for `mako.template.Template`.&quot;&quot;&quot;</span>
+
+    <span class="n">definition</span><span class="p">:</span> <span class="n">mako_tpl</span><span class="o">.</span><span class="n">Template</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">definition</span><span class="p">:</span> <span class="n">mako_tpl</span><span class="o">.</span><span class="n">Template</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">definition</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">definition</span> <span class="o">=</span> <span class="n">mako_tpl</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">definition</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">definition</span><span class="p">,</span> <span class="n">mako_tpl</span><span class="o">.</span><span class="n">Template</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">definition</span>
+
+    <span class="k">def</span> <span class="nf">render_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">class</span> <span class="nc">TemplatedGenerator</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A code generator visitor using :class:`TextTemplate` s.</span>
+
+<span class="sd">    The order followed to choose a `dump()` function for instances of</span>
+<span class="sd">    :class:`eve.Node` is the following:</span>
+
+<span class="sd">        1. A `self.visit_NODE_TYPE_NAME()` method where `NODE_TYPE_NAME`</span>
+<span class="sd">            matches `NODE_CLASS.__name__`, and `NODE_CLASS` is the</span>
+<span class="sd">            actual type of the node or any of its superclasses</span>
+<span class="sd">            following MRO order.</span>
+<span class="sd">        2. A `NODE_TYPE_NAME` class variable of type :class:`Template`,</span>
+<span class="sd">            where `NODE_TYPE_NAME` matches `NODE_CLASS.__name__`, and</span>
+<span class="sd">            `NODE_CLASS` is the actual type of the node or any of its</span>
+<span class="sd">            superclasses following MRO order.</span>
+
+<span class="sd">    When a template is used, the following keys will be passed to the template</span>
+<span class="sd">    instance:</span>
+
+<span class="sd">        * `**node_fields`: all the node children and attributes by name.</span>
+<span class="sd">        * `_attrs`: a `dict` instance with the results of visiting all</span>
+<span class="sd">            the node attributes.</span>
+<span class="sd">        * `_children`: a `dict` instance with the results of visiting all</span>
+<span class="sd">            the node children.</span>
+<span class="sd">        * `_this_node`: the actual node instance (before visiting children).</span>
+<span class="sd">        * `_this_generator`: the current generator instance.</span>
+<span class="sd">        * `_this_module`: the generator&#39;s module instance .</span>
+<span class="sd">        * `**kwargs`: the keyword arguments received by the visiting method.</span>
+
+<span class="sd">    Class variable templates cannot be used for instances of other types</span>
+<span class="sd">    (not :class:`eve.Node` subclasses). Step 2 will be therefore substituted</span>
+<span class="sd">    by a call to the :meth:`self.generic_dump()` method.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_templates_</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Template</span><span class="p">]]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">inherit_templates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># mypy has troubles with __init_subclass__: https://github.com/python/mypy/issues/4660</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="s2">&quot;_templates_&quot;</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid &#39;_templates_&#39; member in class </span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">templates</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Template</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">inherit_templates</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">templated_gen_class</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">issubclass</span><span class="p">(</span><span class="n">templated_gen_class</span><span class="p">,</span> <span class="n">TemplatedGenerator</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">templated_gen_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">TemplatedGenerator</span>
+                <span class="p">):</span>
+                    <span class="n">templates</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">templated_gen_class</span><span class="o">.</span><span class="n">_templates_</span><span class="p">)</span>
+
+        <span class="n">templates</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Template</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_templates_</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">MappingProxyType</span><span class="p">(</span><span class="n">templates</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">TreeNode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Public method to build a class instance and visit an IR node.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            root: An IR node.</span>
+<span class="sd">            node_templates (optiona): see :class:`NodeDumper`.</span>
+<span class="sd">            dump_function (optiona): see :class:`NodeDumper`.</span>
+<span class="sd">            **kwargs (optional): custom extra parameters forwarded to</span>
+<span class="sd">                `visit_NODE_TYPE_NAME()`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            String (or collection of strings) with the dumped version of the root IR node.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">typing</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">generic_dump</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">TreeNode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Class-specific ``dump()`` function for primitive types.</span>
+
+<span class="sd">        This class could be redefined in the subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">generic_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">TreeNode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="n">result</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+            <span class="n">template</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">template</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_template</span><span class="p">(</span>
+                    <span class="n">template</span><span class="p">,</span>
+                    <span class="n">node</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transform_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transform_attrs</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Set</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ATOMIC_COLLECTION_TYPES</span>
+        <span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_dump</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">get_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">TreeNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Template</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Get a template for a node instance (see class documentation).&quot;&quot;&quot;</span>
+        <span class="n">template</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Template</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">template_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Node</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">node_class</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">:</span>
+                <span class="n">template_key</span> <span class="o">=</span> <span class="n">node_class</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_templates_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">template_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">node_class</span> <span class="ow">is</span> <span class="n">Node</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">template</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">template_key</span>
+
+    <span class="k">def</span> <span class="nf">render_template</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">template</span><span class="p">:</span> <span class="n">Template</span><span class="p">,</span>
+        <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span>
+        <span class="n">transformed_children</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">transformed_attrs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Render a template using node instance data (see class documentation).&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">transformed_children</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">transformed_attrs</span><span class="p">,</span>
+            <span class="n">_children</span><span class="o">=</span><span class="n">transformed_children</span><span class="p">,</span>
+            <span class="n">_attrs</span><span class="o">=</span><span class="n">transformed_attrs</span><span class="p">,</span>
+            <span class="n">_this_node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span>
+            <span class="n">_this_generator</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">_this_module</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span><span class="p">],</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">transform_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">iter_children</span><span class="p">()}</span>
+
+    <span class="k">def</span> <span class="nf">transform_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">iter_attributes</span><span class="p">()}</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

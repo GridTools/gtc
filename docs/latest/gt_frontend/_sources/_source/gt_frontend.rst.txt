@@ -1,0 +1,69 @@
+gt\_frontend package
+====================
+
+Submodules
+----------
+
+gt\_frontend.ast\_node\_matcher module
+--------------------------------------
+
+.. automodule:: gt_frontend.ast_node_matcher
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gt\_frontend.built\_in\_types module
+------------------------------------
+
+.. automodule:: gt_frontend.built_in_types
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gt\_frontend.frontend module
+----------------------------
+
+.. automodule:: gt_frontend.frontend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gt\_frontend.gtscript module
+----------------------------
+
+.. automodule:: gt_frontend.gtscript
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gt\_frontend.gtscript\_ast module
+---------------------------------
+
+.. automodule:: gt_frontend.gtscript_ast
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gt\_frontend.gtscript\_to\_gtir module
+--------------------------------------
+
+.. automodule:: gt_frontend.gtscript_to_gtir
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gt\_frontend.py\_to\_gtscript module
+------------------------------------
+
+.. automodule:: gt_frontend.py_to_gtscript
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: gt_frontend
+   :members:
+   :undoc-members:
+   :show-inheritance:

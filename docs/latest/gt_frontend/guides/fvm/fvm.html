@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Finite-Volume-Method on Median-Dual Meshes &mdash; gt_frontend 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="API Documentation" href="../../apiref.html" />
+    <link rel="prev" title="Contents:" href="../../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> gt_frontend
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Finite-Volume-Method on Median-Dual Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../language_reference.html">Language Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gt_frontend</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Finite-Volume-Method on Median-Dual Meshes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/guides/fvm/fvm.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="finite-volume-method-on-median-dual-meshes">
+<h1>Finite-Volume-Method on Median-Dual Meshes<a class="headerlink" href="#finite-volume-method-on-median-dual-meshes" title="Permalink to this headline">¶</a></h1>
+<p>The Finite Volume Method is a numerical method for the discretization of conversation laws. In this document a vertex centered FVM on median dual meshes is derived.</p>
+<p><strong>Problem formulation</strong></p>
+<p>We start with the advection equation describing the transport of some fluid, e.g. air, with density <span class="math notranslate nohighlight">\(\rho(t, \mathbf{x}) \in \mathbb{R}\)</span> and velocity <span class="math notranslate nohighlight">\(\mathbf{v}(\mathbf{x}) \in \mathbb{R}^2\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{align*}
+  \frac{\partial \rho}{\partial t} + \nabla \cdot (\rho v) &amp;= 0 \text{ on } \Omega
+\end{align*}\]</div>
+<p>After integrating over a yet to be specified control volume <span class="math notranslate nohighlight">\(\mathcal{V}_i\)</span> and application of Gauss’s divergence theorem we arrive at the following integral formulation</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+    \int_{\mathcal{V}_i} \frac{\partial \rho}{\partial t} \mathrm{\,dV} + \int_{\mathcal{V}_i} \nabla \cdot (\rho \mathbf{v}) \mathrm{\,dV} &amp;= 0 \\
+    \Leftrightarrow \int_{\mathcal{V}_i} \frac{\partial \rho}{\partial t} \mathrm{\,dV} + \int_{\partial {\mathcal{V}_i}} \rho \mathbf{v} \cdot \mathbf{n} \mathrm{\,dA} &amp;= 0
+\end{align}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(n(\mathbf{x})\)</span> is the outward surface normal. This form allows for an intuitive interpretation where the change in density inside the control volume is equal to the flux through its surface.</p>
+<div class="math notranslate nohighlight">
+\[\begin{align}
+    \int_{\mathcal{V}_i} \frac{\partial \rho}{\partial t} \mathrm{\,dV} = - \int_{\partial {\mathcal{V}_i}} \rho \mathbf{v} \cdot \mathbf{n} \mathrm{\,dA}
+\end{align}\]</div>
+<p><strong>Temporal discretization</strong></p>
+<p>For simplicity we consider a uniform discretization in time with time step <span class="math notranslate nohighlight">\(\delta t\)</span> and integrate over a single time step from time <span class="math notranslate nohighlight">\(t^n = n \cdot \delta t\)</span> to <span class="math notranslate nohighlight">\(t^{n+1}\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{align}
+  \int_{t^n}^{t^{n+1}} \int_{\mathcal{V}_i} \frac{\partial \rho}{\partial t} \mathrm{\,dV} \mathrm{\,dt} + \int_{t^n}^{t^{n+1}} \int_{\partial {\mathcal{V}_i}} \rho \mathbf{v} \cdot \mathbf{n} \mathrm{\,dA} \mathrm{\,dt} &amp;= 0
+\end{align}\]</div>
+<p>After observing that the first term is nothing else but the change in density from <span class="math notranslate nohighlight">\(t^n\)</span> to <span class="math notranslate nohighlight">\(t^{n+1}\)</span> the first temporal integral collapses to a finite difference. For the surface integral term we make the first approximation by assuming the density <span class="math notranslate nohighlight">\(\rho\)</span> as well as the velocity at each point are approximately constant over a single time step, i.e.</p>
+<div class="math notranslate nohighlight">
+\[\forall t \in [t_n, t_{n+1}] : \rho(t, \mathbf{x}) \approx \rho^n(\mathbf{x}) = \rho(t_n, \mathbf{x})\]</div>
+<p>to obtain the following semi-discrete form</p>
+<div class="math notranslate nohighlight">
+\[\begin{align}
+  \int_{\mathcal{V}_i} (\rho^{n+1}-\rho^n) \mathrm{\,dV} + \delta t \int_{\partial {\mathcal{V}_i}} \rho^n \mathbf{v} \cdot \mathbf{n} \mathrm{\,dA} &amp;= 0
+\end{align}\]</div>
+<p>In order the simplify notation we further introduce the average cell density <span class="math notranslate nohighlight">\(\bar \rho_i^n\)</span></p>
+<div class="math notranslate nohighlight">
+\[\bar \rho_i^n = \frac{1}{|\mathcal{V}_i|} \int_{\mathcal{V}_i} \rho^n \mathrm{\,dV}\]</div>
+<p>resulting in the following time stepping scheme</p>
+<div class="math notranslate nohighlight">
+\[\begin{align}
+  \bar \rho^{n+1} = \bar \rho^{n} - \frac{\delta t}{|\mathcal{V}_i|}  \int_{\partial {\mathcal{V}_i}} \rho^n \mathbf{v} \cdot \mathbf{n} \mathrm{\,dA}
+\end{align}\]</div>
+<p>which again allows for an intuitive interpretation: The average density inside the control volume in the next time step is equal to average density in the last time step plus the inward-flux through the control volumes surface.</p>
+<p><strong>Spatial discretization</strong></p>
+<p>Up until now we have just considered a single control volume without actually talking about what quantities we are solving for nor the relation of the control volumes to each other. In doing so we introduce the concept of a mesh, representing a subdivision of the domain <span class="math notranslate nohighlight">\(\Omega\)</span> into a set of cells, either triangles or quadrilaterals.</p>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="../../_images/mesh.png"><img alt="../../_images/mesh.png" src="../../_images/mesh.png" style="width: 300px;" /></a>
+<p class="caption"><span class="caption-text">Schematic of a 2D mesh</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>At this point different choices for the quantities to be solved for are possible. We will here use a vertex-centered approach where the unknowns are choosen to be the densities at the vertices of the mesh <span class="math notranslate nohighlight">\(\rho_i^n = \rho^n_i(x_i)\)</span>, which are a first order approximation of the average cell density <span class="math notranslate nohighlight">\(\bar \rho_i^n\)</span> appearing in the time discretized form above.</p>
+<div class="math notranslate nohighlight">
+\[\begin{align}
+  \rho_i^{n+1} &amp;= \rho_i^{n} - \frac{\delta t}{|\mathcal{V}_i|}  \int_{\partial {\mathcal{V}_i}} \rho^n \mathbf{v} \cdot \mathbf{n} \mathrm{\,dA}
+\end{align}\]</div>
+<p>The control volumes <span class="math notranslate nohighlight">\(\mathcal{V}_i\)</span> are then constructed by joining the (bary)centers of the cells adjacent to each vertex with the midpoint of the adjacent edges. The set of control volumes form another mesh, denoted the dual mesh.</p>
+<div class="figure align-center" id="id2">
+<a class="reference internal image-reference" href="../../_images/fvm_median_dual_mesh_cv.png"><img alt="../../_images/fvm_median_dual_mesh_cv.png" src="../../_images/fvm_median_dual_mesh_cv.png" style="width: 300px;" /></a>
+<p class="caption"><span class="caption-text">Schematic of the median-dual mesh in 2D. Primary mesh in black, dual mesh in blue. The control volume <span class="math notranslate nohighlight">\(\mathcal{V}_i\)</span> around the vertex <span class="math notranslate nohighlight">\(v_i\)</span> is constructed by joining the (bary)centers of adjacent cells with the midpoint of the outgoing edges of <span class="math notranslate nohighlight">\(v_i\)</span>.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>It remains to derive a discrete representation for the surface integral by first splitting the integral into its contributions on a set of segments <span class="math notranslate nohighlight">\(S_j\)</span>, where each segment can be attributed to the edges adjacent to <span class="math notranslate nohighlight">\(v_i\)</span>. Let <span class="math notranslate nohighlight">\(|\mathcal{V}_i|\)</span> be the area of the control volume and <span class="math notranslate nohighlight">\(l(i)\)</span> the number of edges adjacent to <span class="math notranslate nohighlight">\(v_i\)</span> then</p>
+<div class="math notranslate nohighlight">
+\[\begin{align}
+  \rho_i^{n+1} &amp;= \rho_i^{n} - \frac{\delta t}{|\mathcal{V}_i|} \sum_{j=1}^{l(i)} \int_{S_j} \rho^n \mathbf{v} \cdot \mathbf{n} \, \mathrm{dA}
+\end{align}\]</div>
+<p>The segment itself consists of the two dual edges adjacent to a primary edge from <span class="math notranslate nohighlight">\(v_i\)</span> to <span class="math notranslate nohighlight">\(v_j\)</span> and its length <span class="math notranslate nohighlight">\(S_j\)</span> and normal <span class="math notranslate nohighlight">\(\mathbf{n}_j\)</span> are approximated by</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+  \mathbf{S}_j &amp;= (\mathbf{c}_{1}-\mathbf{c}_{2}) \cdot (\begin{bmatrix}
+    0 &amp; 1 \\
+    -1 &amp; 0 \\
+  \end{bmatrix}) \\
+  S_j &amp;= ||\mathbf{S}_j||_2 \\
+  \mathbf{n}_j &amp;= \frac{\mathbf{S}_j}{S_j}
+\end{align}\end{split}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\mathbf{c}_{1}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{c}_{2}\)</span> the coordinates of the two bary(centers).</p>
+<p>Lastly to ensure stability of the method the flux density perpendicular to the surface <span class="math notranslate nohighlight">\(F_i^\perp = \rho^n \mathbf{v} \cdot \mathbf{n}\)</span> is approximated by a simple upwind flux</p>
+<div class="math notranslate nohighlight">
+\[F_i^\perp(\rho_i, \rho_j, v) \approx [v_j^\perp]^+ \rho_i + [v_j^\perp]^- \rho_j\]</div>
+<p>where <span class="math notranslate nohighlight">\(v_j^\perp = \mathbf{v} \cdot n_j\)</span> is the normal velocity evaluated at the surface <span class="math notranslate nohighlight">\(S_j\)</span> and its positive and negative parts are defined as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}[V^\perp]^+ = \mathrm{max}(0, V^\perp) \\
+[V^\perp]^- = \mathrm{min}(0, V^\perp)\end{split}\]</div>
+<p>The resulting fully discrete time stepping scheme then reads</p>
+<div class="math notranslate nohighlight">
+\[\begin{align}
+  \rho_i^{n+1} &amp;= \rho_i^{n} - \frac{\delta t}{|\mathcal{V}_i|} \sum_{j=1}^{l(i)} F_j^\perp S_j
+\end{align}\]</div>
+<p><strong>Implementation in GT4Py</strong></p>
+<p>To be written.</p>
+<p><strong>TODO</strong></p>
+<p>Frame extension to IFS-FVM</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>curvilinear coordinates</p></li>
+<li><p>pseudo velocity (higher order spatial discretization)</p></li>
+<li><p>additional differential operators (higher order temporal)</p></li>
+<li><p>adaptive time stepping</p></li>
+<li><p>CFL</p></li>
+</ul>
+</div></blockquote>
+<p><strong>Notes</strong></p>
+<p>Code for the construction of the dual mesh in Atlas: src/atlas/mesh/actions/BuildDualMesh.cc</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../apiref.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../../index.html" class="btn btn-neutral float-left" title="Contents:" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,274 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.nir_passes.field_dependency_graph &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.nir_passes.field_dependency_graph</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.nir_passes.field_dependency_graph</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="kn">import</span> <span class="nn">eve</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">NodeVisitor</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured.nir</span> <span class="kn">import</span> <span class="n">AssignStmt</span><span class="p">,</span> <span class="n">FieldAccess</span><span class="p">,</span> <span class="n">HorizontalLoop</span>
+
+
+<div class="viewcode-block" id="_FieldWriteDependencyGraph"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.field_dependency_graph._FieldWriteDependencyGraph">[docs]</a><span class="k">class</span> <span class="nc">_FieldWriteDependencyGraph</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dependency graph of field writes for a list of horizontal loops.</span>
+
+<span class="sd">    Result is a DAG where nodes represent writes and edges represent reads with extent information.</span>
+
+<span class="sd">    Example 1:</span>
+<span class="sd">    A = 1</span>
+<span class="sd">    B = A(with offset)</span>
+
+<span class="sd">    Graph: A --has_extent--&gt; B</span>
+
+<span class="sd">    Example 2:</span>
+<span class="sd">    A = B (B is external to the loop)</span>
+
+<span class="sd">    Graph: A</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_write_access</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="_FieldWriteDependencyGraph.generate"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.field_dependency_graph._FieldWriteDependencyGraph.generate">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">loops</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the visitor, returns graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">loops</span><span class="p">:</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">graph</span></div>
+
+<div class="viewcode-block" id="_FieldWriteDependencyGraph.visit_FieldAccess"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.field_dependency_graph._FieldWriteDependencyGraph.visit_FieldAccess">[docs]</a>    <span class="k">def</span> <span class="nf">visit_FieldAccess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">FieldAccess</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="s2">&quot;current_write&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_write_access</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_write_access</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_write_access</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;current_write&quot;</span><span class="p">],</span> <span class="n">extent</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">extent</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="_FieldWriteDependencyGraph.visit_AssignStmt"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.field_dependency_graph._FieldWriteDependencyGraph.visit_AssignStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_AssignStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">AssignStmt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">id_attr_</span><span class="p">)</span>  <span class="c1"># make IR nodes hashable?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">current_write</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">id_attr_</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_write_access</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">id_attr_</span></div></div>
+
+
+<div class="viewcode-block" id="generate_dependency_graph"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.field_dependency_graph.generate_dependency_graph">[docs]</a><span class="k">def</span> <span class="nf">generate_dependency_graph</span><span class="p">(</span><span class="n">loops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">HorizontalLoop</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">_FieldWriteDependencyGraph</span><span class="p">()</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">loops</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

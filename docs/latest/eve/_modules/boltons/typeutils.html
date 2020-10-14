@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>boltons.typeutils &mdash; Eve 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> Eve
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eve</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>boltons.typeutils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for boltons.typeutils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Python&#39;s built-in :mod:`functools` module builds several useful</span>
+<span class="sd">utilities on top of Python&#39;s first-class function support.</span>
+<span class="sd">``typeutils`` attempts to do the same for metaprogramming with types</span>
+<span class="sd">and instances.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+
+<span class="n">_issubclass</span> <span class="o">=</span> <span class="nb">issubclass</span>
+
+
+<span class="k">def</span> <span class="nf">make_sentinel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;_MISSING&#39;</span><span class="p">,</span> <span class="n">var_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates and returns a new **instance** of a new class, suitable for</span>
+<span class="sd">    usage as a &quot;sentinel&quot;, a kind of singleton often used to indicate</span>
+<span class="sd">    a value is missing when ``None`` is a valid input.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name (str): Name of the Sentinel</span>
+<span class="sd">        var_name (str): Set this name to the name of the variable in</span>
+<span class="sd">            its respective module enable pickleability.</span>
+
+<span class="sd">    &gt;&gt;&gt; make_sentinel(var_name=&#39;_MISSING&#39;)</span>
+<span class="sd">    _MISSING</span>
+
+<span class="sd">    The most common use cases here in boltons are as default values</span>
+<span class="sd">    for optional function arguments, partly because of its</span>
+<span class="sd">    less-confusing appearance in automatically generated</span>
+<span class="sd">    documentation. Sentinels also function well as placeholders in queues</span>
+<span class="sd">    and linked lists.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">      By design, additional calls to ``make_sentinel`` with the same</span>
+<span class="sd">      values will not produce equivalent objects.</span>
+
+<span class="sd">      &gt;&gt;&gt; make_sentinel(&#39;TEST&#39;) == make_sentinel(&#39;TEST&#39;)</span>
+<span class="sd">      False</span>
+<span class="sd">      &gt;&gt;&gt; type(make_sentinel(&#39;TEST&#39;)) == type(make_sentinel(&#39;TEST&#39;))</span>
+<span class="sd">      False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">Sentinel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">var_name</span> <span class="o">=</span> <span class="n">var_name</span>
+
+        <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_name</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%r</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">var_name</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_name</span>
+
+        <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="fm">__bool__</span> <span class="o">=</span> <span class="n">__nonzero__</span>
+
+    <span class="k">return</span> <span class="n">Sentinel</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">issubclass</span><span class="p">(</span><span class="n">subclass</span><span class="p">,</span> <span class="n">baseclass</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Just like the built-in :func:`issubclass`, this function checks</span>
+<span class="sd">    whether *subclass* is inherited from *baseclass*. Unlike the</span>
+<span class="sd">    built-in function, this ``issubclass`` will simply return</span>
+<span class="sd">    ``False`` if either argument is not suitable (e.g., if *subclass*</span>
+<span class="sd">    is not an instance of :class:`type`), instead of raising</span>
+<span class="sd">    :exc:`TypeError`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        subclass (type): The target class to check.</span>
+<span class="sd">        baseclass (type): The base class *subclass* will be checked against.</span>
+
+<span class="sd">    &gt;&gt;&gt; class MyObject(object): pass</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; issubclass(MyObject, object)  # always a fun fact</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; issubclass(&#39;hi&#39;, &#39;friend&#39;)</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_issubclass</span><span class="p">(</span><span class="n">subclass</span><span class="p">,</span> <span class="n">baseclass</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">get_all_subclasses</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursively finds and returns a :class:`list` of all types</span>
+<span class="sd">    inherited from *cls*.</span>
+
+<span class="sd">    &gt;&gt;&gt; class A(object):</span>
+<span class="sd">    ...     pass</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; class B(A):</span>
+<span class="sd">    ...     pass</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; class C(B):</span>
+<span class="sd">    ...     pass</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; class D(A):</span>
+<span class="sd">    ...     pass</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; [t.__name__ for t in get_all_subclasses(A)]</span>
+<span class="sd">    [&#39;B&#39;, &#39;D&#39;, &#39;C&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; [t.__name__ for t in get_all_subclasses(B)]</span>
+<span class="sd">    [&#39;C&#39;]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">to_check</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">())</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;expected type object, not </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">cls</span><span class="p">)</span>
+    <span class="n">seen</span><span class="p">,</span> <span class="n">ret</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">to_check</span><span class="p">:</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">to_check</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cur</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+        <span class="n">to_check</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">class</span> <span class="nc">classproperty</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Much like a :class:`property`, but the wrapped get function is a</span>
+<span class="sd">    class method.  For simplicity, only read-only properties are</span>
+<span class="sd">    implemented.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span>
+
+    <span class="k">def</span> <span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
