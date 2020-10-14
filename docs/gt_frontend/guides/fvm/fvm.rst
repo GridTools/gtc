@@ -70,7 +70,7 @@ Up until now we have just considered a single control volume without actually ta
 .. figure:: mesh.png
    :width: 300
    :align: center
-  
+
    Schematic of a 2D mesh
 
 At this point different choices for the quantities to be solved for are possible. We will here use a vertex-centered approach where the unknowns are choosen to be the densities at the vertices of the mesh :math:`\rho_i^n = \rho^n_i(x_i)`, which are a first order approximation of the average cell density :math:`\bar \rho_i^n` appearing in the time discretized form above.
@@ -80,12 +80,12 @@ At this point different choices for the quantities to be solved for are possible
     \rho_i^{n+1} &= \rho_i^{n} - \frac{\delta t}{|\mathcal{V}_i|}  \int_{\partial {\mathcal{V}_i}} \rho^n \mathbf{v} \cdot \mathbf{n} \mathrm{\,dA}
   \end{align}
 
-The control volumes :math:`\mathcal{V}_i` are then constructed by joining the (bary)centers of the cells adjacent to each vertex with the midpoint of the adjacent edges. The set of control volumes form another mesh, denoted the dual mesh. 
+The control volumes :math:`\mathcal{V}_i` are then constructed by joining the (bary)centers of the cells adjacent to each vertex with the midpoint of the adjacent edges. The set of control volumes form another mesh, denoted the dual mesh.
 
 .. figure:: fvm_median_dual_mesh_cv.png
    :width: 300
    :align: center
-  
+
    Schematic of the median-dual mesh in 2D. Primary mesh in black, dual mesh in blue. The control volume :math:`\mathcal{V}_i` around the vertex :math:`v_i` is constructed by joining the (bary)centers of adjacent cells with the midpoint of the outgoing edges of :math:`v_i`.
 
 It remains to derive a discrete representation for the surface integral by first splitting the integral into its contributions on a set of segments :math:`S_j`, where each segment can be attributed to the edges adjacent to :math:`v_i`. Let :math:`|\mathcal{V}_i|` be the area of the control volume and :math:`l(i)` the number of edges adjacent to :math:`v_i` then
@@ -129,7 +129,63 @@ The resulting fully discrete time stepping scheme then reads
 
 **Implementation in GT4Py**
 
-To be written.
+.. code-block:: python
+
+    @gtscript.stencil(externals={"vel": vel})
+    def fvm_advect(
+        mesh: Mesh,
+        rho: gtscript.Field[Vertex, dtype],
+        rho_next: gtscript.Field[Vertex, dtype],
+        volume: gtscript.Field[Vertex, dtype],
+        dual_normal: gtscript.Field[Edge, dtype],
+        dual_face_length: gtscript.Field[Edge, dtype],
+        face_orientation: gtscript.Field[Vertex, Edge, dtype], # either -1 or 1
+        #flux: gtscript.Field[Edge, dtype]
+    ):
+    with computation(PARALLEL):
+        gtscript.Field[Edge, dtype]
+        # compute flux density through the intersection of the two
+        #  control volumes around the dual cells associated with
+        #  the vertices of `e` using an upwind scheme
+        with location(Edge) as e:
+            # upwind flux (instructive)
+            v1, v2 = vertices(e)
+            normal_velocity = dot(v, dual_normal[e]) # velocity projected onto the normal
+            if dot(vel, dual_normal[e]) > 0:
+                flux = rho[v1] * normal_velocity[e] * dual_face_length[e]
+            else:
+                flux = rho[v2] * normal_velocity[e] * dual_face_length[e]
+
+            # upwind flux (compact)
+            v1, v2 = vertices(e)
+            normal_velocity = dot(v, dual_normal[e]) # velocity projected onto the normal
+            flux = dual_face_area[e]*(max(0., normal_velocity)*rho[v1] + min(0., normal_velocity)*rho[v2])
+
+            # upwind flux (compact with weights)
+            flux = dual_face_area[e]*sum(rho, weights=[max(0., normal_velocity), min(0., normal_velocity)])
+
+            # centered flux (different flux just for comparison here)
+            flux = 0.5*sum(rho[v]*vel for v in vertices(e))
+        with location(Vertex) as v:
+            # compute density in the next timestep
+            rho_next = rho - δt/volume*sum(flux*face_orientation[v, e] for e in edges(v))
+
+    # parameters
+    vel = [1., 2.] # velocity
+    δt = 1e-6 # time step
+    niter = 100
+
+    # initialize mesh
+    #  ...
+
+    # initialize fields
+    rho = zeros(mesh, dtype)
+    rho_next = zeros(mesh, dtype)
+    #  todo: geometry: dual_volume, dual_normal, face_orientation
+
+    for i in range(niter):
+        fvm_advect(mesh, rho, rho_next, dual_volume, dual_normal, face_orientation, flux)
+        copyto(rho_next, rho)
 
 **TODO**
 
