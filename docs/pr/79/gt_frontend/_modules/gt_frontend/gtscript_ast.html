@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gt_frontend.gtscript_ast &mdash; gt_frontend 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> gt_frontend
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/fvm/fvm.html">Finite-Volume-Method on Median-Dual Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../language_reference.html">Language Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gt_frontend</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>gt_frontend.gtscript_ast</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gt_frontend.gtscript_ast</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+<span class="c1"># todo(tehrengruber): document nodes</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">gtc.common</span> <span class="k">as</span> <span class="nn">common</span>
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">Node</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;GTScriptASTNode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Statement&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Expr&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Symbol&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;IterationOrder&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Constant&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Interval&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;LocationSpecification&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SubscriptSingle&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SubscriptMultiple&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;BinaryOp&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Call&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;LocationComprehension&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Generator&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Assign&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Stencil&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Pass&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Argument&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Computation&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="GTScriptASTNode"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.GTScriptASTNode">[docs]</a><span class="k">class</span> <span class="nc">GTScriptASTNode</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Statement"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Statement">[docs]</a><span class="k">class</span> <span class="nc">Statement</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Expr"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Expr">[docs]</a><span class="k">class</span> <span class="nc">Expr</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Symbol"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Symbol">[docs]</a><span class="k">class</span> <span class="nc">Symbol</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+<div class="viewcode-block" id="IterationOrder"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.IterationOrder">[docs]</a><span class="k">class</span> <span class="nc">IterationOrder</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="n">order</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+<span class="c1"># TODO(tehrengruber): use type parameter see https://github.com/samuelcolvin/pydantic/pull/595</span>
+<span class="c1"># T = TypeVar(&#39;T&#39;)</span>
+<span class="c1"># class Constant(GTScriptASTNode, Generic[T]):</span>
+<span class="c1">#    value: T</span>
+
+
+<div class="viewcode-block" id="Constant"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Constant">[docs]</a><span class="k">class</span> <span class="nc">Constant</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="c1"># TODO(tehrengruber): use StrictStr, StrictInt, StrictFloat as pydantic automatically converts into the first</span>
+    <span class="c1">#  type it occurs. As a result currently all integers become floats</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Interval"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Interval">[docs]</a><span class="k">class</span> <span class="nc">Interval</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interval [start, stop[</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">start</span><span class="p">:</span> <span class="n">Constant</span>  <span class="c1"># TODO(tehrengruber): use Constant[Union[int, str, None]]</span>
+    <span class="n">stop</span><span class="p">:</span> <span class="n">Constant</span></div>
+
+
+<span class="c1"># TODO(tehrengruber): allow interval(...) by introducing Optional(captures={...}) placeholder</span>
+<span class="c1"># Optional(captures={start=0, end=None})</span>
+
+
+<div class="viewcode-block" id="LocationSpecification"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.LocationSpecification">[docs]</a><span class="k">class</span> <span class="nc">LocationSpecification</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Symbol</span>
+    <span class="n">location_type</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+<span class="c1"># TODO(tehrengruber): proper cannonicalization (CanBeCanonicalizedTo[Subscript] ?)</span>
+<div class="viewcode-block" id="SubscriptSingle"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.SubscriptSingle">[docs]</a><span class="k">class</span> <span class="nc">SubscriptSingle</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Symbol</span>
+    <span class="n">index</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+<div class="viewcode-block" id="SubscriptMultiple"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.SubscriptMultiple">[docs]</a><span class="k">class</span> <span class="nc">SubscriptMultiple</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Symbol</span>
+    <span class="n">indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Symbol</span><span class="p">,</span> <span class="n">SubscriptSingle</span><span class="p">,</span> <span class="s2">&quot;SubscriptMultiple&quot;</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="BinaryOp"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.BinaryOp">[docs]</a><span class="k">class</span> <span class="nc">BinaryOp</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">op</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<div class="viewcode-block" id="Call"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Call">[docs]</a><span class="k">class</span> <span class="nc">Call</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Expr</span><span class="p">]</span>
+    <span class="n">func</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+<span class="c1"># TODO(tehrengruber): can be enabled as soon as eve_toolchain#58 lands</span>
+<span class="c1"># class Call(Generic[T]):</span>
+<span class="c1">#    name: str</span>
+<span class="c1">#    return_type: T</span>
+<span class="c1">#    arg_types: Ts</span>
+<span class="c1">#    args: List[Expr]</span>
+
+
+<div class="viewcode-block" id="LocationComprehension"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.LocationComprehension">[docs]</a><span class="k">class</span> <span class="nc">LocationComprehension</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">Symbol</span>
+    <span class="n">iterator</span><span class="p">:</span> <span class="n">Call</span></div>
+
+
+<div class="viewcode-block" id="Generator"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Generator">[docs]</a><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">generators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LocationComprehension</span><span class="p">]</span>
+    <span class="n">elt</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<div class="viewcode-block" id="Assign"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Assign">[docs]</a><span class="k">class</span> <span class="nc">Assign</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Symbol</span><span class="p">,</span> <span class="n">SubscriptSingle</span><span class="p">,</span> <span class="n">SubscriptMultiple</span><span class="p">]</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<div class="viewcode-block" id="Stencil"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Stencil">[docs]</a><span class="k">class</span> <span class="nc">Stencil</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="n">iteration_spec</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">IterationOrder</span><span class="p">,</span> <span class="n">LocationSpecification</span><span class="p">,</span> <span class="n">Interval</span><span class="p">]]</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span>
+        <span class="n">Union</span><span class="p">[</span><span class="n">Statement</span><span class="p">,</span> <span class="s2">&quot;Stencil&quot;</span><span class="p">]</span>
+    <span class="p">]</span>  <span class="c1"># TODO(tehrengruber): stencil only allowed non-canonicalized</span></div>
+
+
+<span class="c1"># TODO(tehrengruber): attributes are not supported yet. we need to decide on how to handle them first</span>
+<span class="c1"># class Attribute(GT4PyAstNode):</span>
+<span class="c1">#    attr: str</span>
+<span class="c1">#    value: Union[Attribute, Name]</span>
+<span class="c1">#</span>
+<span class="c1">#    @staticmethod</span>
+<span class="c1">#    def template():</span>
+<span class="c1">#        return ast.Attribute(attr=Capture(&quot;attr&quot;), value=Capture(&quot;value&quot;))</span>
+
+
+<div class="viewcode-block" id="Pass"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Pass">[docs]</a><span class="k">class</span> <span class="nc">Pass</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Argument"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Argument">[docs]</a><span class="k">class</span> <span class="nc">Argument</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">type_</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Symbol</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">SubscriptMultiple</span><span class="p">,</span> <span class="n">SubscriptSingle</span><span class="p">]]</span></div>
+    <span class="c1"># is_keyword: bool</span>
+
+
+<div class="viewcode-block" id="Computation"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Computation">[docs]</a><span class="k">class</span> <span class="nc">Computation</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">arguments</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Argument</span><span class="p">]</span>
+    <span class="n">stencils</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stencil</span><span class="p">]</span></div>
+    <span class="c1"># TODO(tehrengruber): use the following as soon as nodes support type parameters:</span>
+    <span class="c1">#  stencils: List[Union[Stencil[Stencil[Statement]], Stencil[Statement]]]</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

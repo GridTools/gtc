@@ -1,0 +1,499 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.sir &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.sir</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.sir</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+
+<span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">root_validator</span><span class="p">,</span> <span class="n">validator</span>  <span class="c1"># noqa: F401</span>
+
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">Node</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">common</span>
+
+
+<span class="c1"># = statements.proto =</span>
+
+
+<div class="viewcode-block" id="LocationType"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.LocationType">[docs]</a><span class="nd">@enum</span><span class="o">.</span><span class="n">unique</span>
+<span class="k">class</span> <span class="nc">LocationType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">LocationTypeUnknown</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Vertex</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Cell</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Edge</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+<div class="viewcode-block" id="SourceLocation"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.SourceLocation">[docs]</a><span class="k">class</span> <span class="nc">SourceLocation</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">line</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">column</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<span class="c1"># helper (not part of dawn-SIR)</span>
+<div class="viewcode-block" id="ExprCommon"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.ExprCommon">[docs]</a><span class="k">class</span> <span class="nc">ExprCommon</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">location_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LocationType</span><span class="p">]</span>
+    <span class="n">loc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SourceLocation</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Expr"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Expr">[docs]</a><span class="k">class</span> <span class="nc">Expr</span><span class="p">(</span><span class="n">ExprCommon</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Stmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Stmt">[docs]</a><span class="k">class</span> <span class="nc">Stmt</span><span class="p">(</span><span class="n">ExprCommon</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="AST"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.AST">[docs]</a><span class="k">class</span> <span class="nc">AST</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Stmt</span></div>
+
+
+<div class="viewcode-block" id="CartesianDimension"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.CartesianDimension">[docs]</a><span class="k">class</span> <span class="nc">CartesianDimension</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">mask_cart_i</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">mask_cart_j</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<div class="viewcode-block" id="UnstructuredDimension"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.UnstructuredDimension">[docs]</a><span class="k">class</span> <span class="nc">UnstructuredDimension</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">dense_location_type</span><span class="p">:</span> <span class="n">LocationType</span>
+    <span class="n">sparse_part</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">LocationType</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="FieldDimensions"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.FieldDimensions">[docs]</a><span class="k">class</span> <span class="nc">FieldDimensions</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">horizontal_dimension</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CartesianDimension</span><span class="p">,</span> <span class="n">UnstructuredDimension</span><span class="p">]</span>
+    <span class="n">mask_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># 1 == active</span></div>
+
+
+<div class="viewcode-block" id="Field"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Field">[docs]</a><span class="k">class</span> <span class="nc">Field</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">loc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SourceLocation</span><span class="p">]</span>
+    <span class="n">is_temporary</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">field_dimensions</span><span class="p">:</span> <span class="n">FieldDimensions</span></div>
+
+
+<span class="c1"># TODO class Direction</span>
+<span class="c1"># TODO class Offset</span>
+<span class="c1"># TODO class StencilFunctionArg</span>
+
+
+<div class="viewcode-block" id="SpecialLevel"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.SpecialLevel">[docs]</a><span class="nd">@enum</span><span class="o">.</span><span class="n">unique</span>
+<span class="k">class</span> <span class="nc">SpecialLevel</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">Start</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">End</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<span class="c1"># TODO maybe remove defaults</span>
+<div class="viewcode-block" id="Interval"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Interval">[docs]</a><span class="k">class</span> <span class="nc">Interval</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">lower_level</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SpecialLevel</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">SpecialLevel</span><span class="o">.</span><span class="n">Start</span>
+    <span class="n">upper_level</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SpecialLevel</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">SpecialLevel</span><span class="o">.</span><span class="n">End</span>
+    <span class="n">lower_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">upper_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="BuiltinType"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.BuiltinType">[docs]</a><span class="k">class</span> <span class="nc">BuiltinType</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">type_id</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span></div>
+
+
+<div class="viewcode-block" id="Direction"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Direction">[docs]</a><span class="nd">@enum</span><span class="o">.</span><span class="n">unique</span>
+<span class="k">class</span> <span class="nc">Direction</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">I_dir</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">J_dir</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">K_dir</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Invalid</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+<div class="viewcode-block" id="Dimension"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Dimension">[docs]</a><span class="k">class</span> <span class="nc">Dimension</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="n">Direction</span></div>
+
+
+<div class="viewcode-block" id="Type"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Type">[docs]</a><span class="k">class</span> <span class="nc">Type</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">data_type</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BuiltinType</span><span class="p">]</span>
+    <span class="n">is_const</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">is_volatile</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+
+<span class="c1"># TODO maybe remove defaults</span>
+<div class="viewcode-block" id="VerticalRegion"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.VerticalRegion">[docs]</a><span class="k">class</span> <span class="nc">VerticalRegion</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">loop_order</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LoopOrder</span>
+    <span class="n">loc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SourceLocation</span><span class="p">]</span>
+    <span class="n">ast</span><span class="p">:</span> <span class="n">AST</span>
+    <span class="n">interval</span><span class="p">:</span> <span class="n">Interval</span>
+    <span class="n">i_range</span><span class="p">:</span> <span class="n">Interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">()</span>
+    <span class="n">j_range</span><span class="p">:</span> <span class="n">Interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">()</span></div>
+
+
+<span class="c1"># TODO class StencilCall</span>
+
+
+<div class="viewcode-block" id="Extent"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Extent">[docs]</a><span class="k">class</span> <span class="nc">Extent</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">minus</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">plus</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<div class="viewcode-block" id="CartesianExtent"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.CartesianExtent">[docs]</a><span class="k">class</span> <span class="nc">CartesianExtent</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">i_extent</span><span class="p">:</span> <span class="n">Extent</span>
+    <span class="n">j_extent</span><span class="p">:</span> <span class="n">Extent</span></div>
+
+
+<div class="viewcode-block" id="UnstructedExtent"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.UnstructedExtent">[docs]</a><span class="k">class</span> <span class="nc">UnstructedExtent</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">has_extent</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+
+<div class="viewcode-block" id="ZeroExtent"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.ZeroExtent">[docs]</a><span class="k">class</span> <span class="nc">ZeroExtent</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Extents"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Extents">[docs]</a><span class="k">class</span> <span class="nc">Extents</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">horizontal_extent</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CartesianExtent</span><span class="p">,</span> <span class="n">UnstructedExtent</span><span class="p">,</span> <span class="n">ZeroExtent</span><span class="p">]</span>
+    <span class="n">vertical_extent</span><span class="p">:</span> <span class="n">Extent</span></div>
+
+
+<span class="c1"># TODO class Accesses (TODO is this IIR only?)</span>
+
+
+<div class="viewcode-block" id="BlockStmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.BlockStmt">[docs]</a><span class="k">class</span> <span class="nc">BlockStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">statements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stmt</span><span class="p">]</span></div>
+
+
+<span class="c1"># TODO Loop stuff</span>
+
+
+<div class="viewcode-block" id="ExprStmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.ExprStmt">[docs]</a><span class="k">class</span> <span class="nc">ExprStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">expr</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<div class="viewcode-block" id="ReturnStmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.ReturnStmt">[docs]</a><span class="k">class</span> <span class="nc">ReturnStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">expr</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<div class="viewcode-block" id="VarDeclStmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.VarDeclStmt">[docs]</a><span class="k">class</span> <span class="nc">VarDeclStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">data_type</span><span class="p">:</span> <span class="n">Type</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">op</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">init_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Expr</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="VerticalRegionDeclStmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.VerticalRegionDeclStmt">[docs]</a><span class="k">class</span> <span class="nc">VerticalRegionDeclStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">vertical_region</span><span class="p">:</span> <span class="n">VerticalRegion</span></div>
+
+
+<span class="c1"># TODO class StencilCallDeclStmt(Stmt)</span>
+<span class="c1"># TODO class BoundaryConditionDeclStmt(Stmt)</span>
+
+
+<div class="viewcode-block" id="IfStmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.IfStmt">[docs]</a><span class="k">class</span> <span class="nc">IfStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">cond_part</span><span class="p">:</span> <span class="n">ExprStmt</span>
+    <span class="n">then_part</span><span class="p">:</span> <span class="n">Stmt</span>
+    <span class="n">else_part</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Stmt</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="UnaryOperator"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.UnaryOperator">[docs]</a><span class="k">class</span> <span class="nc">UnaryOperator</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">op</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">operand</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<div class="viewcode-block" id="BinaryOperator"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.BinaryOperator">[docs]</a><span class="k">class</span> <span class="nc">BinaryOperator</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">op</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<div class="viewcode-block" id="AssignmentExpr"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.AssignmentExpr">[docs]</a><span class="k">class</span> <span class="nc">AssignmentExpr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">op</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<div class="viewcode-block" id="TernaryOperator"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.TernaryOperator">[docs]</a><span class="k">class</span> <span class="nc">TernaryOperator</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">cond</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span></div>
+
+
+<span class="c1"># TODO class FunCallExpr</span>
+<span class="c1"># TODO class StencilFunCallExpr</span>
+<span class="c1"># TODO class StencilFunArgExpr</span>
+
+
+<div class="viewcode-block" id="VarAccessExpr"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.VarAccessExpr">[docs]</a><span class="k">class</span> <span class="nc">VarAccessExpr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">index</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Expr</span><span class="p">]</span>
+    <span class="n">is_external</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="CartesianOffset"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.CartesianOffset">[docs]</a><span class="k">class</span> <span class="nc">CartesianOffset</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">i_offset</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">j_offset</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<div class="viewcode-block" id="UnstructuredOffset"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.UnstructuredOffset">[docs]</a><span class="k">class</span> <span class="nc">UnstructuredOffset</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">has_offset</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+
+<div class="viewcode-block" id="ZeroOffset"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.ZeroOffset">[docs]</a><span class="k">class</span> <span class="nc">ZeroOffset</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="FieldAccessExpr"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.FieldAccessExpr">[docs]</a><span class="k">class</span> <span class="nc">FieldAccessExpr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">vertical_offset</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">horizontal_offset</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CartesianOffset</span><span class="p">,</span> <span class="n">UnstructuredOffset</span><span class="p">,</span> <span class="n">ZeroOffset</span><span class="p">]</span></div>
+    <span class="c1"># TODO argument_map</span>
+    <span class="c1"># TODO argument_offset</span>
+    <span class="c1"># TODO negate_offset</span>
+
+
+<div class="viewcode-block" id="LiteralAccessExpr"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.LiteralAccessExpr">[docs]</a><span class="k">class</span> <span class="nc">LiteralAccessExpr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">data_type</span><span class="p">:</span> <span class="n">BuiltinType</span></div>
+
+
+<div class="viewcode-block" id="ReductionOverNeighborExpr"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.ReductionOverNeighborExpr">[docs]</a><span class="k">class</span> <span class="nc">ReductionOverNeighborExpr</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">op</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">rhs</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="n">init</span><span class="p">:</span> <span class="n">Expr</span>
+    <span class="c1"># TODO weights</span>
+    <span class="n">chain</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LocationType</span><span class="p">]</span></div>
+
+
+<span class="c1"># = sir.proto =</span>
+
+
+<div class="viewcode-block" id="Stencil"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.Stencil">[docs]</a><span class="k">class</span> <span class="nc">Stencil</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Field</span><span class="p">]</span>  <span class="c1"># TODO &#39;fields&#39; would shadow base class &#39;fields&#39;</span>
+    <span class="n">ast</span><span class="p">:</span> <span class="n">AST</span></div>
+
+
+<span class="c1"># TODO GlobalVariableMap</span>
+<span class="c1"># TODO GlobalVariableValue</span>
+<span class="c1"># TODO StencilFunction</span>
+
+
+<div class="viewcode-block" id="GridType"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.GridType">[docs]</a><span class="nd">@enum</span><span class="o">.</span><span class="n">unique</span>
+<span class="k">class</span> <span class="nc">GridType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">GridTypeUnknown</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Unstructured</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Cartesian</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="SIR"><a class="viewcode-back" href="../../_source/gtc.html#gtc.sir.SIR">[docs]</a><span class="k">class</span> <span class="nc">SIR</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">grid_type</span><span class="p">:</span> <span class="n">GridType</span>
+    <span class="n">stencils</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stencil</span><span class="p">]</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span></div>
+    <span class="c1"># TODO stencil_functions</span>
+    <span class="c1"># TODO global_variables</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

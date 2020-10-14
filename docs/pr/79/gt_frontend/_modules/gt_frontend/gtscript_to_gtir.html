@@ -1,0 +1,711 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gt_frontend.gtscript_to_gtir &mdash; gt_frontend 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> gt_frontend
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/fvm/fvm.html">Finite-Volume-Method on Median-Dual Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../language_reference.html">Language Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gt_frontend</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>gt_frontend.gtscript_to_gtir</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gt_frontend.gtscript_to_gtir</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">eve</span>
+<span class="kn">import</span> <span class="nn">gtc.common</span> <span class="k">as</span> <span class="nn">common</span>
+<span class="kn">import</span> <span class="nn">gtc.unstructured.gtir</span> <span class="k">as</span> <span class="nn">gtir</span>
+
+<span class="kn">from</span> <span class="nn">.built_in_types</span> <span class="kn">import</span> <span class="n">BuiltInTypeMeta</span>
+<span class="kn">from</span> <span class="nn">.gtscript</span> <span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">Local</span><span class="p">,</span> <span class="n">Location</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">,</span> <span class="n">TemporaryField</span>
+<span class="kn">from</span> <span class="nn">.gtscript_ast</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Argument</span><span class="p">,</span>
+    <span class="n">Assign</span><span class="p">,</span>
+    <span class="n">BinaryOp</span><span class="p">,</span>
+    <span class="n">Call</span><span class="p">,</span>
+    <span class="n">Computation</span><span class="p">,</span>
+    <span class="n">Constant</span><span class="p">,</span>
+    <span class="n">Generator</span><span class="p">,</span>
+    <span class="n">Interval</span><span class="p">,</span>
+    <span class="n">IterationOrder</span><span class="p">,</span>
+    <span class="n">LocationComprehension</span><span class="p">,</span>
+    <span class="n">LocationSpecification</span><span class="p">,</span>
+    <span class="n">Pass</span><span class="p">,</span>
+    <span class="n">Stencil</span><span class="p">,</span>
+    <span class="n">SubscriptMultiple</span><span class="p">,</span>
+    <span class="n">SubscriptSingle</span><span class="p">,</span>
+    <span class="n">Symbol</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">_reduction_mapping</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;sum&quot;</span><span class="p">:</span> <span class="n">gtir</span><span class="o">.</span><span class="n">ReduceOperator</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span>
+    <span class="s2">&quot;product&quot;</span><span class="p">:</span> <span class="n">gtir</span><span class="o">.</span><span class="n">ReduceOperator</span><span class="o">.</span><span class="n">MUL</span><span class="p">,</span>
+    <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">gtir</span><span class="o">.</span><span class="n">ReduceOperator</span><span class="o">.</span><span class="n">MIN</span><span class="p">,</span>
+    <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">gtir</span><span class="o">.</span><span class="n">ReduceOperator</span><span class="o">.</span><span class="n">MAX</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="SymbolTable"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.SymbolTable">[docs]</a><span class="k">class</span> <span class="nc">SymbolTable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple symbol table containing all the types of all symbols and potentially their values if known at compile</span>
+<span class="sd">    time</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">constants</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="c1"># Currently supported types: BuiltInType, LocationType, DataType</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">types</span> <span class="o">=</span> <span class="n">types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constants</span> <span class="o">=</span> <span class="n">constants</span>
+
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span> <span class="o">==</span> <span class="n">val</span>
+            <span class="p">):</span>  <span class="c1"># TODO(tehrengruber): just a workaround. remove when symbol table has proper scope!</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Symbol `</span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2">` already in symbol table.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span>
+
+    <span class="c1"># todo(tehrengruber): decide on constant folding: what, when, how?</span>
+<div class="viewcode-block" id="SymbolTable.materialize_constant"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.SymbolTable.materialize_constant">[docs]</a>    <span class="k">def</span> <span class="nf">materialize_constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">expected_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Materialize constant `symbol`, i.e. return the value of that symbol.</span>
+
+<span class="sd">        Currently the only constants are types, but this is currently the place where constant folding would happen,</span>
+<span class="sd">        hence the name.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            self._materialize_constant(&quot;Vertex&quot;) == LocationType.Vertex</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Symbol </span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Symbol </span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span><span class="si">}</span><span class="s2"> is not a constant&quot;</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constants</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">expected_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected a symbol </span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="n">expected_type</span><span class="si">}</span><span class="s2">, but got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span></div></div>
+
+
+<div class="viewcode-block" id="NodeCanonicalizer"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.NodeCanonicalizer">[docs]</a><span class="k">class</span> <span class="nc">NodeCanonicalizer</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">NodeTranslator</span><span class="p">):</span>
+<div class="viewcode-block" id="NodeCanonicalizer.apply"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.NodeCanonicalizer.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gt4py_ast</span><span class="p">:</span> <span class="n">Computation</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">gt4py_ast</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NodeCanonicalizer.visit_SubscriptSingle"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.NodeCanonicalizer.visit_SubscriptSingle">[docs]</a>    <span class="k">def</span> <span class="nf">visit_SubscriptSingle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">SubscriptSingle</span><span class="p">):</span>
+        <span class="c1"># TODO(tehrengruber): do canonicalization properly. this should happen in the translation from python to gtscript</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">SubscriptMultiple</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="n">Symbol</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">index</span><span class="p">)]))</span></div>
+
+<div class="viewcode-block" id="NodeCanonicalizer.visit_Computation"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.NodeCanonicalizer.visit_Computation">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Computation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Computation</span><span class="p">):</span>
+        <span class="c1"># canonicalize nested stencils</span>
+        <span class="n">stencils</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">stencil</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">stencils</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">body_node</span><span class="p">,</span> <span class="n">Stencil</span><span class="p">)</span> <span class="k">for</span> <span class="n">body_node</span> <span class="ow">in</span> <span class="n">stencil</span><span class="o">.</span><span class="n">body</span><span class="p">):</span>
+                <span class="c1"># if we find a nested stencil flatten it</span>
+                <span class="k">for</span> <span class="n">nested_stencil</span> <span class="ow">in</span> <span class="n">stencil</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nested_stencil</span><span class="p">,</span> <span class="n">Stencil</span><span class="p">)</span>
+                    <span class="c1"># TODO(tehrengruber): validate iteration_spec otherwise the TemporaryFieldDeclExtractor fails</span>
+                    <span class="n">flattened_stencil</span> <span class="o">=</span> <span class="n">Stencil</span><span class="p">(</span>
+                        <span class="n">iteration_spec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">stencil</span><span class="o">.</span><span class="n">iteration_spec</span><span class="p">)</span>
+                        <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">nested_stencil</span><span class="o">.</span><span class="n">iteration_spec</span><span class="p">),</span>
+                        <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">nested_stencil</span><span class="o">.</span><span class="n">body</span><span class="p">),</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">body_node</span><span class="p">,</span> <span class="n">Stencil</span><span class="p">)</span> <span class="k">for</span> <span class="n">body_node</span> <span class="ow">in</span> <span class="n">flattened_stencil</span><span class="o">.</span><span class="n">body</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Nesting a stencil inside a nested stencil not allowed.&quot;</span><span class="p">)</span>
+                    <span class="n">stencils</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flattened_stencil</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">body_node</span><span class="p">,</span> <span class="n">Stencil</span><span class="p">)</span> <span class="k">for</span> <span class="n">body_node</span> <span class="ow">in</span> <span class="n">stencil</span><span class="o">.</span><span class="n">body</span><span class="p">):</span>
+                <span class="c1"># if we have a non-nested stencil just keep it as is</span>
+                <span class="n">stencils</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">stencil</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mixing nested and unnested stencils not allowed.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># write back changes to node</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">stencils</span> <span class="o">=</span> <span class="n">stencils</span>
+
+        <span class="k">return</span> <span class="n">node</span></div>
+
+<div class="viewcode-block" id="NodeCanonicalizer.visit_Call"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.NodeCanonicalizer.visit_Call">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Call</span><span class="p">):</span>
+        <span class="c1"># TODO(tehrengruber): this could be done by the call inliner</span>
+        <span class="c1"># neighbor accessor canonicalization</span>
+        <span class="n">neighbor_selector_mapping</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;vertices&quot;</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Vertex&quot;</span><span class="p">),</span>  <span class="c1"># TODO(tehrengruber): common.LocationType.Vertex,</span>
+            <span class="s2">&quot;edges&quot;</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Edge&quot;</span><span class="p">),</span>  <span class="c1"># common.LocationType.Edge,</span>
+            <span class="s2">&quot;cells&quot;</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Cell&quot;</span><span class="p">),</span>  <span class="c1"># common. LocationType.Cell</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span> <span class="ow">in</span> <span class="n">neighbor_selector_mapping</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Call</span><span class="p">(</span>
+                <span class="n">func</span><span class="o">=</span><span class="s2">&quot;neighbors&quot;</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">neighbor_selector_mapping</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">]],</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># poor mans variable declarations extractor</span>
+<span class="c1"># TODO(tehrengruber): first type inference, than symbol table population?</span>
+<div class="viewcode-block" id="VarDeclExtractor"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.VarDeclExtractor">[docs]</a><span class="k">class</span> <span class="nc">VarDeclExtractor</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract all variable declarations and deduce their type.</span>
+
+<span class="sd">     - :class:`Location` - in location comprehensions and stencil iteration specifications</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            ... for v in vertices(e)</span>
+<span class="sd">            with Location(Vertex) as e: ...</span>
+
+<span class="sd">    - :class:`Field` - in the stencils arguments</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            field_1: Field[Edge, dtype]</span>
+<span class="sd">            field_2: Field[Edge, dtype]</span>
+<span class="sd">            field_3: Field[Edge, dtype]</span>
+
+<span class="sd">    - :class:`TemporaryField`: - implicitly by assigning to a previously unknown variable</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            field_3 = field_1+field_2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_table</span><span class="p">:</span> <span class="n">SymbolTable</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span> <span class="o">=</span> <span class="n">symbol_table</span>
+
+<div class="viewcode-block" id="VarDeclExtractor.apply"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.VarDeclExtractor.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">symbol_table</span><span class="p">:</span> <span class="n">SymbolTable</span><span class="p">,</span> <span class="n">gt4py_ast</span><span class="p">:</span> <span class="n">Computation</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">symbol_table</span><span class="p">)</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">gt4py_ast</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VarDeclExtractor.visit_LocationComprehension"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.VarDeclExtractor.visit_LocationComprehension">[docs]</a>    <span class="k">def</span> <span class="nf">visit_LocationComprehension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">LocationComprehension</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">node</span><span class="o">.</span><span class="n">iterator</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="s2">&quot;neighbors&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iterator</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">Symbol</span><span class="p">)</span>
+        <span class="n">location_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="o">.</span><span class="n">materialize_constant</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iterator</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Location</span><span class="p">[</span><span class="n">location_type</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VarDeclExtractor.visit_LocationSpecification"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.VarDeclExtractor.visit_LocationSpecification">[docs]</a>    <span class="k">def</span> <span class="nf">visit_LocationSpecification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">LocationSpecification</span><span class="p">):</span>
+        <span class="n">location_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="o">.</span><span class="n">materialize_constant</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Location</span><span class="p">[</span><span class="n">location_type</span><span class="p">]</span></div>
+
+    <span class="c1"># def visit_Call(self, node : Call):</span>
+    <span class="c1">#    assert isinstance(self.symbol_table[node.func], Callable)</span>
+    <span class="c1">#    return self.generic_visit(node)</span>
+
+<div class="viewcode-block" id="VarDeclExtractor.visit_Argument"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.VarDeclExtractor.visit_Argument">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Argument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Argument</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Argument declarations need to be handled in the frontend.&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TemporaryFieldDeclExtractor"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.TemporaryFieldDeclExtractor">[docs]</a><span class="k">class</span> <span class="nc">TemporaryFieldDeclExtractor</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="n">symbol_table</span><span class="p">:</span> <span class="n">SymbolTable</span>
+    <span class="n">primary_location</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">BuiltInTypeMeta</span>
+    <span class="p">]</span>  <span class="c1"># TODO(tehrengruber): is there a way to tell mypy this is a Location</span>
+
+    <span class="c1"># TODO(tehrengruber): enhance to support sparse dimension</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_table</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span> <span class="o">=</span> <span class="n">symbol_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_location</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TemporaryFieldDeclExtractor.apply"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.TemporaryFieldDeclExtractor.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">symbol_table</span><span class="p">,</span> <span class="n">gt4py_ast</span><span class="p">:</span> <span class="n">Computation</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">symbol_table</span><span class="p">)</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">gt4py_ast</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TemporaryFieldDeclExtractor.visit_LocationSpecification"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.TemporaryFieldDeclExtractor.visit_LocationSpecification">[docs]</a>    <span class="k">def</span> <span class="nf">visit_LocationSpecification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">LocationSpecification</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_location</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">name</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="TemporaryFieldDeclExtractor.visit_Assign"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.TemporaryFieldDeclExtractor.visit_Assign">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Assign</span><span class="p">):</span>
+        <span class="c1"># extract target symbol</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">SubscriptMultiple</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_location</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">location_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_location</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">TemporaryField</span><span class="p">[</span>
+                <span class="n">location_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="o">.</span><span class="n">materialize_constant</span><span class="p">(</span><span class="s2">&quot;dtype&quot;</span><span class="p">)</span>
+            <span class="p">]</span></div>
+
+<div class="viewcode-block" id="TemporaryFieldDeclExtractor.visit_Stencil"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.TemporaryFieldDeclExtractor.visit_Stencil">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Stencil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Stencil</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_location</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_location</span> <span class="o">=</span> <span class="kc">None</span></div></div>
+
+
+<div class="viewcode-block" id="SymbolResolutionValidation"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.SymbolResolutionValidation">[docs]</a><span class="k">class</span> <span class="nc">SymbolResolutionValidation</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensure all occurring symbols are in the symbol table.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_table</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span> <span class="o">=</span> <span class="n">symbol_table</span>
+
+<div class="viewcode-block" id="SymbolResolutionValidation.apply"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.SymbolResolutionValidation.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">symbol_table</span><span class="p">,</span> <span class="n">gt4py_ast</span><span class="p">:</span> <span class="n">Computation</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">symbol_table</span><span class="p">)</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">gt4py_ast</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SymbolResolutionValidation.visit_Argument"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.SymbolResolutionValidation.visit_Argument">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Argument</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Argument</span><span class="p">):</span>
+        <span class="c1"># we don&#39;t visit any arguments, as their types (which are also symbols)</span>
+        <span class="c1">#  are parsed in the frontend</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SymbolResolutionValidation.visit_Symbol"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.SymbolResolutionValidation.visit_Symbol">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Symbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">):</span>
+        <span class="c1"># every symbol not yet parsed must be supplied externally</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference to undefined symbol `</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="GTScriptToGTIR"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR">[docs]</a><span class="k">class</span> <span class="nc">GTScriptToGTIR</span><span class="p">(</span><span class="n">eve</span><span class="o">.</span><span class="n">NodeTranslator</span><span class="p">):</span>
+    <span class="c1"># TODO(tehrengruber): the current way of passing the location_stack is tidious and error prone</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_table</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># new scope so copy everything</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">symbol_table</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GTScriptToGTIR.apply"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">symbol_table</span><span class="p">,</span> <span class="n">gt4py_ast</span><span class="p">:</span> <span class="n">Computation</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">symbol_table</span><span class="p">)</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">gt4py_ast</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_IterationOrder"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_IterationOrder">[docs]</a>    <span class="k">def</span> <span class="nf">visit_IterationOrder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">IterationOrder</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gtir</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">LoopOrder</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">LoopOrder</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">order</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_Interval"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_Interval">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Interval</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_LocationSpecification"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_LocationSpecification">[docs]</a>    <span class="k">def</span> <span class="nf">visit_LocationSpecification</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">LocationSpecification</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gtir</span><span class="o">.</span><span class="n">LocationComprehension</span><span class="p">:</span>
+        <span class="n">loc_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="o">.</span><span class="n">materialize_constant</span><span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span> <span class="n">expected_type</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">LocationComprehension</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">chain</span><span class="o">=</span><span class="n">gtir</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="n">loc_type</span><span class="p">]),</span> <span class="n">of</span><span class="o">=</span><span class="n">gtir</span><span class="o">.</span><span class="n">Domain</span><span class="p">()</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_LocationComprehension"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_LocationComprehension">[docs]</a>    <span class="k">def</span> <span class="nf">visit_LocationComprehension</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">LocationComprehension</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gtir</span><span class="o">.</span><span class="n">LocationComprehension</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">iterator</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="s2">&quot;neighbors&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid neighbor specification. Expected a call to `neighbors`, but got `</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">iterator</span><span class="o">.</span><span class="n">func</span><span class="si">}</span><span class="s2">`.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">of</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">iterator</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">location_stack</span><span class="o">=</span><span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">of</span><span class="p">,</span> <span class="n">gtir</span><span class="o">.</span><span class="n">LocationRef</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected a `LocationRef` node, but got `</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">of</span><span class="p">)</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
+
+        <span class="n">src_comprehension</span> <span class="o">=</span> <span class="n">location_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">src_comprehension</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">of</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">src_comprehension</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">loc_type</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">iterator</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loc_type</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span>
+            <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="o">.</span><span class="n">materialize_constant</span><span class="p">(</span>
+                    <span class="n">loc_type</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">expected_type</span><span class="o">=</span><span class="n">gtir</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">chain</span> <span class="o">=</span> <span class="n">gtir</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">LocationComprehension</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">chain</span><span class="o">=</span><span class="n">chain</span><span class="p">,</span> <span class="n">of</span><span class="o">=</span><span class="n">of</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_Call"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_Call">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># TODO(tehrengruber): all of this can be done with the symbol table and the call inliner</span>
+        <span class="c1"># reductions</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span> <span class="ow">in</span> <span class="n">_reduction_mapping</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid number of arguments specified for function </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="si">}</span><span class="s2">. Expected 1, but </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="si">}</span><span class="s2"> were given.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Generator</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">generators</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid argument to </span><span class="si">{node.func}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">op</span> <span class="o">=</span> <span class="n">_reduction_mapping</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">]</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="s2">&quot;location_stack&quot;</span><span class="p">:</span> <span class="n">location_stack</span><span class="p">}</span>
+            <span class="p">)</span>
+
+            <span class="c1"># operand gets new location stack</span>
+            <span class="n">new_location_stack</span> <span class="o">=</span> <span class="n">location_stack</span> <span class="o">+</span> <span class="p">[</span><span class="n">neighbors</span><span class="p">]</span>
+
+            <span class="n">operand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">elt</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="s2">&quot;location_stack&quot;</span><span class="p">:</span> <span class="n">new_location_stack</span><span class="p">}</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">NeighborReduce</span><span class="p">(</span>
+                <span class="n">op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">operand</span><span class="o">=</span><span class="n">operand</span><span class="p">,</span>
+                <span class="n">neighbors</span><span class="o">=</span><span class="n">neighbors</span><span class="p">,</span>
+                <span class="n">location_type</span><span class="o">=</span><span class="n">location_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_Constant"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_Constant">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Constant</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">py_dtype_to_eve</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># TODO(tehrengruber): check</span>
+            <span class="nb">int</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">INT32</span><span class="p">,</span>
+            <span class="nb">float</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+            <span class="n">vtype</span><span class="o">=</span><span class="n">py_dtype_to_eve</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)],</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="n">location_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_Symbol"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_Symbol">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Symbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">location_stack</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">Field</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">TemporaryField</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">FieldAccess</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">location_type</span><span class="o">=</span><span class="n">location_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">subscript</span><span class="o">=</span><span class="p">[</span><span class="n">gtir</span><span class="o">.</span><span class="n">LocationRef</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">location_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)],</span>
+            <span class="p">)</span>  <span class="c1"># TODO(tehrengruber): just visit the subscript symbol</span>
+        <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">Location</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">LocationRef</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_SubscriptMultiple"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_SubscriptMultiple">[docs]</a>    <span class="k">def</span> <span class="nf">visit_SubscriptMultiple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">SubscriptMultiple</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">location_stack</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">Field</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">TemporaryField</span>
+        <span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">Location</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">indices</span>
+            <span class="p">)</span>
+            <span class="c1"># TODO(tehrengruber): just visit the index symbol</span>
+            <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">FieldAccess</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">subscript</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">gtir</span><span class="o">.</span><span class="n">LocationRef</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Symbol</span><span class="p">],</span> <span class="n">node</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span>
+                <span class="p">],</span>
+                <span class="n">location_type</span><span class="o">=</span><span class="n">location_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_Assign"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_Assign">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Assign</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gtir</span><span class="o">.</span><span class="n">AssignStmt</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">AssignStmt</span><span class="p">(</span>
+            <span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s2">&quot;location_stack&quot;</span><span class="p">:</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}),</span>
+            <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s2">&quot;location_stack&quot;</span><span class="p">:</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}),</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="n">location_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_BinaryOp"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_BinaryOp">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BinaryOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">BinaryOp</span><span class="p">,</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">BinaryOp</span><span class="p">(</span>
+            <span class="n">op</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+            <span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s2">&quot;location_stack&quot;</span><span class="p">:</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}),</span>
+            <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s2">&quot;location_stack&quot;</span><span class="p">:</span> <span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}),</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="n">location_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_Stencil"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_Stencil">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Stencil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Stencil</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gtir</span><span class="o">.</span><span class="n">Stencil</span><span class="p">:</span>
+        <span class="n">loop_order</span><span class="p">,</span> <span class="n">primary_location</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">it_spec</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">iteration_spec</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it_spec</span><span class="p">,</span> <span class="n">IterationOrder</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="n">loop_order</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="n">loop_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">it_spec</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it_spec</span><span class="p">,</span> <span class="n">LocationSpecification</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="n">primary_location</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="n">primary_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">it_spec</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it_spec</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+                <span class="c1"># TODO(tehrengruber): implement</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">loop_order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">primary_location</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="n">location_stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">primary_location</span><span class="p">]</span>  <span class="c1"># TODO(tehrengruber): we should store dimensions here</span>
+
+        <span class="n">horizontal_loops</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">stmt</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+            <span class="n">horizontal_loops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">gtir</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">(</span>
+                    <span class="n">stmt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">location_stack</span><span class="o">=</span><span class="n">location_stack</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                    <span class="n">location</span><span class="o">=</span><span class="n">primary_location</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">Stencil</span><span class="p">(</span>
+            <span class="n">vertical_loops</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">gtir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">(</span><span class="n">loop_order</span><span class="o">=</span><span class="n">loop_order</span><span class="p">,</span> <span class="n">horizontal_loops</span><span class="o">=</span><span class="n">horizontal_loops</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_transform_field_type</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field_type</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">field_type</span><span class="p">,</span> <span class="n">Field</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">field_type</span><span class="p">,</span> <span class="n">TemporaryField</span><span class="p">)</span>
+        <span class="o">*</span><span class="n">location_types</span><span class="p">,</span> <span class="n">vtype</span><span class="p">,</span> <span class="o">=</span> <span class="n">field_type</span><span class="o">.</span><span class="n">args</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vtype</span><span class="p">,</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">location_types</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">location_types</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">)</span>
+            <span class="n">horizontal_dim</span> <span class="o">=</span> <span class="n">gtir</span><span class="o">.</span><span class="n">HorizontalDimension</span><span class="p">(</span><span class="n">primary</span><span class="o">=</span><span class="n">location_types</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">location_types</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">location_types</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">location_types</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">Local</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">location_types</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span>
+            <span class="p">)</span>
+            <span class="n">horizontal_dim</span> <span class="o">=</span> <span class="n">gtir</span><span class="o">.</span><span class="n">HorizontalDimension</span><span class="p">(</span>
+                <span class="n">primary</span><span class="o">=</span><span class="n">location_types</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">secondary</span><span class="o">=</span><span class="n">gtir</span><span class="o">.</span><span class="n">NeighborChain</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="p">[</span><span class="n">location_types</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">UField</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="n">vtype</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="n">gtir</span><span class="o">.</span><span class="n">Dimensions</span><span class="p">(</span><span class="n">horizontal</span><span class="o">=</span><span class="n">horizontal_dim</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_Computation"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_Computation">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Computation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Computation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gtir</span><span class="o">.</span><span class="n">Computation</span><span class="p">:</span>
+        <span class="c1"># parse arguments</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">Mesh</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;First stencil argument must be a gtscript.Mesh&quot;</span><span class="p">)</span>
+
+        <span class="n">field_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">field_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform_field_type</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">]))</span>
+
+        <span class="c1"># parse temporary fields</span>
+        <span class="n">temporary_field_decls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">type_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">type_</span><span class="p">,</span> <span class="n">TemporaryField</span><span class="p">):</span>
+                <span class="n">temporary_field_decls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform_field_type</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">type_</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">gtir</span><span class="o">.</span><span class="n">Computation</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">field_args</span><span class="p">,</span>
+            <span class="n">stencils</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">stencils</span><span class="p">),</span>
+            <span class="n">declarations</span><span class="o">=</span><span class="n">temporary_field_decls</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="GTScriptToGTIR.visit_Pass"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_to_gtir.GTScriptToGTIR.visit_Pass">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Pass</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Not implemented.&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.sir_to_naive &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.sir_to_naive</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.sir_to_naive</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">MappingProxyType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span> <span class="nn">eve</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeTranslator</span>
+<span class="kn">from</span> <span class="nn">gtc</span> <span class="kn">import</span> <span class="n">common</span><span class="p">,</span> <span class="n">sir</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured</span> <span class="kn">import</span> <span class="n">naive</span>
+
+
+<div class="viewcode-block" id="SirToNaive"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive">[docs]</a><span class="k">class</span> <span class="nc">SirToNaive</span><span class="p">(</span><span class="n">NodeTranslator</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">memo</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">memo</span><span class="o">=</span><span class="n">memo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isControlFlow</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sir_stencil_params</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">{}</span>
+        <span class="p">)</span>  <span class="c1"># elements are sir.Field # TODO this is a dummy symbol table for stencil parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># TODO experimental</span>
+
+    <span class="n">BINOPSTR_TO_ENUM</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="p">]]</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;+&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span>
+            <span class="s2">&quot;-&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="o">.</span><span class="n">SUB</span><span class="p">,</span>
+            <span class="s2">&quot;*&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="o">.</span><span class="n">MUL</span><span class="p">,</span>
+            <span class="s2">&quot;/&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="o">.</span><span class="n">DIV</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span>
+        <span class="n">Mapping</span><span class="p">[</span><span class="n">sir</span><span class="o">.</span><span class="n">LocationType</span><span class="p">,</span> <span class="n">naive</span><span class="o">.</span><span class="n">LocationType</span><span class="p">]</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">sir</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Edge</span><span class="p">:</span> <span class="n">naive</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Edge</span><span class="p">,</span>
+            <span class="n">sir</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Cell</span><span class="p">:</span> <span class="n">naive</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Face</span><span class="p">,</span>
+            <span class="n">sir</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Vertex</span><span class="p">:</span> <span class="n">naive</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_field_location_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">Field</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">sparse_part</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span>
+                <span class="n">field</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">sparse_part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span>
+            <span class="n">field</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">dense_location_type</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_is_sparse_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">:</span> <span class="n">sir</span><span class="o">.</span><span class="n">Field</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">sparse_part</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="SirToNaive.visit_Field"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_Field">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">sparse_part</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">sparse_part</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">sparse_location_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">sparse_part</span><span class="p">:</span>
+            <span class="n">sparse_location_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">sparse_part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">]</span>
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">UnstructuredField</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">field_dimensions</span><span class="o">.</span><span class="n">horizontal_dimension</span><span class="o">.</span><span class="n">dense_location_type</span>
+            <span class="p">],</span>
+            <span class="n">sparse_location_type</span><span class="o">=</span><span class="n">sparse_location_type</span><span class="p">,</span>
+            <span class="n">data_type</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_Stencil"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_Stencil">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Stencil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Needs to run before the body/ast as it creates a dummy symbol table for stencil parameters</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sir_stencil_params</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+
+        <span class="p">[</span><span class="n">declarations</span><span class="p">,</span> <span class="n">k_loops</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">Computation</span><span class="p">(</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+            <span class="n">stencils</span><span class="o">=</span><span class="p">[</span><span class="n">naive</span><span class="o">.</span><span class="n">Stencil</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">k_loops</span><span class="o">=</span><span class="n">k_loops</span><span class="p">,</span> <span class="n">declarations</span><span class="o">=</span><span class="n">declarations</span><span class="p">)],</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_VerticalRegion"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_VerticalRegion">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VerticalRegion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># TODO don&#39;t ignore interval</span>
+        <span class="p">[</span><span class="n">declarations</span><span class="p">,</span> <span class="n">horizontal_loops</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ast</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">declarations</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">naive</span><span class="o">.</span><span class="n">ForK</span><span class="p">(</span><span class="n">loop_order</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">loop_order</span><span class="p">,</span> <span class="n">horizontal_loops</span><span class="o">=</span><span class="n">horizontal_loops</span><span class="p">,)],</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_VerticalRegionDeclStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_VerticalRegionDeclStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VerticalRegionDeclStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">vertical_region</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_FieldAccessExpr"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_FieldAccessExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_FieldAccessExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">horizontal_offset</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># TODO</span>
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">FieldAccessExpr</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="n">horizontal_offset</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">vertical_offset</span><span class="p">),</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_field_location_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sir_stencil_params</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]),</span>
+            <span class="n">is_sparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_sparse_field</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sir_stencil_params</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_AssignmentExpr"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_AssignmentExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_AssignmentExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span>
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">AssignmentExpr</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">),</span> <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_ExprStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_ExprStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_ExprStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">ExprStmt</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">expr</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_VarAccessExpr"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_VarAccessExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VarAccessExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">loctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="n">loctype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span><span class="p">:</span>
+            <span class="n">loctype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;no location type&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">FieldAccessExpr</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">location_type</span><span class="o">=</span><span class="n">loctype</span><span class="p">,</span> <span class="n">is_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_BlockStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_BlockStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BlockStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isControlFlow</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">statements</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sir</span><span class="o">.</span><span class="n">VerticalRegionDeclStmt</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">horizontal_loops</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">declarations</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">statements</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sir</span><span class="o">.</span><span class="n">VarDeclStmt</span><span class="p">):</span>
+                    <span class="c1"># TODO this doesn&#39;t work: if we move the declaration out of the horizontal loop, we need to promote it to a field</span>
+                    <span class="p">[</span><span class="n">vardecl</span><span class="p">,</span> <span class="n">initexpr</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                    <span class="n">declarations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vardecl</span><span class="p">)</span>
+                    <span class="n">transformed_stmt</span> <span class="o">=</span> <span class="n">naive</span><span class="o">.</span><span class="n">ExprStmt</span><span class="p">(</span>
+                        <span class="n">expr</span><span class="o">=</span><span class="n">naive</span><span class="o">.</span><span class="n">AssignmentExpr</span><span class="p">(</span>
+                            <span class="n">left</span><span class="o">=</span><span class="n">naive</span><span class="o">.</span><span class="n">FieldAccessExpr</span><span class="p">(</span>
+                                <span class="n">name</span><span class="o">=</span><span class="n">vardecl</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                                <span class="n">location_type</span><span class="o">=</span><span class="n">initexpr</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
+                                <span class="n">is_sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="p">),</span>
+                            <span class="n">right</span><span class="o">=</span><span class="n">initexpr</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">transformed_stmt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+                <span class="n">horizontal_loops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">naive</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">(</span><span class="n">ast</span><span class="o">=</span><span class="n">naive</span><span class="o">.</span><span class="n">BlockStmt</span><span class="p">(</span><span class="n">statements</span><span class="o">=</span><span class="p">[</span><span class="n">transformed_stmt</span><span class="p">]))</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">declarations</span><span class="p">,</span> <span class="n">horizontal_loops</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_BinaryOperator"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_BinaryOperator">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BinaryOperator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">BinaryOp</span><span class="p">(</span>
+            <span class="n">op</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">BINOPSTR_TO_ENUM</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+            <span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">),</span>
+            <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_VarDeclStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_VarDeclStmt">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VarDeclStmt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span>
+        <span class="k">assert</span> <span class="n">node</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">init_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">data_type</span><span class="o">.</span><span class="n">data_type</span><span class="p">,</span> <span class="n">sir</span><span class="o">.</span><span class="n">BuiltinType</span><span class="p">)</span>
+
+        <span class="n">loctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="n">loctype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">loctype</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loctype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;no location type&quot;</span><span class="p">)</span>
+
+        <span class="n">init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">init_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">naive</span><span class="o">.</span><span class="n">TemporaryFieldDeclStmt</span><span class="p">(</span>
+                <span class="n">data_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">data_type</span><span class="o">.</span><span class="n">data_type</span><span class="o">.</span><span class="n">type_id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">loctype</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">init</span><span class="p">,</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_LiteralAccessExpr"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_LiteralAccessExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_LiteralAccessExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">loctype</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="n">loctype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span><span class="p">:</span>
+            <span class="n">loctype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;no location type&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">LiteralExpr</span><span class="p">(</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">data_type</span><span class="o">.</span><span class="n">type_id</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">loctype</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_ReductionOverNeighborExpr"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_ReductionOverNeighborExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_ReductionOverNeighborExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">init</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_loc_type_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">naive</span><span class="o">.</span><span class="n">ReduceOverNeighbourExpr</span><span class="p">(</span>
+            <span class="n">operation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">BINOPSTR_TO_ENUM</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+            <span class="n">right</span><span class="o">=</span><span class="n">right</span><span class="p">,</span>
+            <span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">,</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SIR_TO_NAIVE_LOCATION_TYPE</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">chain</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SirToNaive.visit_AST"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.sir_to_naive.SirToNaive.visit_AST">[docs]</a>    <span class="k">def</span> <span class="nf">visit_AST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">sir</span><span class="o">.</span><span class="n">BlockStmt</span><span class="p">)</span>  <span class="c1"># TODO add check to IR</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isControlFlow</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">isControlFlow</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">isControlFlow</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">isControlFlow</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="s2">&quot;unreachable: there should not be an AST node in the stencil ast&quot;</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

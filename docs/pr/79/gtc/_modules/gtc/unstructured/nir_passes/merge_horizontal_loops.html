@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.nir_passes.merge_horizontal_loops &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.nir_passes.merge_horizontal_loops</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.nir_passes.merge_horizontal_loops</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="kn">import</span> <span class="nn">eve</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">NodeTranslator</span><span class="p">,</span> <span class="n">NodeVisitor</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured</span> <span class="kn">import</span> <span class="n">nir</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured.nir_passes.field_dependency_graph</span> <span class="kn">import</span> <span class="n">generate_dependency_graph</span>
+
+
+<div class="viewcode-block" id="_FindMergeCandidatesAnalysis"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops._FindMergeCandidatesAnalysis">[docs]</a><span class="k">class</span> <span class="nc">_FindMergeCandidatesAnalysis</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find horizontal loop merge candidates.</span>
+
+<span class="sd">    Result is a List[List[HorizontalLoop]], where the inner list contains mergable loops.</span>
+<span class="sd">    Currently the merge sets are ordered and disjunct, see question below.</span>
+
+<span class="sd">    In the following examples A, B, C, ... are loops</span>
+
+<span class="sd">    TODO Question</span>
+<span class="sd">    Should we report all possible merge candidates, example: A, B, C</span>
+<span class="sd">     - A + B and B + C possible, but not A + B + C  -&gt; want both candidates (currently we only return [A,B])</span>
+<span class="sd">     - A + B + C possible, we only want A + B + C, but not A + B and B + C as candidates</span>
+
+<span class="sd">    Candidates are selected as follows:</span>
+<span class="sd">     - Different location types cannot be fused</span>
+<span class="sd">     - Only adjacent loops are considered</span>
+<span class="sd">       Example: if A, C can be fused but an independent B which cannot be fused (e.g. different location) is in the middle,</span>
+<span class="sd">                we don&#39;t consider A + C for fusion</span>
+<span class="sd">     - Read after write access</span>
+<span class="sd">        - if the read is without offset, we can fuse</span>
+<span class="sd">        - if the read is with offset, we cannot fuse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidate</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="_FindMergeCandidatesAnalysis.find"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops._FindMergeCandidatesAnalysis.find">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">nir</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Runs the visitor, returns merge candidates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">candidate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">candidate</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">candidates</span></div>
+
+<div class="viewcode-block" id="_FindMergeCandidatesAnalysis.has_read_with_offset_after_write"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops._FindMergeCandidatesAnalysis.has_read_with_offset_after_write">[docs]</a>    <span class="k">def</span> <span class="nf">has_read_with_offset_after_write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="s2">&quot;extent&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="_FindMergeCandidatesAnalysis.visit_HorizontalLoop"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops._FindMergeCandidatesAnalysis.visit_HorizontalLoop">[docs]</a>    <span class="k">def</span> <span class="nf">visit_HorizontalLoop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">candidate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">candidate</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">location_type</span>
+        <span class="p">):</span>  <span class="c1"># same location type as previous</span>
+            <span class="n">dependencies</span> <span class="o">=</span> <span class="n">generate_dependency_graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate</span> <span class="o">+</span> <span class="p">[</span><span class="n">node</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_read_with_offset_after_write</span><span class="p">(</span><span class="n">dependencies</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">candidate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="k">return</span>
+        <span class="c1"># cannot merge to previous loop:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate</span><span class="p">)</span>  <span class="c1"># add a new merge set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidate</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_find_merge_candidates</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_FindMergeCandidatesAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MergeHorizontalLoops"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops.MergeHorizontalLoops">[docs]</a><span class="k">class</span> <span class="nc">MergeHorizontalLoops</span><span class="p">(</span><span class="n">NodeTranslator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MergeHorizontalLoops.apply"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops.MergeHorizontalLoops.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">,</span> <span class="n">merge_candidates</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># merge_candidates = _find_merge_candidates(root)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">merge_candidates</span><span class="o">=</span><span class="n">merge_candidates</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MergeHorizontalLoops.visit_VerticalLoop"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops.MergeHorizontalLoops.visit_VerticalLoop">[docs]</a>    <span class="k">def</span> <span class="nf">visit_VerticalLoop</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">merge_candidates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">nir</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">]],</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">merge_candidates</span><span class="p">:</span>
+            <span class="n">declarations</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">statements</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">location_type</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+
+            <span class="n">first_index</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">horizontal_loops</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">candidate</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">last_index</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">horizontal_loops</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">candidate</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">candidate</span><span class="p">:</span>
+                <span class="n">declarations</span> <span class="o">+=</span> <span class="n">loop</span><span class="o">.</span><span class="n">stmt</span><span class="o">.</span><span class="n">declarations</span>
+                <span class="n">statements</span> <span class="o">+=</span> <span class="n">loop</span><span class="o">.</span><span class="n">stmt</span><span class="o">.</span><span class="n">statements</span>
+
+            <span class="n">node</span><span class="o">.</span><span class="n">horizontal_loops</span><span class="p">[</span><span class="n">first_index</span> <span class="p">:</span> <span class="n">last_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>  <span class="c1"># noqa: E203</span>
+                <span class="n">nir</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">(</span>
+                    <span class="n">stmt</span><span class="o">=</span><span class="n">nir</span><span class="o">.</span><span class="n">BlockStmt</span><span class="p">(</span>
+                        <span class="n">declarations</span><span class="o">=</span><span class="n">declarations</span><span class="p">,</span>
+                        <span class="n">statements</span><span class="o">=</span><span class="n">statements</span><span class="p">,</span>
+                        <span class="n">location_type</span><span class="o">=</span><span class="n">location_type</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">location_type</span><span class="o">=</span><span class="n">location_type</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">node</span></div></div>
+
+
+<div class="viewcode-block" id="merge_horizontal_loops"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops.merge_horizontal_loops">[docs]</a><span class="k">def</span> <span class="nf">merge_horizontal_loops</span><span class="p">(</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">,</span> <span class="n">merge_candidates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">nir</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">]]</span>
+<span class="p">):</span>
+    <span class="k">return</span> <span class="n">MergeHorizontalLoops</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">merge_candidates</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="find_and_merge_horizontal_loops"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops.find_and_merge_horizontal_loops">[docs]</a><span class="k">def</span> <span class="nf">find_and_merge_horizontal_loops</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
+    <span class="n">copy</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">vertical_loops</span> <span class="o">=</span> <span class="n">eve</span><span class="o">.</span><span class="n">FindNodes</span><span class="p">()</span><span class="o">.</span><span class="n">by_type</span><span class="p">(</span><span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">vertical_loops</span><span class="p">:</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">merge_horizontal_loops</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">_find_merge_candidates</span><span class="p">(</span><span class="n">loop</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">copy</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

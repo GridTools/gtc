@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gt_frontend.frontend &mdash; gt_frontend 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> gt_frontend
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/fvm/fvm.html">Finite-Volume-Method on Median-Dual Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../language_reference.html">Language Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">gt_frontend</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>gt_frontend.frontend</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gt_frontend.frontend</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
+
+<span class="kn">import</span> <span class="nn">devtools</span>
+<span class="kn">from</span> <span class="nn">gt_frontend.gtscript_to_gtir</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GTScriptToGTIR</span><span class="p">,</span>
+    <span class="n">NodeCanonicalizer</span><span class="p">,</span>
+    <span class="n">SymbolResolutionValidation</span><span class="p">,</span>
+    <span class="n">SymbolTable</span><span class="p">,</span>
+    <span class="n">TemporaryFieldDeclExtractor</span><span class="p">,</span>
+    <span class="n">VarDeclExtractor</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">gt_frontend.py_to_gtscript</span> <span class="kn">import</span> <span class="n">PyToGTScript</span>
+
+<span class="kn">from</span> <span class="nn">gtc</span> <span class="kn">import</span> <span class="n">common</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured.gtir_to_nir</span> <span class="kn">import</span> <span class="n">GtirToNir</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured.nir_passes.merge_horizontal_loops</span> <span class="kn">import</span> <span class="n">find_and_merge_horizontal_loops</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured.nir_to_usid</span> <span class="kn">import</span> <span class="n">NirToUsid</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured.usid_codegen</span> <span class="kn">import</span> <span class="n">UsidGpuCodeGenerator</span>
+
+
+<span class="c1"># todo(tehrengruber): the frontend as written here will disappear at some point as the `PassManager` in Eve and</span>
+<span class="c1">#  build stages in GT4Py provide most of the functionality here. Please keep this class as reduced as possible in</span>
+<span class="c1">#  the meantime.</span>
+<div class="viewcode-block" id="GTScriptCompilationTask"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.frontend.GTScriptCompilationTask">[docs]</a><span class="k">class</span> <span class="nc">GTScriptCompilationTask</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">definition</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span> <span class="o">=</span> <span class="n">SymbolTable</span><span class="p">(</span>
+            <span class="n">types</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="p">,</span>
+                <span class="s2">&quot;Vertex&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">,</span>
+                <span class="s2">&quot;Edge&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">,</span>
+                <span class="s2">&quot;Cell&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">constants</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span>
+                <span class="s2">&quot;Vertex&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Vertex</span><span class="p">,</span>
+                <span class="s2">&quot;Edge&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Edge</span><span class="p">,</span>
+                <span class="s2">&quot;Cell&quot;</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Cell</span><span class="p">,</span>
+                <span class="c1"># &quot;Field&quot;: Field,</span>
+                <span class="c1"># &quot;Mesh&quot;: Mesh</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">definition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">python_ast</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gtscript_ast</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gtir</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cpp_code</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="GTScriptCompilationTask._annotate_args"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.frontend.GTScriptCompilationTask._annotate_args">[docs]</a>    <span class="k">def</span> <span class="nf">_annotate_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Populate symbol table by extracting the argument types from scope the function is embedded in.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">annotation</span></div>
+
+    <span class="k">def</span> <span class="nf">_generate_gtscript_ast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_annotate_args</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">python_ast</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gtscript_ast</span> <span class="o">=</span> <span class="n">PyToGTScript</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">python_ast</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gtscript_ast</span>
+
+    <span class="k">def</span> <span class="nf">_generate_gtir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Canonicalization</span>
+        <span class="n">NodeCanonicalizer</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gtscript_ast</span><span class="p">)</span>
+
+        <span class="c1"># Populate symbol table</span>
+        <span class="n">VarDeclExtractor</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gtscript_ast</span><span class="p">)</span>
+        <span class="n">TemporaryFieldDeclExtractor</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gtscript_ast</span><span class="p">)</span>
+        <span class="n">SymbolResolutionValidation</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gtscript_ast</span><span class="p">)</span>
+
+        <span class="c1"># Transform into GTIR</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gtir</span> <span class="o">=</span> <span class="n">GTScriptToGTIR</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_table</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gtscript_ast</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gtir</span>
+
+    <span class="k">def</span> <span class="nf">_generate_cpp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">code_generator</span><span class="o">=</span><span class="n">UsidGpuCodeGenerator</span><span class="p">):</span>
+        <span class="c1"># Code generation</span>
+        <span class="n">nir_comp</span> <span class="o">=</span> <span class="n">GtirToNir</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gtir</span><span class="p">)</span>
+        <span class="n">nir_comp</span> <span class="o">=</span> <span class="n">find_and_merge_horizontal_loops</span><span class="p">(</span><span class="n">nir_comp</span><span class="p">)</span>
+        <span class="n">usid_comp</span> <span class="o">=</span> <span class="n">NirToUsid</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">nir_comp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="n">devtools</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">nir_comp</span><span class="p">)</span>
+            <span class="n">devtools</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">usid_comp</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cpp_code</span> <span class="o">=</span> <span class="n">code_generator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">usid_comp</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpp_code</span>
+
+<div class="viewcode-block" id="GTScriptCompilationTask.generate"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.frontend.GTScriptCompilationTask.generate">[docs]</a>    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">code_generator</span><span class="o">=</span><span class="n">UsidGpuCodeGenerator</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate c++ code of the stencil.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_generate_gtscript_ast</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_generate_gtir</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_generate_cpp</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span> <span class="n">code_generator</span><span class="o">=</span><span class="n">code_generator</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpp_code</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

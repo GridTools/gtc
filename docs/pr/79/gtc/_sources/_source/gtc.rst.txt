@@ -1,0 +1,46 @@
+gtc package
+===========
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gtc.structured
+   gtc.unstructured
+
+Submodules
+----------
+
+gtc.common module
+-----------------
+
+.. automodule:: gtc.common
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.sir module
+--------------
+
+.. automodule:: gtc.sir
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.version module
+------------------
+
+.. automodule:: gtc.version
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: gtc
+   :members:
+   :undoc-members:
+   :show-inheritance:

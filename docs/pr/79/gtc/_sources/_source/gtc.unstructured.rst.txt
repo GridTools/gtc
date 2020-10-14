@@ -1,0 +1,94 @@
+gtc.unstructured package
+========================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gtc.unstructured.nir_passes
+   gtc.unstructured.sir_passes
+
+Submodules
+----------
+
+gtc.unstructured.gtir module
+----------------------------
+
+.. automodule:: gtc.unstructured.gtir
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.gtir\_to\_nir module
+-------------------------------------
+
+.. automodule:: gtc.unstructured.gtir_to_nir
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.naive module
+-----------------------------
+
+.. automodule:: gtc.unstructured.naive
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.naive\_codegen module
+--------------------------------------
+
+.. automodule:: gtc.unstructured.naive_codegen
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.nir module
+---------------------------
+
+.. automodule:: gtc.unstructured.nir
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.nir\_to\_usid module
+-------------------------------------
+
+.. automodule:: gtc.unstructured.nir_to_usid
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.sir\_to\_naive module
+--------------------------------------
+
+.. automodule:: gtc.unstructured.sir_to_naive
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.usid module
+----------------------------
+
+.. automodule:: gtc.unstructured.usid
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.unstructured.usid\_codegen module
+-------------------------------------
+
+.. automodule:: gtc.unstructured.usid_codegen
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: gtc.unstructured
+   :members:
+   :undoc-members:
+   :show-inheritance:

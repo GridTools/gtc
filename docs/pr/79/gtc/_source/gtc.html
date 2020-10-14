@@ -1,0 +1,1243 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc package &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gtc.structured package" href="gtc.structured.html" />
+    <link rel="prev" title="gtc" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../apiref.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">gtc</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gtc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-gtc.common">gtc.common module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-gtc.sir">gtc.sir module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-gtc.version">gtc.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-gtc">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../apiref.html">API Documentation</a> &raquo;</li>
+        
+          <li><a href="modules.html">gtc</a> &raquo;</li>
+        
+      <li>gtc package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_source/gtc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gtc-package">
+<h1>gtc package<a class="headerlink" href="#gtc-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gtc.structured.html">gtc.structured package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gtc.structured.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.structured.html#module-gtc.structured.common">gtc.structured.common module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.structured.html#module-gtc.structured.gt_ir">gtc.structured.gt_ir module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.structured.html#module-gtc.structured.impl_ir">gtc.structured.impl_ir module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.structured.html#module-gtc.structured">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gtc.unstructured.html">gtc.unstructured package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gtc.unstructured.nir_passes.html">gtc.unstructured.nir_passes package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gtc.unstructured.nir_passes.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gtc.unstructured.nir_passes.html#module-gtc.unstructured.nir_passes.field_dependency_graph">gtc.unstructured.nir_passes.field_dependency_graph module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gtc.unstructured.nir_passes.html#module-gtc.unstructured.nir_passes.merge_horizontal_loops">gtc.unstructured.nir_passes.merge_horizontal_loops module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gtc.unstructured.nir_passes.html#module-gtc.unstructured.nir_passes">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gtc.unstructured.sir_passes.html">gtc.unstructured.sir_passes package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gtc.unstructured.sir_passes.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gtc.unstructured.sir_passes.html#module-gtc.unstructured.sir_passes.infer_local_variable_location_type">gtc.unstructured.sir_passes.infer_local_variable_location_type module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gtc.unstructured.sir_passes.html#module-gtc.unstructured.sir_passes">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.gtir">gtc.unstructured.gtir module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.gtir_to_nir">gtc.unstructured.gtir_to_nir module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.naive">gtc.unstructured.naive module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.naive_codegen">gtc.unstructured.naive_codegen module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.nir">gtc.unstructured.nir module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.nir_to_usid">gtc.unstructured.nir_to_usid module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.sir_to_naive">gtc.unstructured.sir_to_naive module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.usid">gtc.unstructured.usid module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured.usid_codegen">gtc.unstructured.usid_codegen module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gtc.unstructured.html#module-gtc.unstructured">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-gtc.common">
+<span id="gtc-common-module"></span><h2>gtc.common module<a class="headerlink" href="#module-gtc.common" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="gtc.common.AssignmentKind">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.common.</code><code class="sig-name descname">AssignmentKind</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/common.html#AssignmentKind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.common.AssignmentKind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.type_definitions.StrEnum" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.type_definitions.StrEnum</span></code></a></p>
+<p>Kind of assignment: plain or combined with operations.</p>
+<dl class="py attribute">
+<dt id="gtc.common.AssignmentKind.ADD">
+<code class="sig-name descname">ADD</code><em class="property"> = '+='</em><a class="headerlink" href="#gtc.common.AssignmentKind.ADD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.AssignmentKind.DIV">
+<code class="sig-name descname">DIV</code><em class="property"> = '/='</em><a class="headerlink" href="#gtc.common.AssignmentKind.DIV" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.AssignmentKind.MUL">
+<code class="sig-name descname">MUL</code><em class="property"> = '*='</em><a class="headerlink" href="#gtc.common.AssignmentKind.MUL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.AssignmentKind.PLAIN">
+<code class="sig-name descname">PLAIN</code><em class="property"> = '='</em><a class="headerlink" href="#gtc.common.AssignmentKind.PLAIN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.AssignmentKind.SUB">
+<code class="sig-name descname">SUB</code><em class="property"> = '-='</em><a class="headerlink" href="#gtc.common.AssignmentKind.SUB" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.common.BinaryOperator">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.common.</code><code class="sig-name descname">BinaryOperator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/common.html#BinaryOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.common.BinaryOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.type_definitions.StrEnum" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.type_definitions.StrEnum</span></code></a></p>
+<p>Binary operator identifier.</p>
+<dl class="py attribute">
+<dt id="gtc.common.BinaryOperator.ADD">
+<code class="sig-name descname">ADD</code><em class="property"> = '+'</em><a class="headerlink" href="#gtc.common.BinaryOperator.ADD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.BinaryOperator.DIV">
+<code class="sig-name descname">DIV</code><em class="property"> = '/'</em><a class="headerlink" href="#gtc.common.BinaryOperator.DIV" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.BinaryOperator.MUL">
+<code class="sig-name descname">MUL</code><em class="property"> = '*'</em><a class="headerlink" href="#gtc.common.BinaryOperator.MUL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.BinaryOperator.SUB">
+<code class="sig-name descname">SUB</code><em class="property"> = '-'</em><a class="headerlink" href="#gtc.common.BinaryOperator.SUB" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.common.BuiltInLiteral">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.common.</code><code class="sig-name descname">BuiltInLiteral</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/common.html#BuiltInLiteral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.common.BuiltInLiteral" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.type_definitions.IntEnum" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.type_definitions.IntEnum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="gtc.common.BuiltInLiteral.MAX_VALUE">
+<code class="sig-name descname">MAX_VALUE</code><em class="property"> = 0</em><a class="headerlink" href="#gtc.common.BuiltInLiteral.MAX_VALUE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.BuiltInLiteral.MIN_VALUE">
+<code class="sig-name descname">MIN_VALUE</code><em class="property"> = 1</em><a class="headerlink" href="#gtc.common.BuiltInLiteral.MIN_VALUE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.BuiltInLiteral.ONE">
+<code class="sig-name descname">ONE</code><em class="property"> = 3</em><a class="headerlink" href="#gtc.common.BuiltInLiteral.ONE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.BuiltInLiteral.ZERO">
+<code class="sig-name descname">ZERO</code><em class="property"> = 2</em><a class="headerlink" href="#gtc.common.BuiltInLiteral.ZERO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.common.DataType">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.common.</code><code class="sig-name descname">DataType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/common.html#DataType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.common.DataType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.type_definitions.IntEnum" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.type_definitions.IntEnum</span></code></a></p>
+<p>Data type identifier.</p>
+<dl class="py attribute">
+<dt id="gtc.common.DataType.AUTO">
+<code class="sig-name descname">AUTO</code><em class="property"> = 1</em><a class="headerlink" href="#gtc.common.DataType.AUTO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.DataType.BOOLEAN">
+<code class="sig-name descname">BOOLEAN</code><em class="property"> = 2</em><a class="headerlink" href="#gtc.common.DataType.BOOLEAN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.DataType.FLOAT32">
+<code class="sig-name descname">FLOAT32</code><em class="property"> = 4</em><a class="headerlink" href="#gtc.common.DataType.FLOAT32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.DataType.FLOAT64">
+<code class="sig-name descname">FLOAT64</code><em class="property"> = 5</em><a class="headerlink" href="#gtc.common.DataType.FLOAT64" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.DataType.INT32">
+<code class="sig-name descname">INT32</code><em class="property"> = 3</em><a class="headerlink" href="#gtc.common.DataType.INT32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.DataType.INVALID">
+<code class="sig-name descname">INVALID</code><em class="property"> = 0</em><a class="headerlink" href="#gtc.common.DataType.INVALID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.DataType.UINT32">
+<code class="sig-name descname">UINT32</code><em class="property"> = 6</em><a class="headerlink" href="#gtc.common.DataType.UINT32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.common.LocationType">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.common.</code><code class="sig-name descname">LocationType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/common.html#LocationType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.common.LocationType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.type_definitions.IntEnum" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.type_definitions.IntEnum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="gtc.common.LocationType.Cell">
+<code class="sig-name descname">Cell</code><em class="property"> = 2</em><a class="headerlink" href="#gtc.common.LocationType.Cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.LocationType.Edge">
+<code class="sig-name descname">Edge</code><em class="property"> = 1</em><a class="headerlink" href="#gtc.common.LocationType.Edge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.LocationType.NoLocation">
+<code class="sig-name descname">NoLocation</code><em class="property"> = 3</em><a class="headerlink" href="#gtc.common.LocationType.NoLocation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.LocationType.Vertex">
+<code class="sig-name descname">Vertex</code><em class="property"> = 0</em><a class="headerlink" href="#gtc.common.LocationType.Vertex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.common.LoopOrder">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.common.</code><code class="sig-name descname">LoopOrder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/common.html#LoopOrder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.common.LoopOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.type_definitions.IntEnum" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.type_definitions.IntEnum</span></code></a></p>
+<p>Loop order identifier.</p>
+<dl class="py attribute">
+<dt id="gtc.common.LoopOrder.BACKWARD">
+<code class="sig-name descname">BACKWARD</code><em class="property"> = 2</em><a class="headerlink" href="#gtc.common.LoopOrder.BACKWARD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.LoopOrder.FORWARD">
+<code class="sig-name descname">FORWARD</code><em class="property"> = 1</em><a class="headerlink" href="#gtc.common.LoopOrder.FORWARD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.common.UnaryOperator">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.common.</code><code class="sig-name descname">UnaryOperator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/common.html#UnaryOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.common.UnaryOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.type_definitions.StrEnum" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.type_definitions.StrEnum</span></code></a></p>
+<p>Unary operator indentifier.</p>
+<dl class="py attribute">
+<dt id="gtc.common.UnaryOperator.NEG">
+<code class="sig-name descname">NEG</code><em class="property"> = '-'</em><a class="headerlink" href="#gtc.common.UnaryOperator.NEG" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.common.UnaryOperator.POS">
+<code class="sig-name descname">POS</code><em class="property"> = '+'</em><a class="headerlink" href="#gtc.common.UnaryOperator.POS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-gtc.sir">
+<span id="gtc-sir-module"></span><h2>gtc.sir module<a class="headerlink" href="#module-gtc.sir" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="gtc.sir.AST">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">AST</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">root</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt">gtc.sir.Stmt</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#AST"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.AST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.AST.root">
+<code class="sig-name descname">root</code><em class="property">: <a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt">gtc.sir.Stmt</a></em><a class="headerlink" href="#gtc.sir.AST.root" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.AssignmentExpr">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">AssignmentExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">left</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">right</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#AssignmentExpr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.AssignmentExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.AssignmentExpr.left">
+<code class="sig-name descname">left</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.AssignmentExpr.left" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.AssignmentExpr.op">
+<code class="sig-name descname">op</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.AssignmentExpr.op" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.AssignmentExpr.right">
+<code class="sig-name descname">right</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.AssignmentExpr.right" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.BinaryOperator">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">BinaryOperator</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">left</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">right</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#BinaryOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.BinaryOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.BinaryOperator.left">
+<code class="sig-name descname">left</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.BinaryOperator.left" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.BinaryOperator.op">
+<code class="sig-name descname">op</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.BinaryOperator.op" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.BinaryOperator.right">
+<code class="sig-name descname">right</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.BinaryOperator.right" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.BlockStmt">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">BlockStmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">statements</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt">gtc.sir.Stmt</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#BlockStmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.BlockStmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Stmt</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.BlockStmt.statements">
+<code class="sig-name descname">statements</code><em class="property">: List<span class="p">[</span><a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt">gtc.sir.Stmt</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.BlockStmt.statements" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.BuiltinType">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">BuiltinType</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">type_id</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#BuiltinType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.BuiltinType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.BuiltinType.type_id">
+<code class="sig-name descname">type_id</code><em class="property">: <a class="reference internal" href="#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></em><a class="headerlink" href="#gtc.sir.BuiltinType.type_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.CartesianDimension">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">CartesianDimension</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mask_cart_i</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">mask_cart_j</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#CartesianDimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.CartesianDimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.CartesianDimension.mask_cart_i">
+<code class="sig-name descname">mask_cart_i</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.CartesianDimension.mask_cart_i" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.CartesianDimension.mask_cart_j">
+<code class="sig-name descname">mask_cart_j</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.CartesianDimension.mask_cart_j" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.CartesianExtent">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">CartesianExtent</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">i_extent</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Extent" title="gtc.sir.Extent">gtc.sir.Extent</a></span></em>, <em class="sig-param"><span class="n">j_extent</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Extent" title="gtc.sir.Extent">gtc.sir.Extent</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#CartesianExtent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.CartesianExtent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.CartesianExtent.i_extent">
+<code class="sig-name descname">i_extent</code><em class="property">: <a class="reference internal" href="#gtc.sir.Extent" title="gtc.sir.Extent">gtc.sir.Extent</a></em><a class="headerlink" href="#gtc.sir.CartesianExtent.i_extent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.CartesianExtent.j_extent">
+<code class="sig-name descname">j_extent</code><em class="property">: <a class="reference internal" href="#gtc.sir.Extent" title="gtc.sir.Extent">gtc.sir.Extent</a></em><a class="headerlink" href="#gtc.sir.CartesianExtent.j_extent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.CartesianOffset">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">CartesianOffset</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">i_offset</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">j_offset</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#CartesianOffset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.CartesianOffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.CartesianOffset.i_offset">
+<code class="sig-name descname">i_offset</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.CartesianOffset.i_offset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.CartesianOffset.j_offset">
+<code class="sig-name descname">j_offset</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.CartesianOffset.j_offset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Dimension">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Dimension</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">direction</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Direction" title="gtc.sir.Direction">gtc.sir.Direction</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Dimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Dimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Dimension.direction">
+<code class="sig-name descname">direction</code><em class="property">: <a class="reference internal" href="#gtc.sir.Direction" title="gtc.sir.Direction">gtc.sir.Direction</a></em><a class="headerlink" href="#gtc.sir.Dimension.direction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Direction">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Direction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="gtc.sir.Direction.I_dir">
+<code class="sig-name descname">I_dir</code><em class="property"> = 0</em><a class="headerlink" href="#gtc.sir.Direction.I_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Direction.Invalid">
+<code class="sig-name descname">Invalid</code><em class="property"> = 3</em><a class="headerlink" href="#gtc.sir.Direction.Invalid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Direction.J_dir">
+<code class="sig-name descname">J_dir</code><em class="property"> = 1</em><a class="headerlink" href="#gtc.sir.Direction.J_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Direction.K_dir">
+<code class="sig-name descname">K_dir</code><em class="property"> = 2</em><a class="headerlink" href="#gtc.sir.Direction.K_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Expr">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Expr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.ExprCommon" title="gtc.sir.ExprCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.ExprCommon</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Expr.loc">
+<code class="sig-name descname">loc</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Expr.loc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Expr.location_type">
+<code class="sig-name descname">location_type</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Expr.location_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.ExprCommon">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">ExprCommon</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#ExprCommon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.ExprCommon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.ExprCommon.loc">
+<code class="sig-name descname">loc</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.ExprCommon.loc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.ExprCommon.location_type">
+<code class="sig-name descname">location_type</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.ExprCommon.location_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.ExprStmt">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">ExprStmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#ExprStmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.ExprStmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Stmt</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.ExprStmt.expr">
+<code class="sig-name descname">expr</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.ExprStmt.expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Extent">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Extent</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">minus</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">plus</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Extent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Extent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Extent.minus">
+<code class="sig-name descname">minus</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.Extent.minus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Extent.plus">
+<code class="sig-name descname">plus</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.Extent.plus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Extents">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Extents</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">horizontal_extent</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference internal" href="#gtc.sir.CartesianExtent" title="gtc.sir.CartesianExtent">gtc.sir.CartesianExtent</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.UnstructedExtent" title="gtc.sir.UnstructedExtent">gtc.sir.UnstructedExtent</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.ZeroExtent" title="gtc.sir.ZeroExtent">gtc.sir.ZeroExtent</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">vertical_extent</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Extent" title="gtc.sir.Extent">gtc.sir.Extent</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Extents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Extents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Extents.horizontal_extent">
+<code class="sig-name descname">horizontal_extent</code><em class="property">: Union<span class="p">[</span><a class="reference internal" href="#gtc.sir.CartesianExtent" title="gtc.sir.CartesianExtent">gtc.sir.CartesianExtent</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.UnstructedExtent" title="gtc.sir.UnstructedExtent">gtc.sir.UnstructedExtent</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.ZeroExtent" title="gtc.sir.ZeroExtent">gtc.sir.ZeroExtent</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Extents.horizontal_extent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Extents.vertical_extent">
+<code class="sig-name descname">vertical_extent</code><em class="property">: <a class="reference internal" href="#gtc.sir.Extent" title="gtc.sir.Extent">gtc.sir.Extent</a></em><a class="headerlink" href="#gtc.sir.Extents.vertical_extent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Field">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Field</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_temporary</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">field_dimensions</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.FieldDimensions" title="gtc.sir.FieldDimensions">gtc.sir.FieldDimensions</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Field.field_dimensions">
+<code class="sig-name descname">field_dimensions</code><em class="property">: <a class="reference internal" href="#gtc.sir.FieldDimensions" title="gtc.sir.FieldDimensions">gtc.sir.FieldDimensions</a></em><a class="headerlink" href="#gtc.sir.Field.field_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Field.is_temporary">
+<code class="sig-name descname">is_temporary</code><em class="property">: bool</em><a class="headerlink" href="#gtc.sir.Field.is_temporary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Field.loc">
+<code class="sig-name descname">loc</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Field.loc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Field.name">
+<code class="sig-name descname">name</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.Field.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.FieldAccessExpr">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">FieldAccessExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">vertical_offset</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">horizontal_offset</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference internal" href="#gtc.sir.CartesianOffset" title="gtc.sir.CartesianOffset">gtc.sir.CartesianOffset</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.UnstructuredOffset" title="gtc.sir.UnstructuredOffset">gtc.sir.UnstructuredOffset</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.ZeroOffset" title="gtc.sir.ZeroOffset">gtc.sir.ZeroOffset</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#FieldAccessExpr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.FieldAccessExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.FieldAccessExpr.horizontal_offset">
+<code class="sig-name descname">horizontal_offset</code><em class="property">: Union<span class="p">[</span><a class="reference internal" href="#gtc.sir.CartesianOffset" title="gtc.sir.CartesianOffset">gtc.sir.CartesianOffset</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.UnstructuredOffset" title="gtc.sir.UnstructuredOffset">gtc.sir.UnstructuredOffset</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.ZeroOffset" title="gtc.sir.ZeroOffset">gtc.sir.ZeroOffset</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.FieldAccessExpr.horizontal_offset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.FieldAccessExpr.name">
+<code class="sig-name descname">name</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.FieldAccessExpr.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.FieldAccessExpr.vertical_offset">
+<code class="sig-name descname">vertical_offset</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.FieldAccessExpr.vertical_offset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.FieldDimensions">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">FieldDimensions</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">horizontal_dimension</span><span class="p">:</span> <span class="n">Union<span class="p">[</span><a class="reference internal" href="#gtc.sir.CartesianDimension" title="gtc.sir.CartesianDimension">gtc.sir.CartesianDimension</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.UnstructuredDimension" title="gtc.sir.UnstructuredDimension">gtc.sir.UnstructuredDimension</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">mask_k</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#FieldDimensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.FieldDimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.FieldDimensions.horizontal_dimension">
+<code class="sig-name descname">horizontal_dimension</code><em class="property">: Union<span class="p">[</span><a class="reference internal" href="#gtc.sir.CartesianDimension" title="gtc.sir.CartesianDimension">gtc.sir.CartesianDimension</a><span class="p">, </span><a class="reference internal" href="#gtc.sir.UnstructuredDimension" title="gtc.sir.UnstructuredDimension">gtc.sir.UnstructuredDimension</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.FieldDimensions.horizontal_dimension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.FieldDimensions.mask_k">
+<code class="sig-name descname">mask_k</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.FieldDimensions.mask_k" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.GridType">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">GridType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#GridType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.GridType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="gtc.sir.GridType.Cartesian">
+<code class="sig-name descname">Cartesian</code><em class="property"> = 2</em><a class="headerlink" href="#gtc.sir.GridType.Cartesian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.GridType.GridTypeUnknown">
+<code class="sig-name descname">GridTypeUnknown</code><em class="property"> = 0</em><a class="headerlink" href="#gtc.sir.GridType.GridTypeUnknown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.GridType.Unstructured">
+<code class="sig-name descname">Unstructured</code><em class="property"> = 1</em><a class="headerlink" href="#gtc.sir.GridType.Unstructured" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.IfStmt">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">IfStmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cond_part</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.ExprStmt" title="gtc.sir.ExprStmt">gtc.sir.ExprStmt</a></span></em>, <em class="sig-param"><span class="n">then_part</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt">gtc.sir.Stmt</a></span></em>, <em class="sig-param"><span class="n">else_part</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt">gtc.sir.Stmt</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#IfStmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.IfStmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Stmt</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.IfStmt.cond_part">
+<code class="sig-name descname">cond_part</code><em class="property">: <a class="reference internal" href="#gtc.sir.ExprStmt" title="gtc.sir.ExprStmt">gtc.sir.ExprStmt</a></em><a class="headerlink" href="#gtc.sir.IfStmt.cond_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.IfStmt.else_part">
+<code class="sig-name descname">else_part</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt">gtc.sir.Stmt</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.IfStmt.else_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.IfStmt.then_part">
+<code class="sig-name descname">then_part</code><em class="property">: <a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt">gtc.sir.Stmt</a></em><a class="headerlink" href="#gtc.sir.IfStmt.then_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Interval">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Interval</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">id_attr_: pydantic.types.StrictStr = None</em>, <em class="sig-param">lower_level: Union[gtc.sir.SpecialLevel</em>, <em class="sig-param">int] = &lt;SpecialLevel.Start: 0&gt;</em>, <em class="sig-param">upper_level: Union[gtc.sir.SpecialLevel</em>, <em class="sig-param">int] = &lt;SpecialLevel.End: 1&gt;</em>, <em class="sig-param">lower_offset: int = 0</em>, <em class="sig-param">upper_offset: int = 0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Interval.lower_level">
+<code class="sig-name descname">lower_level</code><em class="property">: Union<span class="p">[</span><a class="reference internal" href="#gtc.sir.SpecialLevel" title="gtc.sir.SpecialLevel">gtc.sir.SpecialLevel</a><span class="p">, </span>int<span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Interval.lower_level" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Interval.lower_offset">
+<code class="sig-name descname">lower_offset</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.Interval.lower_offset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Interval.upper_level">
+<code class="sig-name descname">upper_level</code><em class="property">: Union<span class="p">[</span><a class="reference internal" href="#gtc.sir.SpecialLevel" title="gtc.sir.SpecialLevel">gtc.sir.SpecialLevel</a><span class="p">, </span>int<span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Interval.upper_level" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Interval.upper_offset">
+<code class="sig-name descname">upper_offset</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.Interval.upper_offset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.LiteralAccessExpr">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">LiteralAccessExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">data_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.BuiltinType" title="gtc.sir.BuiltinType">gtc.sir.BuiltinType</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#LiteralAccessExpr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.LiteralAccessExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.LiteralAccessExpr.data_type">
+<code class="sig-name descname">data_type</code><em class="property">: <a class="reference internal" href="#gtc.sir.BuiltinType" title="gtc.sir.BuiltinType">gtc.sir.BuiltinType</a></em><a class="headerlink" href="#gtc.sir.LiteralAccessExpr.data_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.LiteralAccessExpr.value">
+<code class="sig-name descname">value</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.LiteralAccessExpr.value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.LocationType">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">LocationType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#LocationType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.LocationType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="gtc.sir.LocationType.Cell">
+<code class="sig-name descname">Cell</code><em class="property"> = 2</em><a class="headerlink" href="#gtc.sir.LocationType.Cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.LocationType.Edge">
+<code class="sig-name descname">Edge</code><em class="property"> = 3</em><a class="headerlink" href="#gtc.sir.LocationType.Edge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.LocationType.LocationTypeUnknown">
+<code class="sig-name descname">LocationTypeUnknown</code><em class="property"> = 0</em><a class="headerlink" href="#gtc.sir.LocationType.LocationTypeUnknown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.LocationType.Vertex">
+<code class="sig-name descname">Vertex</code><em class="property"> = 1</em><a class="headerlink" href="#gtc.sir.LocationType.Vertex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.ReductionOverNeighborExpr">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">ReductionOverNeighborExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">rhs</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em>, <em class="sig-param"><span class="n">init</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em>, <em class="sig-param"><span class="n">chain</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#ReductionOverNeighborExpr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.ReductionOverNeighborExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.ReductionOverNeighborExpr.chain">
+<code class="sig-name descname">chain</code><em class="property">: List<span class="p">[</span><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.ReductionOverNeighborExpr.chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.ReductionOverNeighborExpr.init">
+<code class="sig-name descname">init</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.ReductionOverNeighborExpr.init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.ReductionOverNeighborExpr.op">
+<code class="sig-name descname">op</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.ReductionOverNeighborExpr.op" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.ReductionOverNeighborExpr.rhs">
+<code class="sig-name descname">rhs</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.ReductionOverNeighborExpr.rhs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.ReturnStmt">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">ReturnStmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expr</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#ReturnStmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.ReturnStmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Stmt</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.ReturnStmt.expr">
+<code class="sig-name descname">expr</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.ReturnStmt.expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.SIR">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">SIR</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">grid_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.GridType" title="gtc.sir.GridType">gtc.sir.GridType</a></span></em>, <em class="sig-param"><span class="n">stencils</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.sir.Stencil" title="gtc.sir.Stencil">gtc.sir.Stencil</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#SIR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.SIR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.SIR.filename">
+<code class="sig-name descname">filename</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.SIR.filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.SIR.grid_type">
+<code class="sig-name descname">grid_type</code><em class="property">: <a class="reference internal" href="#gtc.sir.GridType" title="gtc.sir.GridType">gtc.sir.GridType</a></em><a class="headerlink" href="#gtc.sir.SIR.grid_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.SIR.stencils">
+<code class="sig-name descname">stencils</code><em class="property">: List<span class="p">[</span><a class="reference internal" href="#gtc.sir.Stencil" title="gtc.sir.Stencil">gtc.sir.Stencil</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.SIR.stencils" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.SourceLocation">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">SourceLocation</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">line</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#SourceLocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.SourceLocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.SourceLocation.column">
+<code class="sig-name descname">column</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.SourceLocation.column" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.SourceLocation.line">
+<code class="sig-name descname">line</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.SourceLocation.line" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.SpecialLevel">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">SpecialLevel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#SpecialLevel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.SpecialLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="gtc.sir.SpecialLevel.End">
+<code class="sig-name descname">End</code><em class="property"> = 1</em><a class="headerlink" href="#gtc.sir.SpecialLevel.End" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.SpecialLevel.Start">
+<code class="sig-name descname">Start</code><em class="property"> = 0</em><a class="headerlink" href="#gtc.sir.SpecialLevel.Start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Stencil">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Stencil</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.sir.Field" title="gtc.sir.Field">gtc.sir.Field</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.AST" title="gtc.sir.AST">gtc.sir.AST</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Stencil"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Stencil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Stencil.ast">
+<code class="sig-name descname">ast</code><em class="property">: <a class="reference internal" href="#gtc.sir.AST" title="gtc.sir.AST">gtc.sir.AST</a></em><a class="headerlink" href="#gtc.sir.Stencil.ast" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Stencil.name">
+<code class="sig-name descname">name</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.Stencil.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Stencil.params">
+<code class="sig-name descname">params</code><em class="property">: List<span class="p">[</span><a class="reference internal" href="#gtc.sir.Field" title="gtc.sir.Field">gtc.sir.Field</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Stencil.params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Stmt">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Stmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Stmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Stmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.ExprCommon" title="gtc.sir.ExprCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.ExprCommon</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Stmt.loc">
+<code class="sig-name descname">loc</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Stmt.loc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Stmt.location_type">
+<code class="sig-name descname">location_type</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Stmt.location_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.TernaryOperator">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">TernaryOperator</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cond</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em>, <em class="sig-param"><span class="n">left</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em>, <em class="sig-param"><span class="n">right</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#TernaryOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.TernaryOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.TernaryOperator.cond">
+<code class="sig-name descname">cond</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.TernaryOperator.cond" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.TernaryOperator.left">
+<code class="sig-name descname">left</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.TernaryOperator.left" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.TernaryOperator.right">
+<code class="sig-name descname">right</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.TernaryOperator.right" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.Type">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">Type</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_type</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span><a class="reference internal" href="#gtc.sir.BuiltinType" title="gtc.sir.BuiltinType">gtc.sir.BuiltinType</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">is_const</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">is_volatile</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#Type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.Type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.Type.data_type">
+<code class="sig-name descname">data_type</code><em class="property">: Union<span class="p">[</span>str<span class="p">, </span><a class="reference internal" href="#gtc.sir.BuiltinType" title="gtc.sir.BuiltinType">gtc.sir.BuiltinType</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.Type.data_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Type.is_const">
+<code class="sig-name descname">is_const</code><em class="property">: bool</em><a class="headerlink" href="#gtc.sir.Type.is_const" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.Type.is_volatile">
+<code class="sig-name descname">is_volatile</code><em class="property">: bool</em><a class="headerlink" href="#gtc.sir.Type.is_volatile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.UnaryOperator">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">UnaryOperator</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">operand</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#UnaryOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.UnaryOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.UnaryOperator.op">
+<code class="sig-name descname">op</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.UnaryOperator.op" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.UnaryOperator.operand">
+<code class="sig-name descname">operand</code><em class="property">: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></em><a class="headerlink" href="#gtc.sir.UnaryOperator.operand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.UnstructedExtent">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">UnstructedExtent</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">has_extent</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#UnstructedExtent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.UnstructedExtent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.UnstructedExtent.has_extent">
+<code class="sig-name descname">has_extent</code><em class="property">: bool</em><a class="headerlink" href="#gtc.sir.UnstructedExtent.has_extent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.UnstructuredDimension">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">UnstructuredDimension</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dense_location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span></em>, <em class="sig-param"><span class="n">sparse_part</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#UnstructuredDimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.UnstructuredDimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.UnstructuredDimension.dense_location_type">
+<code class="sig-name descname">dense_location_type</code><em class="property">: <a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></em><a class="headerlink" href="#gtc.sir.UnstructuredDimension.dense_location_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.UnstructuredDimension.sparse_part">
+<code class="sig-name descname">sparse_part</code><em class="property">: Optional<span class="p">[</span>List<span class="p">[</span><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a><span class="p">]</span><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.UnstructuredDimension.sparse_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.UnstructuredOffset">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">UnstructuredOffset</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">has_offset</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#UnstructuredOffset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.UnstructuredOffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.UnstructuredOffset.has_offset">
+<code class="sig-name descname">has_offset</code><em class="property">: bool</em><a class="headerlink" href="#gtc.sir.UnstructuredOffset.has_offset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.VarAccessExpr">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">VarAccessExpr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">index</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_external</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#VarAccessExpr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.VarAccessExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.VarAccessExpr.index">
+<code class="sig-name descname">index</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.VarAccessExpr.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VarAccessExpr.is_external">
+<code class="sig-name descname">is_external</code><em class="property">: bool</em><a class="headerlink" href="#gtc.sir.VarAccessExpr.is_external" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VarAccessExpr.name">
+<code class="sig-name descname">name</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.VarAccessExpr.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.VarDeclStmt">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">VarDeclStmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.Type" title="gtc.sir.Type">gtc.sir.Type</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">init_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#VarDeclStmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.VarDeclStmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Stmt</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.VarDeclStmt.data_type">
+<code class="sig-name descname">data_type</code><em class="property">: <a class="reference internal" href="#gtc.sir.Type" title="gtc.sir.Type">gtc.sir.Type</a></em><a class="headerlink" href="#gtc.sir.VarDeclStmt.data_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VarDeclStmt.dimension">
+<code class="sig-name descname">dimension</code><em class="property">: int</em><a class="headerlink" href="#gtc.sir.VarDeclStmt.dimension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VarDeclStmt.init_list">
+<code class="sig-name descname">init_list</code><em class="property">: List<span class="p">[</span><a class="reference internal" href="#gtc.sir.Expr" title="gtc.sir.Expr">gtc.sir.Expr</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.VarDeclStmt.init_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VarDeclStmt.name">
+<code class="sig-name descname">name</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.VarDeclStmt.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VarDeclStmt.op">
+<code class="sig-name descname">op</code><em class="property">: str</em><a class="headerlink" href="#gtc.sir.VarDeclStmt.op" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.VerticalRegion">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">VerticalRegion</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">id_attr_: pydantic.types.StrictStr = None</em>, <em class="sig-param">loop_order: gtc.common.LoopOrder</em>, <em class="sig-param">loc: gtc.sir.SourceLocation = None</em>, <em class="sig-param">ast: gtc.sir.AST</em>, <em class="sig-param">interval: gtc.sir.Interval</em>, <em class="sig-param">i_range: gtc.sir.Interval = Interval(id_attr_='Interval_1'</em>, <em class="sig-param">lower_level=&lt;SpecialLevel.Start: 0&gt;</em>, <em class="sig-param">upper_level=&lt;SpecialLevel.End: 1&gt;</em>, <em class="sig-param">lower_offset=0</em>, <em class="sig-param">upper_offset=0)</em>, <em class="sig-param">j_range: gtc.sir.Interval = Interval(id_attr_='Interval_2'</em>, <em class="sig-param">lower_level=&lt;SpecialLevel.Start: 0&gt;</em>, <em class="sig-param">upper_level=&lt;SpecialLevel.End: 1&gt;</em>, <em class="sig-param">lower_offset=0</em>, <em class="sig-param">upper_offset=0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#VerticalRegion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.VerticalRegion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.VerticalRegion.ast">
+<code class="sig-name descname">ast</code><em class="property">: <a class="reference internal" href="#gtc.sir.AST" title="gtc.sir.AST">gtc.sir.AST</a></em><a class="headerlink" href="#gtc.sir.VerticalRegion.ast" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VerticalRegion.i_range">
+<code class="sig-name descname">i_range</code><em class="property">: <a class="reference internal" href="#gtc.sir.Interval" title="gtc.sir.Interval">gtc.sir.Interval</a></em><a class="headerlink" href="#gtc.sir.VerticalRegion.i_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VerticalRegion.interval">
+<code class="sig-name descname">interval</code><em class="property">: <a class="reference internal" href="#gtc.sir.Interval" title="gtc.sir.Interval">gtc.sir.Interval</a></em><a class="headerlink" href="#gtc.sir.VerticalRegion.interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VerticalRegion.j_range">
+<code class="sig-name descname">j_range</code><em class="property">: <a class="reference internal" href="#gtc.sir.Interval" title="gtc.sir.Interval">gtc.sir.Interval</a></em><a class="headerlink" href="#gtc.sir.VerticalRegion.j_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VerticalRegion.loc">
+<code class="sig-name descname">loc</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a><span class="p">]</span></em><a class="headerlink" href="#gtc.sir.VerticalRegion.loc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.sir.VerticalRegion.loop_order">
+<code class="sig-name descname">loop_order</code><em class="property">: <a class="reference internal" href="#gtc.common.LoopOrder" title="gtc.common.LoopOrder">gtc.common.LoopOrder</a></em><a class="headerlink" href="#gtc.sir.VerticalRegion.loop_order" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.VerticalRegionDeclStmt">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">VerticalRegionDeclStmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.LocationType" title="gtc.sir.LocationType">gtc.sir.LocationType</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">loc</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.SourceLocation" title="gtc.sir.SourceLocation">gtc.sir.SourceLocation</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vertical_region</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.sir.VerticalRegion" title="gtc.sir.VerticalRegion">gtc.sir.VerticalRegion</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#VerticalRegionDeclStmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.VerticalRegionDeclStmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.sir.Stmt" title="gtc.sir.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.sir.Stmt</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.VerticalRegionDeclStmt.vertical_region">
+<code class="sig-name descname">vertical_region</code><em class="property">: <a class="reference internal" href="#gtc.sir.VerticalRegion" title="gtc.sir.VerticalRegion">gtc.sir.VerticalRegion</a></em><a class="headerlink" href="#gtc.sir.VerticalRegionDeclStmt.vertical_region" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.ZeroExtent">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">ZeroExtent</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#ZeroExtent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.ZeroExtent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.ZeroExtent.id_attr_">
+<code class="sig-name descname">id_attr_</code><em class="property">: Optional<span class="p">[</span>pydantic.types.StrictStr<span class="p">]</span></em><a class="headerlink" href="#gtc.sir.ZeroExtent.id_attr_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.sir.ZeroOffset">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.sir.</code><code class="sig-name descname">ZeroOffset</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/sir.html#ZeroOffset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.sir.ZeroOffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.sir.ZeroOffset.id_attr_">
+<code class="sig-name descname">id_attr_</code><em class="property">: Optional<span class="p">[</span>pydantic.types.StrictStr<span class="p">]</span></em><a class="headerlink" href="#gtc.sir.ZeroOffset.id_attr_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-gtc.version">
+<span id="gtc-version-module"></span><h2>gtc.version module<a class="headerlink" href="#module-gtc.version" title="Permalink to this headline">¶</a></h2>
+<p>Version specification.</p>
+</div>
+<div class="section" id="module-gtc">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-gtc" title="Permalink to this headline">¶</a></h2>
+<p>GT Toolchain: Eve toolchains for stencils in structured and unstructured grids.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="gtc.structured.html" class="btn btn-neutral float-right" title="gtc.structured package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules.html" class="btn btn-neutral float-left" title="gtc" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

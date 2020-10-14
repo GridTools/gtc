@@ -1,0 +1,37 @@
+gtc.structured package
+======================
+
+Submodules
+----------
+
+gtc.structured.common module
+----------------------------
+
+.. automodule:: gtc.structured.common
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.structured.gt\_ir module
+----------------------------
+
+.. automodule:: gtc.structured.gt_ir
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+gtc.structured.impl\_ir module
+------------------------------
+
+.. automodule:: gtc.structured.impl_ir
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: gtc.structured
+   :members:
+   :undoc-members:
+   :show-inheritance:

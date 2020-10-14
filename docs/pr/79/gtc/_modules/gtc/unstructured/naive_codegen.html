@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.naive_codegen &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.naive_codegen</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.naive_codegen</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">MappingProxyType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Mapping</span>
+
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">codegen</span>
+<span class="kn">from</span> <span class="nn">eve.codegen</span> <span class="kn">import</span> <span class="n">FormatTemplate</span> <span class="k">as</span> <span class="n">as_fmt</span>
+<span class="kn">from</span> <span class="nn">eve.codegen</span> <span class="kn">import</span> <span class="n">MakoTemplate</span> <span class="k">as</span> <span class="n">as_mako</span>
+<span class="kn">from</span> <span class="nn">gtc</span> <span class="kn">import</span> <span class="n">common</span>
+
+<span class="kn">from</span> <span class="nn">.naive</span> <span class="kn">import</span> <span class="n">LocationType</span>
+
+
+<div class="viewcode-block" id="NaiveCodeGenerator"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.naive_codegen.NaiveCodeGenerator">[docs]</a><span class="k">class</span> <span class="nc">NaiveCodeGenerator</span><span class="p">(</span><span class="n">codegen</span><span class="o">.</span><span class="n">TemplatedGenerator</span><span class="p">):</span>
+    <span class="n">DATA_TYPE_TO_STR</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">:</span> <span class="s2">&quot;bool&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">INT32</span><span class="p">:</span> <span class="s2">&quot;int&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">UINT32</span><span class="p">:</span> <span class="s2">&quot;unsigned_int&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">:</span> <span class="s2">&quot;double&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="n">LOCATION_TYPE_TO_STR_MAP</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">LocationType</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">LocationType</span><span class="o">.</span><span class="n">Node</span><span class="p">:</span> <span class="n">MappingProxyType</span><span class="p">({</span><span class="s2">&quot;singular&quot;</span><span class="p">:</span> <span class="s2">&quot;vertex&quot;</span><span class="p">,</span> <span class="s2">&quot;plural&quot;</span><span class="p">:</span> <span class="s2">&quot;vertices&quot;</span><span class="p">}),</span>
+            <span class="n">LocationType</span><span class="o">.</span><span class="n">Edge</span><span class="p">:</span> <span class="n">MappingProxyType</span><span class="p">({</span><span class="s2">&quot;singular&quot;</span><span class="p">:</span> <span class="s2">&quot;edge&quot;</span><span class="p">,</span> <span class="s2">&quot;plural&quot;</span><span class="p">:</span> <span class="s2">&quot;edges&quot;</span><span class="p">}),</span>
+            <span class="n">LocationType</span><span class="o">.</span><span class="n">Face</span><span class="p">:</span> <span class="n">MappingProxyType</span><span class="p">({</span><span class="s2">&quot;singular&quot;</span><span class="p">:</span> <span class="s2">&quot;cell&quot;</span><span class="p">,</span> <span class="s2">&quot;plural&quot;</span><span class="p">:</span> <span class="s2">&quot;cells&quot;</span><span class="p">}),</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="NaiveCodeGenerator.apply"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.naive_codegen.NaiveCodeGenerator.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">generated_code</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">formatted_code</span> <span class="o">=</span> <span class="n">codegen</span><span class="o">.</span><span class="n">format_source</span><span class="p">(</span><span class="s2">&quot;cpp&quot;</span><span class="p">,</span> <span class="n">generated_code</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;LLVM&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">formatted_code</span></div>
+
+<div class="viewcode-block" id="NaiveCodeGenerator.visit_DataType"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.naive_codegen.NaiveCodeGenerator.visit_DataType">[docs]</a>    <span class="k">def</span> <span class="nf">visit_DataType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE_TO_STR</span><span class="p">[</span><span class="n">node</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="NaiveCodeGenerator.visit_LocationType"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.naive_codegen.NaiveCodeGenerator.visit_LocationType">[docs]</a>    <span class="k">def</span> <span class="nf">visit_LocationType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">LOCATION_TYPE_TO_STR_MAP</span><span class="p">[</span><span class="n">node</span><span class="p">]</span></div>
+
+    <span class="n">Node</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span><span class="s2">&quot;${_this_node.__class__.__name__.upper()}&quot;</span><span class="p">)</span>  <span class="c1"># only for testing</span>
+
+    <span class="n">UnstructuredField</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">loc_type = location_type[&quot;singular&quot;]</span>
+<span class="sd">sparseloc = &quot;sparse_&quot; if _this_node.sparse_location_type else &quot;&quot;</span>
+<span class="sd">%&gt;</span>
+<span class="sd">dawn::${ sparseloc }${ loc_type }_field_t&lt;LibTag, ${ data_type }&gt;&amp; ${ name };&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">FieldAccessExpr</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">sparse_index = &quot;m_sparse_dimension_idx, &quot; if _this_node.is_sparse else &quot;&quot;</span>
+<span class="sd">field_acc_itervar = outer_iter_var if _this_node.is_sparse else iter_var</span>
+<span class="sd">%&gt;${ name }(deref(LibTag{}, ${ field_acc_itervar }), ${ sparse_index } k)&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">AssignmentExpr</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{left}</span><span class="s2"> = </span><span class="si">{right}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">VarAccessExpr</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">BinaryOp</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{left}</span><span class="s2"> </span><span class="si">{op}</span><span class="s2"> </span><span class="si">{right}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">ExprStmt</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{expr}</span><span class="s2">;&quot;</span><span class="p">)</span>
+
+    <span class="n">VarDeclStmt</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{data_type}</span><span class="s2"> </span><span class="si">{name}</span><span class="s2">;&quot;</span><span class="p">)</span>
+
+    <span class="n">TemporaryFieldDeclStmt</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;using dawn::allocateEdgeField;</span>
+<span class="sd">        auto ${ name } = allocate${ location_type[&#39;singular&#39;].capitalize() }Field&lt;${ data_type }&gt;(mesh);&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">ForK</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">if _this_node.loop_order == _this_module.common.LoopOrder.FORWARD:</span>
+<span class="sd">    k_init = &#39;0&#39;</span>
+<span class="sd">    k_cond = &#39;k &lt; k_size&#39;</span>
+<span class="sd">    k_step = &#39;++k&#39;</span>
+<span class="sd">else:</span>
+<span class="sd">    k_init = &#39;k_size -1&#39;</span>
+<span class="sd">    k_cond = &#39;k &gt;= 0&#39;</span>
+<span class="sd">    k_step = &#39;--k&#39;</span>
+<span class="sd">%&gt;for (int k = ${k_init}; ${k_cond}; ${k_step}) {</span>
+<span class="sd">int m_sparse_dimension_idx;</span>
+<span class="sd">${ &quot;&quot;.join(horizontal_loops) }\n}&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">HorizontalLoop</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">loc_type = location_type[&#39;plural&#39;].title()</span>
+<span class="sd">%&gt;for(auto const &amp; t: get${ loc_type }(LibTag{}, mesh)) ${ ast }&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="NaiveCodeGenerator.visit_HorizontalLoop"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.naive_codegen.NaiveCodeGenerator.visit_HorizontalLoop">[docs]</a>    <span class="k">def</span> <span class="nf">visit_HorizontalLoop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">iter_var</span><span class="o">=</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="n">BlockStmt</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span><span class="s2">&quot;{${ &#39;&#39;.join(statements) }</span><span class="se">\n</span><span class="s2">}&quot;</span><span class="p">)</span>
+
+    <span class="n">ReduceOverNeighbourExpr</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">right_loc_type = right_location_type[&quot;singular&quot;].title()</span>
+<span class="sd">loc_type = location_type[&quot;singular&quot;].title()</span>
+<span class="sd">%&gt;(m_sparse_dimension_idx=0,reduce${ right_loc_type }To${ loc_type }(mesh, ${ outer_iter_var }, ${ init }, [&amp;](auto&amp; lhs, auto const&amp; ${ iter_var }) {</span>
+<span class="sd">lhs ${ operation }= ${ right };</span>
+<span class="sd">m_sparse_dimension_idx++;</span>
+<span class="sd">return lhs;</span>
+<span class="sd">}))&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="NaiveCodeGenerator.visit_ReduceOverNeighbourExpr"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.naive_codegen.NaiveCodeGenerator.visit_ReduceOverNeighbourExpr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_ReduceOverNeighbourExpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">iter_var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">outer_iter_var</span> <span class="o">=</span> <span class="n">iter_var</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">outer_iter_var</span><span class="o">=</span><span class="n">outer_iter_var</span><span class="p">,</span> <span class="n">iter_var</span><span class="o">=</span><span class="s2">&quot;redIdx&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,)</span></div>
+
+    <span class="n">LiteralExpr</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;(</span><span class="si">{data_type}</span><span class="s2">)</span><span class="si">{value}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">Stencil</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">void ${name}() {</span>
+<span class="sd">using dawn::deref;</span>
+
+<span class="sd">${ &quot;\\n&quot;.join(declarations) if _this_node.declarations else &quot;&quot;}</span>
+
+<span class="sd">${ &quot;&quot;.join(k_loops) }</span>
+<span class="sd">}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">Computation</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">stencil_calls = &#39;\\n&#39;.join(&quot;{name}();&quot;.format(name=s.name) for s in _this_node.stencils)</span>
+<span class="sd">ctor_field_params = &#39;, &#39;.join(</span>
+<span class="sd">    &#39;dawn::{sparse_loc}{loc_type}_field_t&lt;LibTag, {data_type}&gt;&amp; {name}&#39;.format(</span>
+<span class="sd">        loc_type=_this_generator.LOCATION_TYPE_TO_STR_MAP[p.location_type][&#39;singular&#39;],</span>
+<span class="sd">        name=p.name,</span>
+<span class="sd">        data_type=_this_generator.DATA_TYPE_TO_STR[p.data_type],</span>
+<span class="sd">        sparse_loc=&quot;sparse_&quot; if p.sparse_location_type else &quot;&quot;</span>
+<span class="sd">    )</span>
+<span class="sd">    for p in _this_node.params</span>
+<span class="sd">)</span>
+<span class="sd">ctor_field_initializers = &#39;, &#39;.join(</span>
+<span class="sd">    &#39;{name}({name})&#39;.format(name=p.name) for p in _this_node.params</span>
+<span class="sd">)</span>
+<span class="sd">%&gt;#define DAWN_GENERATED 1</span>
+<span class="sd">#define DAWN_BACKEND_T CXXNAIVEICO</span>
+<span class="sd">#include &lt;driver-includes/unstructured_interface.hpp&gt;</span>
+<span class="sd">namespace dawn_generated {</span>
+<span class="sd">namespace cxxnaiveico {</span>
+<span class="sd">template &lt;typename LibTag&gt;</span>
+<span class="sd">class generated {</span>
+<span class="sd">private:</span>
+<span class="sd">dawn::mesh_t&lt;LibTag&gt;&amp; mesh;</span>
+<span class="sd">int const k_size;</span>
+
+<span class="sd">${ &#39;&#39;.join(params) }</span>
+<span class="sd">${ &#39;&#39;.join(stencils) }</span>
+
+<span class="sd">public:</span>
+<span class="sd">generated(dawn::mesh_t&lt;LibTag&gt;&amp; mesh, int k_size, ${ ctor_field_params }): mesh(mesh), k_size(k_size), ${ ctor_field_initializers } {}</span>
+
+<span class="sd">void run() {</span>
+<span class="sd">${ stencil_calls }</span>
+<span class="sd">}</span>
+<span class="sd">};</span>
+<span class="sd">}</span>
+<span class="sd">}</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

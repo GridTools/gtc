@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gtc.unstructured.usid_codegen &mdash; GTC 0.0.1.dev1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> GTC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apiref.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GTC</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>gtc.unstructured.usid_codegen</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for gtc.unstructured.usid_codegen</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Eve Toolchain - GT4Py Project - GridTools Framework</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2020, CSCS - Swiss National Supercomputing Center, ETH Zurich</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of the GT4Py project and the GridTools framework.</span>
+<span class="c1"># GT4Py is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or any later</span>
+<span class="c1"># version. See the LICENSE.txt file at the top-level directory of this</span>
+<span class="c1"># distribution for a copy of the license or check &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
+
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">MappingProxyType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Mapping</span>
+
+<span class="kn">from</span> <span class="nn">devtools</span> <span class="kn">import</span> <span class="n">debug</span>  <span class="c1"># noqa: F401</span>
+
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">NodeTranslator</span><span class="p">,</span> <span class="n">codegen</span>
+<span class="kn">from</span> <span class="nn">eve.codegen</span> <span class="kn">import</span> <span class="n">FormatTemplate</span> <span class="k">as</span> <span class="n">as_fmt</span>
+<span class="kn">from</span> <span class="nn">eve.codegen</span> <span class="kn">import</span> <span class="n">MakoTemplate</span> <span class="k">as</span> <span class="n">as_mako</span>
+<span class="kn">from</span> <span class="nn">gtc</span> <span class="kn">import</span> <span class="n">common</span>
+<span class="kn">from</span> <span class="nn">gtc.unstructured.usid</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Computation</span><span class="p">,</span>
+    <span class="n">Connectivity</span><span class="p">,</span>
+    <span class="n">Kernel</span><span class="p">,</span>
+    <span class="n">KernelCall</span><span class="p">,</span>
+    <span class="n">SidCompositeNeighborTableEntry</span><span class="p">,</span>
+    <span class="n">Temporary</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="SymbolTblHelper"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.SymbolTblHelper">[docs]</a><span class="k">class</span> <span class="nc">SymbolTblHelper</span><span class="p">(</span><span class="n">NodeTranslator</span><span class="p">):</span>
+    <span class="c1"># TODO</span>
+    <span class="c1"># - temporary helper which resolves symbol refs with the symbol it&#39;s pointing to</span>
+    <span class="c1"># - the code generator relies on the possibility to look up a symbol ref outside of a visitor</span>
+
+<div class="viewcode-block" id="SymbolTblHelper.visit_SidCompositeNeighborTableEntry"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.SymbolTblHelper.visit_SidCompositeNeighborTableEntry">[docs]</a>    <span class="k">def</span> <span class="nf">visit_SidCompositeNeighborTableEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">SidCompositeNeighborTableEntry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">connectivity_deref</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;symbol_tbl_conn&quot;</span><span class="p">][</span><span class="n">node</span><span class="o">.</span><span class="n">connectivity</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">SidCompositeNeighborTableEntry</span><span class="p">(</span>
+            <span class="n">connectivity</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">connectivity</span><span class="p">,</span> <span class="n">connectivity_deref_</span><span class="o">=</span><span class="n">connectivity_deref</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SymbolTblHelper.visit_Kernel"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.SymbolTblHelper.visit_Kernel">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Kernel</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">symbol_tbl_conn</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">connectivities</span><span class="p">}</span>
+        <span class="n">symbol_tbl_sids</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">sids</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span>
+            <span class="n">node</span><span class="p">,</span> <span class="n">symbol_tbl_conn</span><span class="o">=</span><span class="n">symbol_tbl_conn</span><span class="p">,</span> <span class="n">symbol_tbl_sids</span><span class="o">=</span><span class="n">symbol_tbl_sids</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="UsidCodeGenerator"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidCodeGenerator">[docs]</a><span class="k">class</span> <span class="nc">UsidCodeGenerator</span><span class="p">(</span><span class="n">codegen</span><span class="o">.</span><span class="n">TemplatedGenerator</span><span class="p">):</span>
+    <span class="n">DATA_TYPE_TO_STR</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">:</span> <span class="s2">&quot;bool&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">INT32</span><span class="p">:</span> <span class="s2">&quot;int&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">UINT32</span><span class="p">:</span> <span class="s2">&quot;unsigned_int&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">:</span> <span class="s2">&quot;double&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="n">LOCATION_TYPE_TO_STR</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Vertex</span><span class="p">:</span> <span class="s2">&quot;vertex&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Edge</span><span class="p">:</span> <span class="s2">&quot;edge&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Cell</span><span class="p">:</span> <span class="s2">&quot;cell&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="n">BUILTIN_LITERAL_TO_STR</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">BuiltInLiteral</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">BuiltInLiteral</span><span class="o">.</span><span class="n">MAX_VALUE</span><span class="p">:</span> <span class="s2">&quot;std::numeric_limits&lt;TODO&gt;::max()&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">BuiltInLiteral</span><span class="o">.</span><span class="n">MIN_VALUE</span><span class="p">:</span> <span class="s2">&quot;std::numeric_limits&lt;TODO&gt;::min()&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">BuiltInLiteral</span><span class="o">.</span><span class="n">ZERO</span><span class="p">:</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span>
+            <span class="n">common</span><span class="o">.</span><span class="n">BuiltInLiteral</span><span class="o">.</span><span class="n">ONE</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="UsidCodeGenerator.apply"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidCodeGenerator.apply">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">symbol_tbl_resolved</span> <span class="o">=</span> <span class="n">SymbolTblHelper</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+        <span class="n">generated_code</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">symbol_tbl_resolved</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">formatted_code</span> <span class="o">=</span> <span class="n">codegen</span><span class="o">.</span><span class="n">format_source</span><span class="p">(</span><span class="s2">&quot;cpp&quot;</span><span class="p">,</span> <span class="n">generated_code</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;LLVM&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">formatted_code</span></div>
+
+<div class="viewcode-block" id="UsidCodeGenerator.location_type_from_dimensions"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidCodeGenerator.location_type_from_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">location_type_from_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+        <span class="n">location_type</span> <span class="o">=</span> <span class="p">[</span><span class="n">dim</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">dimensions</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">location_type</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Doesn&#39;t contain a LocationType!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">location_type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+    <span class="n">headers_</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;&lt;gridtools/next/mesh.hpp&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;gridtools/next/tmp_storage.hpp&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;gridtools/next/unstructured.hpp&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;gridtools/sid/allocator.hpp&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;gridtools/sid/composite.hpp&gt;&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">preface_</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="n">Connectivity</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;auto </span><span class="si">{name}</span><span class="s2"> = gridtools::next::mesh::connectivity&lt;</span><span class="si">{chain}</span><span class="s2">&gt;(mesh);&quot;</span><span class="p">)</span>
+
+    <span class="n">NeighborChain</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">            loc_strs = [_this_generator.LOCATION_TYPE_TO_STR[e] for e in _this_node.elements]</span>
+<span class="sd">        %&gt;</span>
+<span class="sd">        std::tuple&lt;${ &#39;,&#39;.join(loc_strs) }&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">SidCompositeNeighborTableEntry</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span>
+        <span class="s2">&quot;gridtools::next::connectivity::neighbor_table(</span><span class="si">{_this_node.connectivity_deref_.name}</span><span class="s2">)&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">SidCompositeEntry</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">SidComposite</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        auto ${ _this_node.field_name } = tu::make&lt;gridtools::sid::composite::keys&lt;${ &#39;,&#39;.join([t.tag_name for t in _this_node.entries]) }&gt;::values&gt;(</span>
+<span class="sd">        ${ &#39;,&#39;.join(entries)});</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="UsidCodeGenerator.visit_KernelCall"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidCodeGenerator.visit_KernelCall">[docs]</a>    <span class="k">def</span> <span class="nf">visit_KernelCall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">KernelCall</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kernel</span><span class="p">:</span> <span class="n">Kernel</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;symbol_tbl_kernel&quot;</span><span class="p">][</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">connectivities</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">conn</span> <span class="ow">in</span> <span class="n">kernel</span><span class="o">.</span><span class="n">connectivities</span><span class="p">]</span>
+        <span class="n">primary_connectivity</span><span class="p">:</span> <span class="n">Connectivity</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">symbol_tbl</span><span class="p">[</span><span class="n">kernel</span><span class="o">.</span><span class="n">primary_connectivity</span><span class="p">]</span>
+        <span class="n">sids</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">kernel</span><span class="o">.</span><span class="n">sids</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># TODO I don&#39;t like that I render here and that I somehow have the same pattern for the parameters</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">kernel</span><span class="o">.</span><span class="n">connectivities</span><span class="p">]</span>
+        <span class="n">args</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="s2">&quot;gridtools::sid::get_origin(</span><span class="si">{0}</span><span class="s2">), gridtools::sid::get_strides(</span><span class="si">{0}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">field_name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">kernel</span><span class="o">.</span><span class="n">sids</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">]</span>
+        <span class="c1"># connectivity_args = [c.name for c in kernel.connectivities]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span>
+            <span class="n">node</span><span class="p">,</span>
+            <span class="n">connectivities</span><span class="o">=</span><span class="n">connectivities</span><span class="p">,</span>
+            <span class="n">sids</span><span class="o">=</span><span class="n">sids</span><span class="p">,</span>
+            <span class="n">primary_connectivity</span><span class="o">=</span><span class="n">primary_connectivity</span><span class="p">,</span>
+            <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="UsidCodeGenerator.visit_Kernel"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidCodeGenerator.visit_Kernel">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Kernel</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">symbol_tbl_conn</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">connectivities</span><span class="p">}</span>
+        <span class="n">symbol_tbl_sids</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">sids</span><span class="p">}</span>
+
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">connectivities</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">sids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">entries</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">origin_name</span><span class="p">)</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">strides_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span>
+            <span class="n">node</span><span class="p">,</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+            <span class="n">symbol_tbl_conn</span><span class="o">=</span><span class="n">symbol_tbl_conn</span><span class="p">,</span>
+            <span class="n">symbol_tbl_sids</span><span class="o">=</span><span class="n">symbol_tbl_sids</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="n">FieldAccess</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">            sid_deref = symbol_tbl_sids[_this_node.sid]</span>
+<span class="sd">            sid_entry_deref = sid_deref.symbol_tbl[_this_node.name]</span>
+<span class="sd">        %&gt;*gridtools::device::at_key&lt;${ sid_entry_deref.tag_name }&gt;(${ sid_deref.ptr_name })&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">AssignStmt</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{left}</span><span class="s2"> = </span><span class="si">{right}</span><span class="s2">;&quot;</span><span class="p">)</span>
+
+    <span class="n">BinaryOp</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;(</span><span class="si">{left}</span><span class="s2"> </span><span class="si">{op}</span><span class="s2"> </span><span class="si">{right}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="n">NeighborLoop</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">            outer_sid_deref = symbol_tbl_sids[_this_node.outer_sid]</span>
+<span class="sd">            sid_deref = symbol_tbl_sids[_this_node.sid] if _this_node.sid else None</span>
+<span class="sd">            conn_deref = symbol_tbl_conn[_this_node.connectivity]</span>
+<span class="sd">            body_location = _this_generator.LOCATION_TYPE_TO_STR[sid_deref.location.elements[-1]] if sid_deref else None</span>
+<span class="sd">        %&gt;</span>
+<span class="sd">        for (int neigh = 0; neigh &lt; gridtools::next::connectivity::max_neighbors(${ conn_deref.name }); ++neigh) {</span>
+<span class="sd">            auto absolute_neigh_index = *gridtools::device::at_key&lt;${ conn_deref.neighbor_tbl_tag }&gt;(${ outer_sid_deref.ptr_name});</span>
+<span class="sd">            if (absolute_neigh_index != gridtools::next::connectivity::skip_value(${ conn_deref.name })) {</span>
+<span class="sd">                % if sid_deref:</span>
+<span class="sd">                    auto ${ sid_deref.ptr_name } = ${ sid_deref.origin_name }();</span>
+<span class="sd">                    gridtools::sid::shift(</span>
+<span class="sd">                        ${ sid_deref.ptr_name }, gridtools::device::at_key&lt;${ body_location }&gt;(${ sid_deref.strides_name }), absolute_neigh_index);</span>
+<span class="sd">                % endif</span>
+
+<span class="sd">                // bodyparameters</span>
+<span class="sd">                ${ &#39;&#39;.join(body) }</span>
+<span class="sd">                // end body</span>
+<span class="sd">            }</span>
+<span class="sd">            gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::device::at_key&lt;neighbor&gt;(${ outer_sid_deref.strides_name }), 1);</span>
+<span class="sd">        }</span>
+<span class="sd">        gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::device::at_key&lt;neighbor&gt;(${ outer_sid_deref.strides_name }),</span>
+<span class="sd">            -gridtools::next::connectivity::max_neighbors(${ conn_deref.name }));</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">Literal</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">            literal= _this_node.value if isinstance(_this_node.value, str) else _this_generator.BUILTIN_LITERAL_TO_STR[_this_node.value]</span>
+<span class="sd">        %&gt;(${ _this_generator.DATA_TYPE_TO_STR[_this_node.vtype] })${ literal }&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">VarAccess</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">VarDecl</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="s2">&quot;${ _this_generator.DATA_TYPE_TO_STR[_this_node.vtype] } ${ name } = ${ init };&quot;</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="UsidCodeGenerator.visit_Computation"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidCodeGenerator.visit_Computation">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Computation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Computation</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">symbol_tbl_kernel</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">kernels</span><span class="p">}</span>
+        <span class="n">sid_tags</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">kernels</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">k</span><span class="o">.</span><span class="n">sids</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">entries</span><span class="p">:</span>
+                    <span class="n">sid_tags</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;struct &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">tag_name</span> <span class="o">+</span> <span class="s2">&quot;;&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span>
+            <span class="n">node</span><span class="p">,</span>
+            <span class="n">computation_fields</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">parameters</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">temporaries</span><span class="p">,</span>
+            <span class="c1"># cache_allocator=cache_allocator_,</span>
+            <span class="n">sid_tags</span><span class="o">=</span><span class="n">sid_tags</span><span class="p">,</span>
+            <span class="n">symbol_tbl_kernel</span><span class="o">=</span><span class="n">symbol_tbl_kernel</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="n">Computation</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;${_this_generator.preface_}</span>
+<span class="sd">        ${ &#39;\\n&#39;.join(&#39;#include &#39; + header for header in _this_generator.headers_) }</span>
+
+<span class="sd">        namespace ${ name }_impl_ {</span>
+<span class="sd">            ${ &#39;&#39;.join(sid_tags) }</span>
+
+<span class="sd">            ${ &#39;&#39;.join(kernels) }</span>
+<span class="sd">        }</span>
+
+<span class="sd">        template&lt;class mesh_t, ${ &#39;,&#39;.join(&#39;class &#39; + p.name + &#39;_t&#39; for p in _this_node.parameters) }&gt;</span>
+<span class="sd">        void ${ name }(mesh_t&amp;&amp; mesh, ${ &#39;,&#39;.join(p.name + &#39;_t&amp;&amp; &#39; + p.name for p in _this_node.parameters) }){</span>
+<span class="sd">            namespace tu = gridtools::tuple_util;</span>
+<span class="sd">            using namespace ${ name }_impl_;</span>
+
+<span class="sd">            % if len(temporaries) &gt; 0:</span>
+<span class="sd">                auto tmp_alloc = ${ _this_generator.cache_allocator_ }</span>
+<span class="sd">            % endif</span>
+<span class="sd">            ${ &#39;&#39;.join(temporaries) }</span>
+
+<span class="sd">            ${ &#39;&#39;.join(ctrlflow_ast) }</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="UsidCodeGenerator.visit_Temporary"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidCodeGenerator.visit_Temporary">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Temporary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Temporary</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">c_vtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE_TO_STR</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">vtype</span><span class="p">]</span>
+        <span class="n">loctype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LOCATION_TYPE_TO_STR</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">location_type_from_dimensions</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">loctype</span><span class="o">=</span><span class="n">loctype</span><span class="p">,</span> <span class="n">c_vtype</span><span class="o">=</span><span class="n">c_vtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="n">Temporary</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        auto ${ name } = gridtools::next::make_simple_tmp_storage&lt;${ loctype }, ${ c_vtype }&gt;(</span>
+<span class="sd">            (int)gridtools::next::connectivity::size(gridtools::next::mesh::connectivity&lt;std::tuple&lt;${ loctype }&gt;&gt;(mesh)), 1 /* TODO ksize */, tmp_alloc);&quot;&quot;&quot;</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsidGpuCodeGenerator"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidGpuCodeGenerator">[docs]</a><span class="k">class</span> <span class="nc">UsidGpuCodeGenerator</span><span class="p">(</span><span class="n">UsidCodeGenerator</span><span class="p">):</span>
+
+    <span class="n">cache_allocator_</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;gridtools::sid::device::make_cached_allocator(&amp;gridtools::cuda_util::cuda_malloc&lt;char[]&gt;);&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">headers_</span> <span class="o">=</span> <span class="n">UsidCodeGenerator</span><span class="o">.</span><span class="n">headers_</span> <span class="o">+</span> <span class="p">[</span>
+        <span class="s2">&quot;&lt;gridtools/next/cuda_util.hpp&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;gridtools/common/cuda_util.hpp&gt;&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">preface_</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">UsidCodeGenerator</span><span class="o">.</span><span class="n">preface_</span>
+        <span class="o">+</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        #ifndef __CUDACC__</span>
+<span class="s2">        #error &quot;Tried to compile CUDA code with a regular C++ compiler.&quot;</span>
+<span class="s2">        #endif</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">KernelCall</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        {</span>
+<span class="sd">            ${ &#39;&#39;.join(connectivities) }</span>
+
+<span class="sd">            ${ &#39;&#39;.join(sids) }</span>
+
+<span class="sd">            auto [blocks, threads_per_block] = gridtools::next::cuda_util::cuda_setup(gridtools::next::connectivity::size(${ primary_connectivity.name }));</span>
+<span class="sd">            ${ name }&lt;&lt;&lt;blocks, threads_per_block&gt;&gt;&gt;(${&#39;,&#39;.join(args)});</span>
+<span class="sd">            GT_CUDA_CHECK(cudaDeviceSynchronize());</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">Kernel</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">            prim_conn = symbol_tbl_conn[_this_node.primary_connectivity]</span>
+<span class="sd">            prim_sid = symbol_tbl_sids[_this_node.primary_sid]</span>
+<span class="sd">        %&gt;</span>
+<span class="sd">        template&lt;${ &#39;,&#39;.join(&quot;class {}_t&quot;.format(p) for p in parameters)}&gt;</span>
+<span class="sd">        __global__ void ${ name }( ${&#39;,&#39;.join(&quot;{0}_t {0}&quot;.format(p) for p in parameters) }) {</span>
+<span class="sd">            auto idx = blockIdx.x * blockDim.x + threadIdx.x;</span>
+<span class="sd">            if (idx &gt;= gridtools::next::connectivity::size(${ prim_conn.name }))</span>
+<span class="sd">                return;</span>
+<span class="sd">            % if len(prim_sid.entries) &gt; 0:</span>
+<span class="sd">            auto ${ prim_sid.ptr_name } = ${ prim_sid.origin_name }();</span>
+<span class="sd">            gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::device::at_key&lt;</span>
+<span class="sd">                ${ _this_generator.LOCATION_TYPE_TO_STR[prim_sid.location.elements[-1]] }</span>
+<span class="sd">                &gt;(${ prim_sid.strides_name }), idx);</span>
+<span class="sd">            % endif</span>
+<span class="sd">            ${ &quot;&quot;.join(ast) }</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsidNaiveCodeGenerator"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidNaiveCodeGenerator">[docs]</a><span class="k">class</span> <span class="nc">UsidNaiveCodeGenerator</span><span class="p">(</span><span class="n">UsidCodeGenerator</span><span class="p">):</span>
+
+    <span class="n">cache_allocator_</span> <span class="o">=</span> <span class="s2">&quot;gridtools::sid::device::make_cached_allocator(&amp;std::make_unique&lt;char[]&gt;);&quot;</span>
+
+    <span class="n">KernelCall</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        {</span>
+<span class="sd">            ${ &#39;&#39;.join(connectivities) }</span>
+
+<span class="sd">            ${ &#39;&#39;.join(sids) }</span>
+
+<span class="sd">            ${ name }(${&#39;,&#39;.join(args)});</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">Kernel</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
+        <span class="sd">&quot;&quot;&quot;&lt;%</span>
+<span class="sd">            prim_conn = symbol_tbl_conn[_this_node.primary_connectivity]</span>
+<span class="sd">            prim_sid = symbol_tbl_sids[_this_node.primary_sid]</span>
+<span class="sd">        %&gt;</span>
+<span class="sd">        template&lt;${ &#39;,&#39;.join(&quot;class {}_t&quot;.format(p) for p in parameters)}&gt;</span>
+<span class="sd">        void ${ name }( ${&#39;,&#39;.join(&quot;{0}_t {0}&quot;.format(p) for p in parameters) }) {</span>
+<span class="sd">            for(std::size_t idx = 0; idx &lt; gridtools::next::connectivity::size(${ prim_conn.name }); idx++) {</span>
+<span class="sd">                % if len(prim_sid.entries) &gt; 0:</span>
+<span class="sd">                auto ${ prim_sid.ptr_name } = ${ prim_sid.origin_name }();</span>
+<span class="sd">                gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::device::at_key&lt;</span>
+<span class="sd">                    ${ _this_generator.LOCATION_TYPE_TO_STR[prim_sid.location.elements[-1]] }</span>
+<span class="sd">                    &gt;(${ prim_sid.strides_name }), idx);</span>
+<span class="sd">                % endif</span>
+<span class="sd">                ${ &quot;&quot;.join(ast) }</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ETH Zurich
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
