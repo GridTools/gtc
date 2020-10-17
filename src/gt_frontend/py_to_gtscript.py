@@ -135,7 +135,11 @@ class PyToGTScript:
 
         BinaryOp = ast.BinOp(op=Capture("op"), left=Capture("left"), right=Capture("right"))
 
-        Call = ast.Call(args=Capture("args"), func=ast.Name(id=Capture("func")))
+        ListNode = ast.List(elts=Capture("elts"))
+
+        Keyword = ast.keyword(arg=Capture("key"), value=Capture("value"))
+
+        Call = ast.Call(args=Capture("args"), keywords=Capture("keywords"), func=ast.Name(id=Capture("func")))
 
         LocationComprehension = ast.comprehension(
             target=Capture("target"), iter=Capture("iterator")

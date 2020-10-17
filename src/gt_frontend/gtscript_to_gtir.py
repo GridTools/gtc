@@ -32,6 +32,7 @@ from .gtscript_ast import (
     Generator,
     Interval,
     IterationOrder,
+    ListNode,
     LocationComprehension,
     LocationSpecification,
     Pass,
@@ -341,18 +342,22 @@ class GTScriptToGTIR(eve.NodeTranslator):
             neighbors = self.visit(
                 node.args[0].generators[0], **{**kwargs, "location_stack": location_stack}
             )
+            weights = None
+            if node.has_keyword_arg("weights"):
+                weights = node.get_keyword_arg("weights")
+                if not isinstance(weights, ListNode):
+                    raise ValueError(f"Weights argument to neighbor reduction must be a list")
 
-            # operand gets new location stack
-            new_location_stack = location_stack + [neighbors]
-
+                weights = list(self.visit(weight, **{**kwargs, "location_stack": location_stack}) for weight in weights.elts)
             operand = self.visit(
-                node.args[0].elt, **{**kwargs, "location_stack": new_location_stack}
+                node.args[0].elt, **{**kwargs, "location_stack": location_stack + [neighbors]}
             )
 
             return gtir.NeighborReduce(
                 op=op,
                 operand=operand,
                 neighbors=neighbors,
+                weights=weights,
                 location_type=location_stack[-1].chain.elements[-1],
             )
 

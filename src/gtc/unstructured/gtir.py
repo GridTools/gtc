@@ -77,6 +77,7 @@ class NeighborReduce(Expr):
     operand: Expr
     op: ReduceOperator
     neighbors: LocationComprehension
+    weights: Optional[List[Expr]]
 
     @root_validator(pre=True)
     def check_location_type(cls, values):
