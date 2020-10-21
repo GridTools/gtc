@@ -57,8 +57,8 @@ def make_horizontal_loop_with_copy(write: Str, read: Str, read_has_extent: Bool)
     )
 
 
-def make_local_var(name: Str):
-    return nir.LocalVar(name=name, vtype=default_vtype, location_type=default_location)
+def make_scalar_local_var(name: Str):
+    return nir.ScalarLocalVar(name=name, vtype=default_vtype, location_type=default_location)
 
 
 def make_init(field: Str):

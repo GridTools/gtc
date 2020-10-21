@@ -34,7 +34,22 @@ from gtc import common
 
 dtype = common.DataType.FLOAT64
 
-valid_stencils = ["edge_reduction", "sparse_ex", "nested", "fvm_nabla", "temporary_field"]
+valid_stencils = [
+    "edge_reduction",
+    "sparse_ex",
+    "nested",
+    "fvm_nabla",
+    "temporary_field",
+    "weighted_neighbor_reduction",
+]
+
+
+def weighted_neighbor_reduction(
+    mesh: Mesh, vertex_field: Field[Vertex, dtype], edge_field: Field[Vertex, dtype]
+):
+    with computation(FORWARD), interval(0, None):
+        with location(Edge) as e:
+            edge_field = sum((vertex_field[v] for v in vertices(e)), weights=[1, 2])
 
 
 def copy(mesh: Mesh, field_in: Field[Vertex, dtype], field_out: Field[Vertex, dtype]):

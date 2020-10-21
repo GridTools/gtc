@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 # todo(tehrengruber): document nodes
-from typing import List, Union
+from typing import List, Optional, Union
 
 import gtc.common as common
 from eve import Node
@@ -110,9 +110,32 @@ class BinaryOp(Expr):
     right: Expr
 
 
+class ListNode(Expr):  # todo: this node is not valid in every context
+    elts: List[Expr]
+
+
+class Keyword(GTScriptASTNode):
+    key: str
+    value: Expr
+
+
 class Call(Expr):
     args: List[Expr]
+    keywords: Optional[List[Keyword]]
     func: str
+
+    # todo(tehrengruber: validate each keyword arg occurs only once)
+
+    def get_keyword_args_as_dict(self):
+        return {arg.key: arg.value for arg in (self.keywords if self.keywords else [])}
+
+    def has_keyword_arg(self, key):
+        return key in self.get_keyword_args_as_dict()
+
+    def get_keyword_arg(self, key):
+        if not self.has_keyword_arg(key):
+            raise ValueError(f"Call to {self.func} has no keyword argument {key}")
+        return self.get_keyword_args_as_dict()[key]
 
 
 # TODO(tehrengruber): can be enabled as soon as eve_toolchain#58 lands

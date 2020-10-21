@@ -56,15 +56,33 @@ class NeighborChain(Node):
         return "_".join([common.LocationType(loc).name.lower() for loc in self.elements])
 
 
+class IndexAccess(Expr):
+    name: Str  # TODO(tehrengruber): Maybe IndexDecl in NeighborLoop?
+
+
 class FieldAccess(Expr):
     name: Str  # symbol ref to SidCompositeEntry
     sid: Str  # symbol ref
 
 
+class StaticArrayAccess(Expr):
+    name: Str
+    index: IndexAccess  # TODO(tehrengruber): Union[Index, IndexAccess]
+
+
 class VarDecl(Stmt):
     name: Str
+
+
+class ScalarVarDecl(VarDecl):
     init: Expr
     vtype: common.DataType
+
+
+class StaticArrayDecl(VarDecl):
+    init: List[Expr]
+    vtype: common.DataType
+    length: int
 
 
 class Literal(Expr):
@@ -227,6 +245,7 @@ class NeighborLoop(Stmt):
     sid: Optional[
         Str
     ]  # symbol ref to SidComposite where the fields of the loop body live (None if only sparse fields are accessed)
+    iter_var: Str
 
 
 class Kernel(Node):

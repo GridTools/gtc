@@ -174,6 +174,8 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
         %>*gridtools::device::at_key<${ sid_entry_deref.tag_name }>(${ sid_deref.ptr_name })"""
     )
 
+    StaticArrayAccess = as_fmt("{ name }[{ index }]")
+
     AssignStmt = as_fmt("{left} = {right};")
 
     BinaryOp = as_fmt("({left} {op} {right})")
@@ -185,7 +187,7 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
             conn_deref = symbol_tbl_conn[_this_node.connectivity]
             body_location = _this_generator.LOCATION_TYPE_TO_STR[sid_deref.location.elements[-1]] if sid_deref else None
         %>
-        for (int neigh = 0; neigh < gridtools::next::connectivity::max_neighbors(${ conn_deref.name }); ++neigh) {
+        for (int ${ iter_var } = 0; ${ iter_var } < gridtools::next::connectivity::max_neighbors(${ conn_deref.name }); ++${ iter_var }) {
             auto absolute_neigh_index = *gridtools::device::at_key<${ conn_deref.neighbor_tbl_tag }>(${ outer_sid_deref.ptr_name});
             if (absolute_neigh_index != gridtools::next::connectivity::skip_value(${ conn_deref.name })) {
                 % if sid_deref:
@@ -214,8 +216,14 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
 
     VarAccess = as_fmt("{name}")
 
-    VarDecl = as_mako(
+    IndexAccess = as_fmt("{name}")
+
+    ScalarVarDecl = as_mako(
         "${ _this_generator.DATA_TYPE_TO_STR[_this_node.vtype] } ${ name } = ${ init };"
+    )
+
+    StaticArrayDecl = as_mako(
+        "${ _this_generator.DATA_TYPE_TO_STR[_this_node.vtype] } ${ name }[${ length }] = {${ ', '.join(init) }};"
     )
 
     def visit_Computation(self, node: Computation, **kwargs):
