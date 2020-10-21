@@ -31,7 +31,7 @@ from .nir_utils import (
     make_horizontal_loop_with_copy,
     make_horizontal_loop_with_init,
     make_init,
-    make_local_var,
+    make_scalar_local_var,
     make_vertical_loop,
 )
 
@@ -168,11 +168,11 @@ class TestNIRMergeHorizontalLoops:
         assert len(result.horizontal_loops) == 1
 
     def test_merge_loops_with_stats_and_decls(self):
-        var1 = make_local_var("var1")
+        var1 = make_scalar_local_var("var1")
         assignment1, _ = make_init("field1")
         first_loop = make_horizontal_loop(make_block_stmt([assignment1], [var1]))
 
-        var2 = make_local_var("var2")
+        var2 = make_scalar_local_var("var2")
         assignment2, _ = make_init("field2")
         second_loop = make_horizontal_loop(make_block_stmt([assignment2], [var2]))
 
@@ -187,11 +187,11 @@ class TestNIRMergeHorizontalLoops:
         # TODO more precise checks
 
     def test_find_and_merge(self):
-        var1 = make_local_var("var1")
+        var1 = make_scalar_local_var("var1")
         assignment1, _ = make_init("field1")
         first_loop = make_horizontal_loop(make_block_stmt([assignment1], [var1]))
 
-        var2 = make_local_var("var2")
+        var2 = make_scalar_local_var("var2")
         assignment2, _ = make_init("field2")
         second_loop = make_horizontal_loop(make_block_stmt([assignment2], [var2]))
 
@@ -205,11 +205,11 @@ class TestNIRMergeHorizontalLoops:
         # TODO more precise checks
 
     def test_find_and_merge_with_2_vertical_loops(self):
-        var1 = make_local_var("var1")
+        var1 = make_scalar_local_var("var1")
         assignment1, _ = make_init("field1")
         first_loop = make_horizontal_loop(make_block_stmt([assignment1], [var1]))
 
-        var2 = make_local_var("var2")
+        var2 = make_scalar_local_var("var2")
         assignment2, _ = make_init("field2")
         second_loop = make_horizontal_loop(make_block_stmt([assignment2], [var2]))
 

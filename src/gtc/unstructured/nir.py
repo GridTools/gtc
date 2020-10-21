@@ -64,8 +64,36 @@ class NeighborChain(Node):
 
 class LocalVar(Node):
     name: Str
-    vtype: common.DataType
     location_type: common.LocationType
+
+
+class ScalarLocalVar(LocalVar):
+    vtype: common.DataType
+    init: Optional[Expr] # TODO: use in gtir to nir lowering for reduction var
+
+
+class TensorLocalVar(LocalVar):
+    vtype: common.DataType
+    shape: List[int]
+    init: Optional[List[Expr]]
+
+
+class LocalFieldVar(TensorLocalVar):
+    def __init__(self, *args, max_size, **kwargs):
+        assert "shape" not in kwargs
+        return super().__init__(*args, shape=[max_size], **kwargs)
+
+    domain: common.LocationType  # the type of locations the LocalField is defined on
+
+    @validator('shape', pre=True, always=True)
+    def ensure_one_dimensional(cls, shape):
+        if len(shape) != 1:
+            raise ValueError("Invalid shape for LocalFieldVar.")
+        return shape
+
+    @property
+    def max_size(self):
+        return self.shape[0]
 
 
 class BlockStmt(Stmt):
@@ -97,6 +125,7 @@ class BlockStmt(Stmt):
 
 
 class NeighborLoop(Stmt):
+    name: Str
     neighbors: NeighborChain
     body: BlockStmt
 
@@ -123,6 +152,17 @@ class FieldAccess(Access):
 class VarAccess(Access):
     pass
 
+#class IndexAccess(Access): # TODO(tehrengruber): use for TensorLocalVar
+#    indices: List[int]
+
+class LocationLocalIdAccess(Access):
+    pass
+
+class NeighborLoopLocationAccess(LocationLocalIdAccess):
+    pass
+
+class LocalFieldAccess(Access):
+    location: LocationLocalIdAccess
 
 class AssignStmt(Stmt):
     left: Access  # there are no local variables in gtir, only fields
