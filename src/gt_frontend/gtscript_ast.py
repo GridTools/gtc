@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 # todo(tehrengruber): document nodes
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 import gtc.common as common
 from eve import Node
@@ -109,19 +109,22 @@ class BinaryOp(Expr):
     left: Expr
     right: Expr
 
-class ListNode(Expr): # todo: this node is not valid in every context
+
+class ListNode(Expr):  # todo: this node is not valid in every context
     elts: List[Expr]
+
 
 class Keyword(GTScriptASTNode):
     key: str
     value: Expr
+
 
 class Call(Expr):
     args: List[Expr]
     keywords: Optional[List[Keyword]]
     func: str
 
-    #todo(tehrengruber: validate each keyword arg occurs only once)
+    # todo(tehrengruber: validate each keyword arg occurs only once)
 
     def get_keyword_args_as_dict(self):
         return {arg.key: arg.value for arg in (self.keywords if self.keywords else [])}
@@ -151,6 +154,7 @@ class LocationComprehension(GTScriptASTNode):
 class Generator(Expr):
     generators: List[LocationComprehension]
     elt: Expr
+
 
 class Assign(Statement):
     target: Union[Symbol, SubscriptSingle, SubscriptMultiple]

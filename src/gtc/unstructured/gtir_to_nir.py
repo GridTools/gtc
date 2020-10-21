@@ -122,10 +122,13 @@ class GtirToNir(eve.NodeTranslator):
         loc_comprehension[node.neighbors.name] = node.neighbors
         kwargs["location_comprehensions"] = loc_comprehension
 
-        neighbor_loop_name = "neighbor_loop_"+str(node.id_attr_)
+        neighbor_loop_name = "neighbor_loop_" + str(node.id_attr_)
 
-        if node.weights and node.neighbors.chain.elements != [common.LocationType.Edge, common.LocationType.Vertex]:
-                raise ValueError("Invalid usage of weights in NeighborReduce.")
+        if node.weights and node.neighbors.chain.elements != [
+            common.LocationType.Edge,
+            common.LocationType.Vertex,
+        ]:
+            raise ValueError("Invalid usage of weights in NeighborReduce.")
 
         body_location = node.neighbors.chain.elements[-1]
         reduce_var_name = "local" + str(node.id_attr_)
@@ -162,9 +165,17 @@ class GtirToNir(eve.NodeTranslator):
         reduction_item = self.visit(node.operand, in_neighbor_loop=True, **kwargs)
         if node.weights:
             reduction_item = nir.BinaryOp(
-                left=nir.LocalFieldAccess(name=weights_var_name, location=nir.NeighborLoopLocationAccess(
-                    name=neighbor_loop_name, location_type=body_location), location_type=body_location),
-                op=common.BinaryOperator.MUL, right=reduction_item, location_type=body_location)
+                left=nir.LocalFieldAccess(
+                    name=weights_var_name,
+                    location=nir.NeighborLoopLocationAccess(
+                        name=neighbor_loop_name, location_type=body_location
+                    ),
+                    location_type=body_location,
+                ),
+                op=common.BinaryOperator.MUL,
+                right=reduction_item,
+                location_type=body_location,
+            )
 
         reduction_intermediate = nir.BinaryOp(
             left=nir.VarAccess(name=reduce_var_name, location_type=body_location),

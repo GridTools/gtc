@@ -77,7 +77,7 @@ class NirToUsid(eve.NodeTranslator):
 
     def visit_NeighborLoop(self, node: nir.NeighborLoop, **kwargs):
         return usid.NeighborLoop(
-            iter_var=node.name+"_neigh",
+            iter_var=node.name + "_neigh",
             outer_sid=kwargs["sids_tbl"][usid.NeighborChain(elements=[node.location_type])].name,
             connectivity=kwargs["conn_tbl"][node.neighbors].name,
             sid=kwargs["sids_tbl"][node.neighbors].name
@@ -108,9 +108,7 @@ class NirToUsid(eve.NodeTranslator):
     def visit_ScalarLocalVar(self, node: nir.ScalarLocalVar, **kwargs):
         return usid.ScalarVarDecl(
             name=node.name,
-            init=usid.Literal(
-                value="0.0", vtype=node.vtype, location_type=kwargs["location_type"]
-            ),
+            init=usid.Literal(value="0.0", vtype=node.vtype, location_type=kwargs["location_type"]),
             vtype=node.vtype,
             location_type=kwargs["location_type"],
         )
@@ -129,15 +127,17 @@ class NirToUsid(eve.NodeTranslator):
         return usid.StaticArrayAccess(
             name=node.name,
             index=self.visit(node.location, **kwargs),
-            location_type=node.location_type
+            location_type=node.location_type,
         )
 
     def visit_NeighborLoopLocationAccess(self, node: nir.NeighborLoopLocationAccess, **kwargs):
-        return usid.IndexAccess(name=node.name+"_neigh", location_type=node.location_type)
+        return usid.IndexAccess(name=node.name + "_neigh", location_type=node.location_type)
 
     def visit_BlockStmt(self, node: nir.BlockStmt, **kwargs):
         statements = []
-        statements += [self.visit(decl, location_type=node.location_type) for decl in node.declarations]
+        statements += [
+            self.visit(decl, location_type=node.location_type) for decl in node.declarations
+        ]
         statements += [self.visit(stmt, **kwargs) for stmt in node.statements]
         return statements
 

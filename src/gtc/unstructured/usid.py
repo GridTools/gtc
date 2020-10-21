@@ -57,7 +57,7 @@ class NeighborChain(Node):
 
 
 class IndexAccess(Expr):
-    name: Str # TODO(tehrengruber): Maybe IndexDecl in NeighborLoop?
+    name: Str  # TODO(tehrengruber): Maybe IndexDecl in NeighborLoop?
 
 
 class FieldAccess(Expr):
@@ -83,6 +83,7 @@ class StaticArrayDecl(VarDecl):
     init: List[Expr]
     vtype: common.DataType
     length: int
+
 
 class Literal(Expr):
     value: Union[common.BuiltInLiteral, Str]

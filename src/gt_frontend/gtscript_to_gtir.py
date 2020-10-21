@@ -348,7 +348,10 @@ class GTScriptToGTIR(eve.NodeTranslator):
                 if not isinstance(weights, ListNode):
                     raise ValueError(f"Weights argument to neighbor reduction must be a list")
 
-                weights = list(self.visit(weight, **{**kwargs, "location_stack": location_stack}) for weight in weights.elts)
+                weights = list(
+                    self.visit(weight, **{**kwargs, "location_stack": location_stack})
+                    for weight in weights.elts
+                )
             operand = self.visit(
                 node.args[0].elt, **{**kwargs, "location_stack": location_stack + [neighbors]}
             )

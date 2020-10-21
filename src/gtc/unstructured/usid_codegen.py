@@ -29,7 +29,6 @@ from gtc.unstructured.usid import (
     Kernel,
     KernelCall,
     SidCompositeNeighborTableEntry,
-    StaticArrayAccess,
     Temporary,
 )
 

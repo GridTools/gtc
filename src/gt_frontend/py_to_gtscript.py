@@ -64,7 +64,12 @@ class PyToGTScript:
             assert issubclass(typ, enum.Enum)
             return {typ}
         elif typing_inspect.get_origin(typ) == list:
-            return {typing.List[sub_cls] for sub_cls in PyToGTScript._all_subclasses(typing_inspect.get_args(typ)[0], module=module)}
+            return {
+                typing.List[sub_cls]
+                for sub_cls in PyToGTScript._all_subclasses(
+                    typing_inspect.get_args(typ)[0], module=module
+                )
+            }
         elif typing_inspect.is_union_type(typ):
             return {
                 sub_cls
@@ -139,7 +144,9 @@ class PyToGTScript:
 
         Keyword = ast.keyword(arg=Capture("key"), value=Capture("value"))
 
-        Call = ast.Call(args=Capture("args"), keywords=Capture("keywords"), func=ast.Name(id=Capture("func")))
+        Call = ast.Call(
+            args=Capture("args"), keywords=Capture("keywords"), func=ast.Name(id=Capture("func"))
+        )
 
         LocationComprehension = ast.comprehension(
             target=Capture("target"), iter=Capture("iterator")
@@ -178,15 +185,21 @@ class PyToGTScript:
 
         if isinstance(node, typing.List):
             # extract eligable node types which are lists
-            eligable_list_node_types = list(filter(lambda node_type: typing_inspect.get_origin(node_type) == list,
-                                                   eligible_node_types))
-            if len(eligable_list_node_types) == 0:
-                raise ValueError(
-                    f"Expected a list node, but got {type(node)}."
+            eligable_list_node_types = list(
+                filter(
+                    lambda node_type: typing_inspect.get_origin(node_type) == list,
+                    eligible_node_types,
                 )
+            )
+            if len(eligable_list_node_types) == 0:
+                raise ValueError(f"Expected a list node, but got {type(node)}.")
 
-            eligable_el_node_types = list(map(lambda list_node_type: typing_inspect.get_args(list_node_type)[0],
-                                         eligable_list_node_types))
+            eligable_el_node_types = list(
+                map(
+                    lambda list_node_type: typing_inspect.get_args(list_node_type)[0],
+                    eligable_list_node_types,
+                )
+            )
 
             return [self.transform(el, eligable_el_node_types) for el in node]
         elif isinstance(node, ast.AST):
@@ -219,9 +232,7 @@ class PyToGTScript:
                         # determine eligible capture types
                         eligible_capture_types = self._all_subclasses(field_type, module=module)
                         # transform captures recursively
-                        transformed_captures[name] = self.transform(
-                            capture, eligible_capture_types
-                        )
+                        transformed_captures[name] = self.transform(capture, eligible_capture_types)
                     return node_type(**transformed_captures)
                 raise ValueError(
                     "Expected a node of type {}".format(

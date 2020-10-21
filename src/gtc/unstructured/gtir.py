@@ -125,6 +125,7 @@ class BinaryOp(Expr):
 
         return values
 
+
 class VerticalDimension(Node):
     pass
 

@@ -69,7 +69,7 @@ class LocalVar(Node):
 
 class ScalarLocalVar(LocalVar):
     vtype: common.DataType
-    init: Optional[Expr] # TODO: use in gtir to nir lowering for reduction var
+    init: Optional[Expr]  # TODO: use in gtir to nir lowering for reduction var
 
 
 class TensorLocalVar(LocalVar):
@@ -85,7 +85,7 @@ class LocalFieldVar(TensorLocalVar):
 
     domain: common.LocationType  # the type of locations the LocalField is defined on
 
-    @validator('shape', pre=True, always=True)
+    @validator("shape", pre=True, always=True)
     def ensure_one_dimensional(cls, shape):
         if len(shape) != 1:
             raise ValueError("Invalid shape for LocalFieldVar.")
@@ -152,17 +152,22 @@ class FieldAccess(Access):
 class VarAccess(Access):
     pass
 
-#class IndexAccess(Access): # TODO(tehrengruber): use for TensorLocalVar
+
+# class IndexAccess(Access): # TODO(tehrengruber): use for TensorLocalVar
 #    indices: List[int]
+
 
 class LocationLocalIdAccess(Access):
     pass
 
+
 class NeighborLoopLocationAccess(LocationLocalIdAccess):
     pass
 
+
 class LocalFieldAccess(Access):
     location: LocationLocalIdAccess
+
 
 class AssignStmt(Stmt):
     left: Access  # there are no local variables in gtir, only fields
