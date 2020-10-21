@@ -276,15 +276,32 @@
         <span class="n">loc_comprehension</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">neighbors</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;location_comprehensions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loc_comprehension</span>
 
+        <span class="n">neighbor_loop_name</span> <span class="o">=</span> <span class="s2">&quot;neighbor_loop_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id_attr_</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">weights</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span> <span class="o">!=</span> <span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Edge</span><span class="p">,</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="o">.</span><span class="n">Vertex</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid usage of weights in NeighborReduce.&quot;</span><span class="p">)</span>
+
         <span class="n">body_location</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">reduce_var_name</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id_attr_</span><span class="p">)</span>
         <span class="n">last_block</span><span class="o">.</span><span class="n">declarations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">nir</span><span class="o">.</span><span class="n">LocalVar</span><span class="p">(</span>
+            <span class="n">nir</span><span class="o">.</span><span class="n">ScalarLocalVar</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">reduce_var_name</span><span class="p">,</span>
                 <span class="n">vtype</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span>  <span class="c1"># TODO</span>
                 <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">weights</span><span class="p">:</span>
+            <span class="n">weights_var_name</span> <span class="o">=</span> <span class="s2">&quot;local_weights_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id_attr_</span><span class="p">)</span>
+            <span class="n">last_block</span><span class="o">.</span><span class="n">declarations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">nir</span><span class="o">.</span><span class="n">LocalFieldVar</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">weights_var_name</span><span class="p">,</span>
+                    <span class="n">vtype</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">FLOAT64</span><span class="p">,</span>  <span class="c1"># TODO</span>
+                    <span class="n">domain</span><span class="o">=</span><span class="n">body_location</span><span class="p">,</span>
+                    <span class="n">init</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                    <span class="n">max_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># TODO</span>
+                    <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
         <span class="n">last_block</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="n">nir</span><span class="o">.</span><span class="n">AssignStmt</span><span class="p">(</span>
                 <span class="n">left</span><span class="o">=</span><span class="n">nir</span><span class="o">.</span><span class="n">VarAccess</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">reduce_var_name</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">),</span>
@@ -296,17 +313,25 @@
                 <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">)</span>
+        <span class="n">reduction_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">,</span> <span class="n">in_neighbor_loop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">weights</span><span class="p">:</span>
+            <span class="n">reduction_item</span> <span class="o">=</span> <span class="n">nir</span><span class="o">.</span><span class="n">BinaryOp</span><span class="p">(</span>
+                <span class="n">left</span><span class="o">=</span><span class="n">nir</span><span class="o">.</span><span class="n">LocalFieldAccess</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">weights_var_name</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">nir</span><span class="o">.</span><span class="n">NeighborLoopLocationAccess</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">neighbor_loop_name</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">),</span> <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">),</span>
+                <span class="n">op</span><span class="o">=</span><span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span><span class="o">.</span><span class="n">MUL</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">reduction_item</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">)</span>
+
+        <span class="n">reduction_intermediate</span> <span class="o">=</span> <span class="n">nir</span><span class="o">.</span><span class="n">BinaryOp</span><span class="p">(</span>
+            <span class="n">left</span><span class="o">=</span><span class="n">nir</span><span class="o">.</span><span class="n">VarAccess</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">reduce_var_name</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">),</span>
+            <span class="n">op</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">REDUCE_OP_TO_BINOP</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+            <span class="n">right</span><span class="o">=</span><span class="n">reduction_item</span><span class="p">,</span>
+            <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">nir</span><span class="o">.</span><span class="n">BlockStmt</span><span class="p">(</span>
             <span class="n">declarations</span><span class="o">=</span><span class="p">[],</span>
             <span class="n">statements</span><span class="o">=</span><span class="p">[</span>
                 <span class="n">nir</span><span class="o">.</span><span class="n">AssignStmt</span><span class="p">(</span>
                     <span class="n">left</span><span class="o">=</span><span class="n">nir</span><span class="o">.</span><span class="n">VarAccess</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">reduce_var_name</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">),</span>
-                    <span class="n">right</span><span class="o">=</span><span class="n">nir</span><span class="o">.</span><span class="n">BinaryOp</span><span class="p">(</span>
-                        <span class="n">left</span><span class="o">=</span><span class="n">nir</span><span class="o">.</span><span class="n">VarAccess</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">reduce_var_name</span><span class="p">,</span> <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">),</span>
-                        <span class="n">op</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">REDUCE_OP_TO_BINOP</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
-                        <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">,</span> <span class="n">in_neighbor_loop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
-                        <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">,</span>
-                    <span class="p">),</span>
+                    <span class="n">right</span><span class="o">=</span><span class="n">reduction_intermediate</span><span class="p">,</span>
                     <span class="n">location_type</span><span class="o">=</span><span class="n">body_location</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">],</span>
@@ -314,6 +339,7 @@
         <span class="p">)</span>
         <span class="n">last_block</span><span class="o">.</span><span class="n">statements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="n">nir</span><span class="o">.</span><span class="n">NeighborLoop</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">neighbor_loop_name</span><span class="p">,</span>
                 <span class="n">neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="o">.</span><span class="n">chain</span><span class="p">),</span>
                 <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
                 <span class="n">location_type</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">location_type</span><span class="p">,</span>

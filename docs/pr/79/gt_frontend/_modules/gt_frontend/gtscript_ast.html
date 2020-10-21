@@ -171,7 +171,7 @@
 <span class="c1">#</span>
 <span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
 <span class="c1"># todo(tehrengruber): document nodes</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">gtc.common</span> <span class="k">as</span> <span class="nn">common</span>
 <span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">Node</span>
@@ -266,10 +266,30 @@
     <span class="n">left</span><span class="p">:</span> <span class="n">Expr</span>
     <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span></div>
 
+<span class="k">class</span> <span class="nc">ListNode</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span> <span class="c1"># todo: this node is not valid in every context</span>
+    <span class="n">elts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Expr</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">Keyword</span><span class="p">(</span><span class="n">GTScriptASTNode</span><span class="p">):</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Expr</span>
 
 <div class="viewcode-block" id="Call"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Call">[docs]</a><span class="k">class</span> <span class="nc">Call</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
     <span class="n">args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Expr</span><span class="p">]</span>
-    <span class="n">func</span><span class="p">:</span> <span class="nb">str</span></div>
+    <span class="n">keywords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Keyword</span><span class="p">]]</span>
+    <span class="n">func</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="c1">#todo(tehrengruber: validate each keyword arg occurs only once)</span>
+
+<div class="viewcode-block" id="Call.get_keyword_args_as_dict"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Call.get_keyword_args_as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_keyword_args_as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">arg</span><span class="o">.</span><span class="n">key</span><span class="p">:</span> <span class="n">arg</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span> <span class="k">else</span> <span class="p">[])}</span></div>
+
+<div class="viewcode-block" id="Call.has_keyword_arg"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Call.has_keyword_arg">[docs]</a>    <span class="k">def</span> <span class="nf">has_keyword_arg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_keyword_args_as_dict</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Call.get_keyword_arg"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Call.get_keyword_arg">[docs]</a>    <span class="k">def</span> <span class="nf">get_keyword_arg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_keyword_arg</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Call to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="si">}</span><span class="s2"> has no keyword argument </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_keyword_args_as_dict</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span></div></div>
 
 
 <span class="c1"># TODO(tehrengruber): can be enabled as soon as eve_toolchain#58 lands</span>
@@ -288,7 +308,6 @@
 <div class="viewcode-block" id="Generator"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Generator">[docs]</a><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
     <span class="n">generators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LocationComprehension</span><span class="p">]</span>
     <span class="n">elt</span><span class="p">:</span> <span class="n">Expr</span></div>
-
 
 <div class="viewcode-block" id="Assign"><a class="viewcode-back" href="../../_source/gt_frontend.html#gt_frontend.gtscript_ast.Assign">[docs]</a><span class="k">class</span> <span class="nc">Assign</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Symbol</span><span class="p">,</span> <span class="n">SubscriptSingle</span><span class="p">,</span> <span class="n">SubscriptMultiple</span><span class="p">]</span>

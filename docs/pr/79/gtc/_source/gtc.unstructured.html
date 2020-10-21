@@ -432,7 +432,7 @@
 
 <dl class="py class">
 <dt id="gtc.unstructured.gtir.NeighborReduce">
-<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.gtir.</code><code class="sig-name descname">NeighborReduce</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">operand</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.gtir.Expr" title="gtc.unstructured.gtir.Expr">gtc.unstructured.gtir.Expr</a></span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.gtir.ReduceOperator" title="gtc.unstructured.gtir.ReduceOperator">gtc.unstructured.gtir.ReduceOperator</a></span></em>, <em class="sig-param"><span class="n">neighbors</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.gtir.LocationComprehension" title="gtc.unstructured.gtir.LocationComprehension">gtc.unstructured.gtir.LocationComprehension</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/gtir.html#NeighborReduce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.gtir.NeighborReduce" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.gtir.</code><code class="sig-name descname">NeighborReduce</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">operand</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.gtir.Expr" title="gtc.unstructured.gtir.Expr">gtc.unstructured.gtir.Expr</a></span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.gtir.ReduceOperator" title="gtc.unstructured.gtir.ReduceOperator">gtc.unstructured.gtir.ReduceOperator</a></span></em>, <em class="sig-param"><span class="n">neighbors</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.gtir.LocationComprehension" title="gtc.unstructured.gtir.LocationComprehension">gtc.unstructured.gtir.LocationComprehension</a></span></em>, <em class="sig-param"><span class="n">weights</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.gtir.Expr" title="gtc.unstructured.gtir.Expr">gtc.unstructured.gtir.Expr</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/gtir.html#NeighborReduce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.gtir.NeighborReduce" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.gtir.Expr" title="gtc.unstructured.gtir.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.gtir.Expr</span></code></a></p>
 <dl class="py method">
 <dt id="gtc.unstructured.gtir.NeighborReduce.check_location_type">
@@ -452,6 +452,11 @@
 <dl class="py attribute">
 <dt id="gtc.unstructured.gtir.NeighborReduce.operand">
 <code class="sig-name descname">operand</code><em class="property">: <a class="reference internal" href="#gtc.unstructured.gtir.Expr" title="gtc.unstructured.gtir.Expr">gtc.unstructured.gtir.Expr</a></em><a class="headerlink" href="#gtc.unstructured.gtir.NeighborReduce.operand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.gtir.NeighborReduce.weights">
+<code class="sig-name descname">weights</code><em class="property">: Optional<span class="p">[</span>List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.gtir.Expr" title="gtc.unstructured.gtir.Expr">gtc.unstructured.gtir.Expr</a><span class="p">]</span><span class="p">]</span></em><a class="headerlink" href="#gtc.unstructured.gtir.NeighborReduce.weights" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1344,8 +1349,40 @@
 </dd></dl>
 
 <dl class="py class">
+<dt id="gtc.unstructured.nir.LocalFieldAccess">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">LocalFieldAccess</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">location</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.LocationLocalIdAccess" title="gtc.unstructured.nir.LocationLocalIdAccess">gtc.unstructured.nir.LocationLocalIdAccess</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#LocalFieldAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.LocalFieldAccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.nir.Access" title="gtc.unstructured.nir.Access"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.nir.Access</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.nir.LocalFieldAccess.location">
+<code class="sig-name descname">location</code><em class="property">: <a class="reference internal" href="#gtc.unstructured.nir.LocationLocalIdAccess" title="gtc.unstructured.nir.LocationLocalIdAccess">gtc.unstructured.nir.LocationLocalIdAccess</a></em><a class="headerlink" href="#gtc.unstructured.nir.LocalFieldAccess.location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.unstructured.nir.LocalFieldVar">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">LocalFieldVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">max_size</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#LocalFieldVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.LocalFieldVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.nir.TensorLocalVar" title="gtc.unstructured.nir.TensorLocalVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.nir.TensorLocalVar</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.nir.LocalFieldVar.domain">
+<code class="sig-name descname">domain</code><em class="property">: <a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></em><a class="headerlink" href="#gtc.unstructured.nir.LocalFieldVar.domain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="gtc.unstructured.nir.LocalFieldVar.ensure_one_dimensional">
+<em class="property">classmethod </em><code class="sig-name descname">ensure_one_dimensional</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#LocalFieldVar.ensure_one_dimensional"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.LocalFieldVar.ensure_one_dimensional" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="gtc.unstructured.nir.LocalFieldVar.max_size">
+<em class="property">property </em><code class="sig-name descname">max_size</code><a class="headerlink" href="#gtc.unstructured.nir.LocalFieldVar.max_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="gtc.unstructured.nir.LocalVar">
-<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">LocalVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">vtype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#LocalVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.LocalVar" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">LocalVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#LocalVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.LocalVar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
 <dl class="py attribute">
 <dt id="gtc.unstructured.nir.LocalVar.location_type">
@@ -1357,9 +1394,15 @@
 <code class="sig-name descname">name</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.nir.LocalVar.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.unstructured.nir.LocationLocalIdAccess">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">LocationLocalIdAccess</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#LocationLocalIdAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.LocationLocalIdAccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.nir.Access" title="gtc.unstructured.nir.Access"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.nir.Access</span></code></a></p>
 <dl class="py attribute">
-<dt id="gtc.unstructured.nir.LocalVar.vtype">
-<code class="sig-name descname">vtype</code><em class="property">: <a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></em><a class="headerlink" href="#gtc.unstructured.nir.LocalVar.vtype" title="Permalink to this definition">¶</a></dt>
+<dt id="gtc.unstructured.nir.LocationLocalIdAccess.name">
+<code class="sig-name descname">name</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.nir.LocationLocalIdAccess.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1388,7 +1431,7 @@
 
 <dl class="py class">
 <dt id="gtc.unstructured.nir.NeighborLoop">
-<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">NeighborLoop</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">neighbors</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.NeighborChain" title="gtc.unstructured.nir.NeighborChain">gtc.unstructured.nir.NeighborChain</a></span></em>, <em class="sig-param"><span class="n">body</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.BlockStmt" title="gtc.unstructured.nir.BlockStmt">gtc.unstructured.nir.BlockStmt</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#NeighborLoop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.NeighborLoop" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">NeighborLoop</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">neighbors</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.NeighborChain" title="gtc.unstructured.nir.NeighborChain">gtc.unstructured.nir.NeighborChain</a></span></em>, <em class="sig-param"><span class="n">body</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.BlockStmt" title="gtc.unstructured.nir.BlockStmt">gtc.unstructured.nir.BlockStmt</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#NeighborLoop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.NeighborLoop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.nir.Stmt" title="gtc.unstructured.nir.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.nir.Stmt</span></code></a></p>
 <dl class="py attribute">
 <dt id="gtc.unstructured.nir.NeighborLoop.body">
@@ -1401,8 +1444,40 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt id="gtc.unstructured.nir.NeighborLoop.name">
+<code class="sig-name descname">name</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.nir.NeighborLoop.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="gtc.unstructured.nir.NeighborLoop.neighbors">
 <code class="sig-name descname">neighbors</code><em class="property">: <a class="reference internal" href="#gtc.unstructured.nir.NeighborChain" title="gtc.unstructured.nir.NeighborChain">gtc.unstructured.nir.NeighborChain</a></em><a class="headerlink" href="#gtc.unstructured.nir.NeighborLoop.neighbors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.unstructured.nir.NeighborLoopLocationAccess">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">NeighborLoopLocationAccess</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#NeighborLoopLocationAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.NeighborLoopLocationAccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.nir.LocationLocalIdAccess" title="gtc.unstructured.nir.LocationLocalIdAccess"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.nir.LocationLocalIdAccess</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.nir.NeighborLoopLocationAccess.name">
+<code class="sig-name descname">name</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.nir.NeighborLoopLocationAccess.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.unstructured.nir.ScalarLocalVar">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">ScalarLocalVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">vtype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></span></em>, <em class="sig-param"><span class="n">init</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.Expr" title="gtc.unstructured.nir.Expr">gtc.unstructured.nir.Expr</a></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#ScalarLocalVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.ScalarLocalVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.nir.LocalVar" title="gtc.unstructured.nir.LocalVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.nir.LocalVar</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.nir.ScalarLocalVar.init">
+<code class="sig-name descname">init</code><em class="property">: Optional<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.nir.Expr" title="gtc.unstructured.nir.Expr">gtc.unstructured.nir.Expr</a><span class="p">]</span></em><a class="headerlink" href="#gtc.unstructured.nir.ScalarLocalVar.init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.nir.ScalarLocalVar.vtype">
+<code class="sig-name descname">vtype</code><em class="property">: <a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></em><a class="headerlink" href="#gtc.unstructured.nir.ScalarLocalVar.vtype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1446,6 +1521,27 @@
 <dl class="py attribute">
 <dt id="gtc.unstructured.nir.TemporaryField.vtype">
 <code class="sig-name descname">vtype</code><em class="property">: <a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></em><a class="headerlink" href="#gtc.unstructured.nir.TemporaryField.vtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.unstructured.nir.TensorLocalVar">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.nir.</code><code class="sig-name descname">TensorLocalVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">vtype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></span></em>, <em class="sig-param"><span class="n">shape</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">init</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.nir.Expr" title="gtc.unstructured.nir.Expr">gtc.unstructured.nir.Expr</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir.html#TensorLocalVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir.TensorLocalVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.nir.LocalVar" title="gtc.unstructured.nir.LocalVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.nir.LocalVar</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.nir.TensorLocalVar.init">
+<code class="sig-name descname">init</code><em class="property">: Optional<span class="p">[</span>List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.nir.Expr" title="gtc.unstructured.nir.Expr">gtc.unstructured.nir.Expr</a><span class="p">]</span><span class="p">]</span></em><a class="headerlink" href="#gtc.unstructured.nir.TensorLocalVar.init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.nir.TensorLocalVar.shape">
+<code class="sig-name descname">shape</code><em class="property">: List<span class="p">[</span>int<span class="p">]</span></em><a class="headerlink" href="#gtc.unstructured.nir.TensorLocalVar.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.nir.TensorLocalVar.vtype">
+<code class="sig-name descname">vtype</code><em class="property">: <a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></em><a class="headerlink" href="#gtc.unstructured.nir.TensorLocalVar.vtype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1557,6 +1653,11 @@
 <dd></dd></dl>
 
 <dl class="py method">
+<dt id="gtc.unstructured.nir_to_usid.NirToUsid.visit_LocalFieldAccess">
+<code class="sig-name descname">visit_LocalFieldAccess</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.LocalFieldAccess" title="gtc.unstructured.nir.LocalFieldAccess">gtc.unstructured.nir.LocalFieldAccess</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir_to_usid.html#NirToUsid.visit_LocalFieldAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir_to_usid.NirToUsid.visit_LocalFieldAccess" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="gtc.unstructured.nir_to_usid.NirToUsid.visit_NeighborChain">
 <code class="sig-name descname">visit_NeighborChain</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.NeighborChain" title="gtc.unstructured.nir.NeighborChain">gtc.unstructured.nir.NeighborChain</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir_to_usid.html#NirToUsid.visit_NeighborChain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir_to_usid.NirToUsid.visit_NeighborChain" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1567,6 +1668,16 @@
 <dd></dd></dl>
 
 <dl class="py method">
+<dt id="gtc.unstructured.nir_to_usid.NirToUsid.visit_NeighborLoopLocationAccess">
+<code class="sig-name descname">visit_NeighborLoopLocationAccess</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.NeighborLoopLocationAccess" title="gtc.unstructured.nir.NeighborLoopLocationAccess">gtc.unstructured.nir.NeighborLoopLocationAccess</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir_to_usid.html#NirToUsid.visit_NeighborLoopLocationAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir_to_usid.NirToUsid.visit_NeighborLoopLocationAccess" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="gtc.unstructured.nir_to_usid.NirToUsid.visit_ScalarLocalVar">
+<code class="sig-name descname">visit_ScalarLocalVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.ScalarLocalVar" title="gtc.unstructured.nir.ScalarLocalVar">gtc.unstructured.nir.ScalarLocalVar</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir_to_usid.html#NirToUsid.visit_ScalarLocalVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir_to_usid.NirToUsid.visit_ScalarLocalVar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="gtc.unstructured.nir_to_usid.NirToUsid.visit_Stencil">
 <code class="sig-name descname">visit_Stencil</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.Stencil" title="gtc.unstructured.nir.Stencil">gtc.unstructured.nir.Stencil</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir_to_usid.html#NirToUsid.visit_Stencil"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir_to_usid.NirToUsid.visit_Stencil" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1574,6 +1685,11 @@
 <dl class="py method">
 <dt id="gtc.unstructured.nir_to_usid.NirToUsid.visit_TemporaryField">
 <code class="sig-name descname">visit_TemporaryField</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.TemporaryField" title="gtc.unstructured.nir.TemporaryField">gtc.unstructured.nir.TemporaryField</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir_to_usid.html#NirToUsid.visit_TemporaryField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir_to_usid.NirToUsid.visit_TemporaryField" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="gtc.unstructured.nir_to_usid.NirToUsid.visit_TensorLocalVar">
+<code class="sig-name descname">visit_TensorLocalVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.nir.TensorLocalVar" title="gtc.unstructured.nir.TensorLocalVar">gtc.unstructured.nir.TensorLocalVar</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/nir_to_usid.html#NirToUsid.visit_TensorLocalVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.nir_to_usid.NirToUsid.visit_TensorLocalVar" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1828,6 +1944,17 @@
 </dd></dl>
 
 <dl class="py class">
+<dt id="gtc.unstructured.usid.IndexAccess">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">IndexAccess</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#IndexAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.IndexAccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.usid.Expr" title="gtc.unstructured.usid.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.usid.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid.IndexAccess.name">
+<code class="sig-name descname">name</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.usid.IndexAccess.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="gtc.unstructured.usid.Kernel">
 <em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">Kernel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">connectivities</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.usid.Connectivity" title="gtc.unstructured.usid.Connectivity">gtc.unstructured.usid.Connectivity</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sids</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.usid.SidComposite" title="gtc.unstructured.usid.SidComposite">gtc.unstructured.usid.SidComposite</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">primary_connectivity</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">primary_sid</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">ast</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.usid.Stmt" title="gtc.unstructured.usid.Stmt">gtc.unstructured.usid.Stmt</a><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#Kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.Kernel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
@@ -1919,7 +2046,7 @@
 
 <dl class="py class">
 <dt id="gtc.unstructured.usid.NeighborLoop">
-<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">NeighborLoop</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">body_location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">body</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.usid.Stmt" title="gtc.unstructured.usid.Stmt">gtc.unstructured.usid.Stmt</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">connectivity</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">outer_sid</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">sid</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#NeighborLoop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.NeighborLoop" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">NeighborLoop</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">body_location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">body</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.usid.Stmt" title="gtc.unstructured.usid.Stmt">gtc.unstructured.usid.Stmt</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">connectivity</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">outer_sid</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">sid</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">iter_var</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#NeighborLoop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.NeighborLoop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.usid.Stmt" title="gtc.unstructured.usid.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.usid.Stmt</span></code></a></p>
 <dl class="py attribute">
 <dt id="gtc.unstructured.usid.NeighborLoop.body">
@@ -1937,6 +2064,11 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt id="gtc.unstructured.usid.NeighborLoop.iter_var">
+<code class="sig-name descname">iter_var</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.usid.NeighborLoop.iter_var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="gtc.unstructured.usid.NeighborLoop.outer_sid">
 <code class="sig-name descname">outer_sid</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.usid.NeighborLoop.outer_sid" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1944,6 +2076,22 @@
 <dl class="py attribute">
 <dt id="gtc.unstructured.usid.NeighborLoop.sid">
 <code class="sig-name descname">sid</code><em class="property">: Optional<span class="p">[</span>pydantic.types.StrictStr<span class="p">]</span></em><a class="headerlink" href="#gtc.unstructured.usid.NeighborLoop.sid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.unstructured.usid.ScalarVarDecl">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">ScalarVarDecl</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">init</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.usid.Expr" title="gtc.unstructured.usid.Expr">gtc.unstructured.usid.Expr</a></span></em>, <em class="sig-param"><span class="n">vtype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#ScalarVarDecl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.ScalarVarDecl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.usid.VarDecl" title="gtc.unstructured.usid.VarDecl"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.usid.VarDecl</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid.ScalarVarDecl.init">
+<code class="sig-name descname">init</code><em class="property">: <a class="reference internal" href="#gtc.unstructured.usid.Expr" title="gtc.unstructured.usid.Expr">gtc.unstructured.usid.Expr</a></em><a class="headerlink" href="#gtc.unstructured.usid.ScalarVarDecl.init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid.ScalarVarDecl.vtype">
+<code class="sig-name descname">vtype</code><em class="property">: <a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></em><a class="headerlink" href="#gtc.unstructured.usid.ScalarVarDecl.vtype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -2054,6 +2202,43 @@
 </dd></dl>
 
 <dl class="py class">
+<dt id="gtc.unstructured.usid.StaticArrayAccess">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">StaticArrayAccess</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">index</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.usid.IndexAccess" title="gtc.unstructured.usid.IndexAccess">gtc.unstructured.usid.IndexAccess</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#StaticArrayAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.StaticArrayAccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.usid.Expr" title="gtc.unstructured.usid.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.usid.Expr</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid.StaticArrayAccess.index">
+<code class="sig-name descname">index</code><em class="property">: <a class="reference internal" href="#gtc.unstructured.usid.IndexAccess" title="gtc.unstructured.usid.IndexAccess">gtc.unstructured.usid.IndexAccess</a></em><a class="headerlink" href="#gtc.unstructured.usid.StaticArrayAccess.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid.StaticArrayAccess.name">
+<code class="sig-name descname">name</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.usid.StaticArrayAccess.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="gtc.unstructured.usid.StaticArrayDecl">
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">StaticArrayDecl</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">init</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.usid.Expr" title="gtc.unstructured.usid.Expr">gtc.unstructured.usid.Expr</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">vtype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></span></em>, <em class="sig-param"><span class="n">length</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#StaticArrayDecl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.StaticArrayDecl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.usid.VarDecl" title="gtc.unstructured.usid.VarDecl"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.usid.VarDecl</span></code></a></p>
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid.StaticArrayDecl.init">
+<code class="sig-name descname">init</code><em class="property">: List<span class="p">[</span><a class="reference internal" href="#gtc.unstructured.usid.Expr" title="gtc.unstructured.usid.Expr">gtc.unstructured.usid.Expr</a><span class="p">]</span></em><a class="headerlink" href="#gtc.unstructured.usid.StaticArrayDecl.init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid.StaticArrayDecl.length">
+<code class="sig-name descname">length</code><em class="property">: int</em><a class="headerlink" href="#gtc.unstructured.usid.StaticArrayDecl.length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid.StaticArrayDecl.vtype">
+<code class="sig-name descname">vtype</code><em class="property">: <a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></em><a class="headerlink" href="#gtc.unstructured.usid.StaticArrayDecl.vtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="gtc.unstructured.usid.Stmt">
 <em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">Stmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#Stmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.Stmt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="../../eve/_build/html/_source/eve.html#eve.concepts.Node" title="(in Eve v0.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.Node</span></code></a></p>
@@ -2124,21 +2309,11 @@
 
 <dl class="py class">
 <dt id="gtc.unstructured.usid.VarDecl">
-<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">VarDecl</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em>, <em class="sig-param"><span class="n">init</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#gtc.unstructured.usid.Expr" title="gtc.unstructured.usid.Expr">gtc.unstructured.usid.Expr</a></span></em>, <em class="sig-param"><span class="n">vtype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#VarDecl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.VarDecl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">gtc.unstructured.usid.</code><code class="sig-name descname">VarDecl</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">location_type</span><span class="p">:</span> <span class="n"><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gtc/unstructured/usid.html#VarDecl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gtc.unstructured.usid.VarDecl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gtc.unstructured.usid.Stmt" title="gtc.unstructured.usid.Stmt"><code class="xref py py-class docutils literal notranslate"><span class="pre">gtc.unstructured.usid.Stmt</span></code></a></p>
-<dl class="py attribute">
-<dt id="gtc.unstructured.usid.VarDecl.init">
-<code class="sig-name descname">init</code><em class="property">: <a class="reference internal" href="#gtc.unstructured.usid.Expr" title="gtc.unstructured.usid.Expr">gtc.unstructured.usid.Expr</a></em><a class="headerlink" href="#gtc.unstructured.usid.VarDecl.init" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="py attribute">
 <dt id="gtc.unstructured.usid.VarDecl.name">
 <code class="sig-name descname">name</code><em class="property">: pydantic.types.StrictStr</em><a class="headerlink" href="#gtc.unstructured.usid.VarDecl.name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="gtc.unstructured.usid.VarDecl.vtype">
-<code class="sig-name descname">vtype</code><em class="property">: <a class="reference internal" href="gtc.html#gtc.common.DataType" title="gtc.common.DataType">gtc.common.DataType</a></em><a class="headerlink" href="#gtc.unstructured.usid.VarDecl.vtype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -2213,6 +2388,11 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.IndexAccess">
+<code class="sig-name descname">IndexAccess</code><em class="property"> = &lt;eve.codegen.FormatTemplate object&gt;</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.IndexAccess" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.LOCATION_TYPE_TO_STR">
 <code class="sig-name descname">LOCATION_TYPE_TO_STR</code><em class="property">: ClassVar<span class="p">[</span>Mapping<span class="p">[</span><a class="reference internal" href="gtc.html#gtc.common.LocationType" title="gtc.common.LocationType">gtc.common.LocationType</a><span class="p">, </span>str<span class="p">]</span><span class="p">]</span></em><em class="property"> = mappingproxy({&lt;LocationType.Vertex: 0&gt;: 'vertex', &lt;LocationType.Edge: 1&gt;: 'edge', &lt;LocationType.Cell: 2&gt;: 'cell'})</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.LOCATION_TYPE_TO_STR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -2233,6 +2413,11 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.ScalarVarDecl">
+<code class="sig-name descname">ScalarVarDecl</code><em class="property"> = &lt;eve.codegen.MakoTemplate object&gt;</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.ScalarVarDecl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.SidComposite">
 <code class="sig-name descname">SidComposite</code><em class="property"> = &lt;eve.codegen.MakoTemplate object&gt;</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.SidComposite" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -2248,6 +2433,16 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.StaticArrayAccess">
+<code class="sig-name descname">StaticArrayAccess</code><em class="property"> = &lt;eve.codegen.FormatTemplate object&gt;</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.StaticArrayAccess" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.StaticArrayDecl">
+<code class="sig-name descname">StaticArrayDecl</code><em class="property"> = &lt;eve.codegen.MakoTemplate object&gt;</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.StaticArrayDecl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.Temporary">
 <code class="sig-name descname">Temporary</code><em class="property"> = &lt;eve.codegen.MakoTemplate object&gt;</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.Temporary" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -2255,11 +2450,6 @@
 <dl class="py attribute">
 <dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.VarAccess">
 <code class="sig-name descname">VarAccess</code><em class="property"> = &lt;eve.codegen.FormatTemplate object&gt;</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.VarAccess" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="gtc.unstructured.usid_codegen.UsidCodeGenerator.VarDecl">
-<code class="sig-name descname">VarDecl</code><em class="property"> = &lt;eve.codegen.MakoTemplate object&gt;</em><a class="headerlink" href="#gtc.unstructured.usid_codegen.UsidCodeGenerator.VarDecl" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

@@ -210,16 +210,33 @@
         <span class="k">return</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">common</span><span class="o">.</span><span class="n">LocationType</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">])</span></div>
 
 
+<div class="viewcode-block" id="IndexAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.IndexAccess">[docs]</a><span class="k">class</span> <span class="nc">IndexAccess</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span> <span class="c1"># TODO(tehrengruber): Maybe IndexDecl in NeighborLoop?</span></div>
+
+
 <div class="viewcode-block" id="FieldAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.FieldAccess">[docs]</a><span class="k">class</span> <span class="nc">FieldAccess</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref to SidCompositeEntry</span>
     <span class="n">sid</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref</span></div>
 
 
-<div class="viewcode-block" id="VarDecl"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.VarDecl">[docs]</a><span class="k">class</span> <span class="nc">VarDecl</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+<div class="viewcode-block" id="StaticArrayAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.StaticArrayAccess">[docs]</a><span class="k">class</span> <span class="nc">StaticArrayAccess</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">index</span><span class="p">:</span> <span class="n">IndexAccess</span>  <span class="c1"># TODO(tehrengruber): Union[Index, IndexAccess]</span></div>
+
+
+<div class="viewcode-block" id="VarDecl"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.VarDecl">[docs]</a><span class="k">class</span> <span class="nc">VarDecl</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span></div>
+
+
+<div class="viewcode-block" id="ScalarVarDecl"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.ScalarVarDecl">[docs]</a><span class="k">class</span> <span class="nc">ScalarVarDecl</span><span class="p">(</span><span class="n">VarDecl</span><span class="p">):</span>
     <span class="n">init</span><span class="p">:</span> <span class="n">Expr</span>
     <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span></div>
 
+
+<div class="viewcode-block" id="StaticArrayDecl"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.StaticArrayDecl">[docs]</a><span class="k">class</span> <span class="nc">StaticArrayDecl</span><span class="p">(</span><span class="n">VarDecl</span><span class="p">):</span>
+    <span class="n">init</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Expr</span><span class="p">]</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span></div>
 
 <div class="viewcode-block" id="Literal"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Literal">[docs]</a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
     <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">common</span><span class="o">.</span><span class="n">BuiltInLiteral</span><span class="p">,</span> <span class="n">Str</span><span class="p">]</span>
@@ -380,7 +397,8 @@
     <span class="n">outer_sid</span><span class="p">:</span> <span class="n">Str</span>  <span class="c1"># symbol ref to SidComposite where the neighbor tables lives (and sparse fields)</span>
     <span class="n">sid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
         <span class="n">Str</span>
-    <span class="p">]</span>  <span class="c1"># symbol ref to SidComposite where the fields of the loop body live (None if only sparse fields are accessed)</span></div>
+    <span class="p">]</span>  <span class="c1"># symbol ref to SidComposite where the fields of the loop body live (None if only sparse fields are accessed)</span>
+    <span class="n">iter_var</span><span class="p">:</span> <span class="n">Str</span></div>
 
 
 <div class="viewcode-block" id="Kernel"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid.Kernel">[docs]</a><span class="k">class</span> <span class="nc">Kernel</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>

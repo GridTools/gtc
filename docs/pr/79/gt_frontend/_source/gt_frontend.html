@@ -602,7 +602,7 @@ of type arguments.</p>
 
 <dl class="py class">
 <dt id="gt_frontend.gtscript_ast.Call">
-<em class="property">class </em><code class="sig-prename descclassname">gt_frontend.gtscript_ast.</code><code class="sig-name descname">Call</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gt_frontend.gtscript_ast.Expr" title="gt_frontend.gtscript_ast.Expr">gt_frontend.gtscript_ast.Expr</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">func</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gt_frontend/gtscript_ast.html#Call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gt_frontend.gtscript_ast.Call" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">gt_frontend.gtscript_ast.</code><code class="sig-name descname">Call</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">id_attr_</span><span class="p">:</span> <span class="n">pydantic.types.StrictStr</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">args</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="#gt_frontend.gtscript_ast.Expr" title="gt_frontend.gtscript_ast.Expr">gt_frontend.gtscript_ast.Expr</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">keywords</span><span class="p">:</span> <span class="n">List<span class="p">[</span>gt_frontend.gtscript_ast.Keyword<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">func</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gt_frontend/gtscript_ast.html#Call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gt_frontend.gtscript_ast.Call" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gt_frontend.gtscript_ast.Expr" title="gt_frontend.gtscript_ast.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">gt_frontend.gtscript_ast.Expr</span></code></a></p>
 <dl class="py attribute">
 <dt id="gt_frontend.gtscript_ast.Call.args">
@@ -612,6 +612,26 @@ of type arguments.</p>
 <dl class="py attribute">
 <dt id="gt_frontend.gtscript_ast.Call.func">
 <code class="sig-name descname">func</code><em class="property">: str</em><a class="headerlink" href="#gt_frontend.gtscript_ast.Call.func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="gt_frontend.gtscript_ast.Call.get_keyword_arg">
+<code class="sig-name descname">get_keyword_arg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gt_frontend/gtscript_ast.html#Call.get_keyword_arg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gt_frontend.gtscript_ast.Call.get_keyword_arg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="gt_frontend.gtscript_ast.Call.get_keyword_args_as_dict">
+<code class="sig-name descname">get_keyword_args_as_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gt_frontend/gtscript_ast.html#Call.get_keyword_args_as_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gt_frontend.gtscript_ast.Call.get_keyword_args_as_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="gt_frontend.gtscript_ast.Call.has_keyword_arg">
+<code class="sig-name descname">has_keyword_arg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gt_frontend/gtscript_ast.html#Call.has_keyword_arg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gt_frontend.gtscript_ast.Call.has_keyword_arg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gt_frontend.gtscript_ast.Call.keywords">
+<code class="sig-name descname">keywords</code><em class="property">: Optional<span class="p">[</span>List<span class="p">[</span>gt_frontend.gtscript_ast.Keyword<span class="p">]</span><span class="p">]</span></em><a class="headerlink" href="#gt_frontend.gtscript_ast.Call.keywords" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1125,6 +1145,16 @@ field types and all understood sementic is encoded in the structure.</p>
 <dl class="py attribute">
 <dt id="gt_frontend.py_to_gtscript.PyToGTScript.Patterns.IterationOrder">
 <code class="sig-name descname">IterationOrder</code><em class="property"> = &lt;_ast.withitem object&gt;</em><a class="headerlink" href="#gt_frontend.py_to_gtscript.PyToGTScript.Patterns.IterationOrder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gt_frontend.py_to_gtscript.PyToGTScript.Patterns.Keyword">
+<code class="sig-name descname">Keyword</code><em class="property"> = &lt;_ast.keyword object&gt;</em><a class="headerlink" href="#gt_frontend.py_to_gtscript.PyToGTScript.Patterns.Keyword" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="gt_frontend.py_to_gtscript.PyToGTScript.Patterns.ListNode">
+<code class="sig-name descname">ListNode</code><em class="property"> = &lt;_ast.List object&gt;</em><a class="headerlink" href="#gt_frontend.py_to_gtscript.PyToGTScript.Patterns.ListNode" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

@@ -218,8 +218,36 @@
 
 <div class="viewcode-block" id="LocalVar"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.LocalVar">[docs]</a><span class="k">class</span> <span class="nc">LocalVar</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
-    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span>
     <span class="n">location_type</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span></div>
+
+
+<div class="viewcode-block" id="ScalarLocalVar"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.ScalarLocalVar">[docs]</a><span class="k">class</span> <span class="nc">ScalarLocalVar</span><span class="p">(</span><span class="n">LocalVar</span><span class="p">):</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span>
+    <span class="n">init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Expr</span><span class="p">]</span> <span class="c1"># TODO: use in gtir to nir lowering for reduction var</span></div>
+
+
+<div class="viewcode-block" id="TensorLocalVar"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.TensorLocalVar">[docs]</a><span class="k">class</span> <span class="nc">TensorLocalVar</span><span class="p">(</span><span class="n">LocalVar</span><span class="p">):</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span>
+    <span class="n">shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Expr</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="LocalFieldVar"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.LocalFieldVar">[docs]</a><span class="k">class</span> <span class="nc">LocalFieldVar</span><span class="p">(</span><span class="n">TensorLocalVar</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">max_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="s2">&quot;shape&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">max_size</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">domain</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">LocationType</span>  <span class="c1"># the type of locations the LocalField is defined on</span>
+
+<div class="viewcode-block" id="LocalFieldVar.ensure_one_dimensional"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.LocalFieldVar.ensure_one_dimensional">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">ensure_one_dimensional</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid shape for LocalFieldVar.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">shape</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="BlockStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.BlockStmt">[docs]</a><span class="k">class</span> <span class="nc">BlockStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
@@ -251,6 +279,7 @@
 
 
 <div class="viewcode-block" id="NeighborLoop"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.NeighborLoop">[docs]</a><span class="k">class</span> <span class="nc">NeighborLoop</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Str</span>
     <span class="n">neighbors</span><span class="p">:</span> <span class="n">NeighborChain</span>
     <span class="n">body</span><span class="p">:</span> <span class="n">BlockStmt</span>
 
@@ -277,6 +306,17 @@
 <div class="viewcode-block" id="VarAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.VarAccess">[docs]</a><span class="k">class</span> <span class="nc">VarAccess</span><span class="p">(</span><span class="n">Access</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
+<span class="c1">#class IndexAccess(Access): # TODO(tehrengruber): use for TensorLocalVar</span>
+<span class="c1">#    indices: List[int]</span>
+
+<div class="viewcode-block" id="LocationLocalIdAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.LocationLocalIdAccess">[docs]</a><span class="k">class</span> <span class="nc">LocationLocalIdAccess</span><span class="p">(</span><span class="n">Access</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="NeighborLoopLocationAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.NeighborLoopLocationAccess">[docs]</a><span class="k">class</span> <span class="nc">NeighborLoopLocationAccess</span><span class="p">(</span><span class="n">LocationLocalIdAccess</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="LocalFieldAccess"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.LocalFieldAccess">[docs]</a><span class="k">class</span> <span class="nc">LocalFieldAccess</span><span class="p">(</span><span class="n">Access</span><span class="p">):</span>
+    <span class="n">location</span><span class="p">:</span> <span class="n">LocationLocalIdAccess</span></div>
 
 <div class="viewcode-block" id="AssignStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.nir.AssignStmt">[docs]</a><span class="k">class</span> <span class="nc">AssignStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
     <span class="n">left</span><span class="p">:</span> <span class="n">Access</span>  <span class="c1"># there are no local variables in gtir, only fields</span>
