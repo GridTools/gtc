@@ -15,8 +15,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import enum
+from typing import Generic, TypeVar
 
-from eve import IntEnum, StrEnum
+from pydantic import root_validator
+
+from eve import GenericNode, IntEnum, Node, Str, StrEnum
 
 
 class AssignmentKind(StrEnum):
@@ -85,3 +88,57 @@ class BuiltInLiteral(IntEnum):
     MIN_VALUE = 1
     ZERO = 2
     ONE = 3
+
+
+ExprT = TypeVar("ExprT")
+
+
+class Expr(Node):
+    location_type: LocationType
+
+
+class Stmt(Node):
+    location_type: LocationType
+
+
+class BinaryOp(Expr, GenericNode, Generic[ExprT]):
+    op: BinaryOperator
+    left: ExprT
+    right: ExprT
+
+    @root_validator(pre=True)
+    def check_location_type(cls, values):
+        if values["left"].location_type != values["right"].location_type:
+            raise ValueError("Location type mismatch")
+
+        if "location_type" not in values:
+            values["location_type"] = values["left"].location_type
+        elif values["left"].location_type != values["location_type"]:
+            raise ValueError("Location type mismatch")
+
+        return values
+
+
+class Literal(Expr):
+    value: Str
+    vtype: DataType
+
+
+LeftT = TypeVar("LeftT")
+
+
+class AssignStmt(Stmt, GenericNode, Generic[LeftT, ExprT]):
+    left: LeftT  # there are no local variables in gtir, only fields
+    right: ExprT
+
+    @root_validator(pre=True)
+    def check_location_type(cls, values):
+        if values["left"].location_type != values["right"].location_type:
+            raise ValueError("Location type mismatch")
+
+        if "location_type" not in values:
+            values["location_type"] = values["left"].location_type
+        elif values["left"].location_type != values["location_type"]:
+            raise ValueError("Location type mismatch")
+
+        return values

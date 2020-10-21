@@ -25,6 +25,7 @@ from .concepts import (
     FieldKind,
     FrozenModel,
     FrozenNode,
+    GenericNode,
     Model,
     Node,
     SourceLocation,

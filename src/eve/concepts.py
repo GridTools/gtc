@@ -24,6 +24,7 @@ import warnings
 
 import boltons.typeutils
 import pydantic
+import pydantic.generics
 
 from . import typing
 from .type_definitions import IntEnum, PositiveInt, Str, StrEnum
@@ -230,6 +231,10 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     class Config(BaseModelConfig):
         pass
+
+
+class GenericNode(BaseNode, pydantic.generics.GenericModel):
+    pass
 
 
 class Node(BaseNode):
