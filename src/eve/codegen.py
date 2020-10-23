@@ -31,9 +31,8 @@ import black
 import jinja2
 from mako import template as mako_tpl
 
-from . import typing, utils
-from .concepts import Node, TreeNode
-from .typing import (
+from . import type_definitions, utils
+from ._typing import (
     Any,
     Callable,
     ClassVar,
@@ -49,7 +48,9 @@ from .typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
+from .concepts import Node, TreeNode
 from .visitors import NodeVisitor
 
 
@@ -453,8 +454,7 @@ class TemplatedGenerator(NodeVisitor):
 
     @classmethod
     def __init_subclass__(cls, *, inherit_templates: bool = True, **kwargs: Any) -> None:
-        # mypy has troubles with __init_subclass__: https://github.com/python/mypy/issues/4660
-        super().__init_subclass__(**kwargs)  # type: ignore
+        super().__init_subclass__(**kwargs)  # type: ignore  # mypy issues 4335, 4660
         if "_templates_" in cls.__dict__:
             raise TypeError(f"Invalid '_templates_' member in class {cls}")
 
@@ -492,7 +492,7 @@ class TemplatedGenerator(NodeVisitor):
             String (or collection of strings) with the dumped version of the root IR node.
 
         """
-        return typing.cast(Union[str, Collection[str]], cls().visit(root, **kwargs))
+        return cast(Union[str, Collection[str]], cls().visit(root, **kwargs))
 
     @classmethod
     def generic_dump(cls, node: TreeNode, **kwargs: Any) -> str:
@@ -515,7 +515,7 @@ class TemplatedGenerator(NodeVisitor):
                     **kwargs,
                 )
         elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
-            node, self.ATOMIC_COLLECTION_TYPES
+            node, type_definitions.ATOMIC_COLLECTION_TYPES
         ):
             result = [self.visit(value, **kwargs) for value in node]
         elif isinstance(node, collections.abc.Mapping):
@@ -564,9 +564,3 @@ class TemplatedGenerator(NodeVisitor):
 
     def transform_attrs(self, node: Node, **kwargs: Any) -> Dict[str, Any]:
         return {key: self.visit(value, **kwargs) for key, value in node.iter_attributes()}
-
-
-if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()

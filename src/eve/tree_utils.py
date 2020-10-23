@@ -14,8 +14,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+from ._typing import Any, Callable, List, Type
 from .concepts import Node, TreeNode
-from .typing import Any, Callable, List, Type
 from .visitors import NodeVisitor
 
 

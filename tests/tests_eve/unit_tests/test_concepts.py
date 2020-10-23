@@ -24,21 +24,6 @@ import eve
 from .. import common
 
 
-class TestUIDGenerator:
-    def test_unique_id(self):
-        i = eve.UIDGenerator.get_unique_id()
-        assert eve.UIDGenerator.get_unique_id() != i
-        assert eve.UIDGenerator.get_unique_id(prefix="abcde").startswith("abcde")
-
-    def test_reset(self):
-        i = eve.UIDGenerator.get_unique_id()
-        counter = int(i)
-        eve.UIDGenerator.reset(counter + 1)
-        assert int(eve.UIDGenerator.get_unique_id()) == counter + 1
-        with pytest.warns(RuntimeWarning, match="Unsafe reset"):
-            eve.UIDGenerator.reset(counter)
-
-
 class TestSourceLocation:
     def test_valid_position(self):
         eve.SourceLocation(line=1, column=1, source="source")

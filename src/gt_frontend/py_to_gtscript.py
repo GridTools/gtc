@@ -22,7 +22,8 @@ import typing
 import typing_inspect
 
 import gtc.common
-from eve import UIDGenerator, type_definitions
+from eve import type_definitions
+from eve.utils import UIDGenerator
 
 from . import ast_node_matcher as anm
 from . import gtscript_ast
@@ -119,7 +120,7 @@ class PyToGTScript:
                 func=ast.Name(id="location"), args=[ast.Name(id=Capture("location_type"))]
             ),
             optional_vars=Capture(
-                "name", default=ast.Name(id=UIDGenerator.get_unique_id(prefix="location"))
+                "name", default=ast.Name(id=UIDGenerator.sequential_id(prefix="location"))
             ),
         )
 

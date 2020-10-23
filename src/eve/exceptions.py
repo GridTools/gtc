@@ -16,13 +16,14 @@
 
 """Definitions of specific Eve exceptions."""
 
-from .typing import Any
+from ._typing import Any
 
 
 class EveError:
     message_template = "Generic Eve error (info: {info}) "
 
     def __init__(self, message: str = None, **kwargs: Any) -> None:
+        super().__init__(**kwargs)  # type: ignore  # mypy issue 4335
         self.message = message
         self.info = kwargs
 

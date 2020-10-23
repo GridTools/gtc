@@ -14,13 +14,17 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""General utility functions."""
+"""General utility functions. Some functionalities are directly imported from dependecies."""
 
 
 import collections.abc
 import enum
+import itertools
+import pickle
 import re
 import string
+import uuid
+import warnings
 
 import xxhash
 from boltons.iterutils import flatten, flatten_iter  # noqa: F401
@@ -33,57 +37,109 @@ from boltons.strutils import (  # noqa: F401
     slugify,
     unwrap_text,
 )
+from boltons.typeutils import classproperty  # noqa: F401
 
-from . import typing
-from .typing import Any, Callable, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
-
-
-class _NOTHING_TYPE:
-    pass
-
-
-#: Marker value used to avoid confusion with `None`
-#: (specially in contexts where `None` could be a valid value)
-NOTHING = _NOTHING_TYPE()
-
-
-def call_all(funcs_iterable: Iterable[Callable]) -> Callable:
-    """Function call composition."""
-
-    def _caller(*args: Any, **kwargs: Any) -> None:
-        for f in funcs_iterable:
-            f(*args, **kwargs)
-
-    return _caller
+from ._typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
+from .type_definitions import DELETE, NOTHING
 
 
-def shash(*args: Any, hash_algorithm: Optional[Any] = None, str_encoding: str = "utf-8") -> str:
+def filter_map(
+    func: Callable[..., Any], iterable: Iterable[Any], *, delete_sentinel: Any = DELETE
+) -> Iterator[Any]:
+    """Mapping function supporting elimination of items.
+
+    Args:
+        iterable: iterable object to be processed.
+        delete_sentinel: sentinel object which marks items to be deleted from the
+            the output (note that comparison is made by identity NOT by value).
+
+    """
+    for item in iterable:
+        result = func(item)
+        if result is not delete_sentinel:
+            yield result
+
+
+filter_map.DELETE = DELETE  # type: ignore
+
+
+def get_item(obj: Any, key: Any, default: Any = NOTHING) -> Any:
+    """Similar to :func:`operator.getitem()` accepting a default value."""
+
+    if default is NOTHING:
+        result = obj[key]
+    else:
+        try:
+            result = obj[key]
+        except (KeyError, IndexError):
+            result = default
+
+    return result
+
+
+def register_subclasses(*subclasses: Type) -> Callable[[Type], Type]:
+    """Class decorator to automatically register virtual subclasses.
+
+    Example:
+        >>> import abc
+        >>> class MyVirtualSubclassA:
+        ...     pass
+        ...
+        >>> class MyVirtualSubclassB:
+        ...    pass
+        ...
+        >>> @register_subclasses(MyVirtualSubclassA, MyVirtualSubclassB)
+        ... class MyBaseClass(abc.ABC):
+        ...    pass
+        ...
+        >>> issubclass(MyVirtualSubclassA, MyBaseClass) and issubclass(MyVirtualSubclassB, MyBaseClass)
+        True
+
+    """
+
+    def _decorator(base_cls: Type) -> Type:
+        for s in subclasses:
+            base_cls.register(s)
+        return base_cls
+
+    return _decorator
+
+
+def shash(*args: Any, hash_algorithm: Optional[Any] = None) -> str:
     """Stable hash function.
+
+    It provides a customizable hash function for any kind of data.
+    Unlike the builtin `hash` function, it is stable (same hash value across
+    interpreter reboots) and it does not use hash customizations on user
+    classes (it uses `pickle` internally to get a byte stream).
 
     Args:
         hash_algorithm: object implementing the `hash algorithm` interface
-            from :mod:`hashlib`.
-        str_encoding: encoding use by :func:`str.encode()` to generate a
-            :obj:`bytes` object for hashing.
+            from :mod:`hashlib`. Defaults to :class:`xxhash.xxh64`.
 
     """
+
     if hash_algorithm is None:
         hash_algorithm = xxhash.xxh64()
 
-    for item in args:
-        if not isinstance(item, bytes):
-            if not isinstance(item, str):
-                if isinstance(item, collections.abc.Iterable):
-                    item = flatten(item)
-                elif isinstance(item, collections.abc.Mapping):
-                    item = flatten(item.items())
-                item = repr(item)
+    hash_algorithm.update(pickle.dumps(args))
+    result = hash_algorithm.hexdigest()
+    assert isinstance(result, str)
 
-            item = item.encode(str_encoding)
-
-        hash_algorithm.update(item)
-
-    return typing.cast(str, hash_algorithm.hexdigest())
+    return result
 
 
 AnyWordsIterable = Union[str, Iterable[str]]
@@ -94,6 +150,7 @@ class CaseStyleConverter:
 
     Functionality exposed through :meth:`split()`, :meth:`join()` and
     :meth:`convert()` methods.
+
     """
 
     class CASE_STYLE(enum.Enum):
@@ -182,6 +239,46 @@ class CaseStyleConverter:
     @staticmethod
     def split_kebab_case(name: str) -> List[str]:
         return name.split("-")
+
+
+class UIDGenerator:
+    """Simple unique id generator using different methods."""
+
+    #: Constantly increasing counter for generation of sequential unique ids
+    __counter = itertools.count(1)
+
+    @classmethod
+    def random_id(cls, *, prefix: Optional[str] = None, width: int = 8) -> str:
+        """Generate a random globally unique id."""
+
+        if width is not None and width <= 4:
+            raise ValueError(f"Width must be a positive number > 4 ({width} provided).")
+        u = uuid.uuid4()
+        s = str(u).replace("-", "")[:width]
+        return f"{prefix}_{s}" if prefix else f"{s}"
+
+    @classmethod
+    def sequential_id(cls, *, prefix: Optional[str] = None, width: Optional[int] = None) -> str:
+        """Generate a sequential unique id (for the current session)."""
+
+        if width is not None and width < 1:
+            raise ValueError(f"Width must be a positive number ({width} provided).")
+        count = next(cls.__counter)
+        s = f"{count:0{width}}" if width else f"{count}"
+        return f"{prefix}_{s}" if prefix else f"{s}"
+
+    @classmethod
+    def reset_sequence(cls, start: int = 1) -> None:
+        """Reset global generator counter.
+
+        Notes:
+            If the new start value is lower than the last generated UID, new
+            IDs are not longer guaranteed to be unique.
+
+        """
+        if start < next(cls.__counter):
+            warnings.warn("Unsafe reset of global UIDGenerator", RuntimeWarning)
+        cls.__counter = itertools.count(start)
 
 
 class XStringFormatter(string.Formatter):

@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""Definitions of useful typing."""
+"""Python version independent typings."""
 
 # flake8: noqa
 from typing import *  # isort:skip

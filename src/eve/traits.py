@@ -14,29 +14,38 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""Definitions of basic Eve concepts."""
+"""Definitions of Trait classes."""
 
 
 import pydantic
 
-from .concepts import _EVE_NODE_ATTR_SUFFIX, Node, Trait
-from .typing import Any, ClassVar, Dict, List, Type
+from . import concepts, iterators
+from ._typing import Any, Dict, Type
+from .type_definitions import SymbolName
 
 
-class SymbolTableTrait(Trait):
+class SymbolTableTrait(concepts.Model):
+    symtable_attr_: Dict[str, Any] = pydantic.Field(default_factory=dict)
 
-    name: ClassVar[str] = "symbol_table"
+    @staticmethod
+    def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, Any]:
+        collected = {}
+        for node in iterators.traverse_tree(root_node):
+            if isinstance(node, concepts.BaseNode):
+                for name, metadata in node.__node_children__.items():
+                    if isinstance(metadata["definition"].type_, type) and issubclass(
+                        metadata["definition"].type_, SymbolName
+                    ):
+                        collected[getattr(node, name)] = node
 
-    @classmethod
-    def process_namespace(
-        cls, namespace: Dict[str, Any], trait_names: List[str], meta_kwargs: Dict[str, Any]
-    ) -> None:
-        attr_name = f"symtable{_EVE_NODE_ATTR_SUFFIX}"
-        namespace["__annotations__"][attr_name] = Dict[str, Node]
-        namespace[attr_name] = pydantic.Field(default_factory=dict)
+        return collected
 
-    @classmethod
-    def process_class(
-        cls, node_class: Type[Node], trait_names: List[str], meta_kwargs: Dict[str, Any]
-    ) -> None:
-        pass
+    @pydantic.root_validator(skip_on_failure=True)
+    def _collect_symbols_validator(  # type: ignore  # validators are classmethods
+        cls: Type["SymbolTableTrait"], values: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        values["symtable_attr_"] = cls._collect_symbols(values)
+        return values
+
+    def collect_symbols(self) -> None:
+        self.symtable_attr_ = self._collect_symbols(self)

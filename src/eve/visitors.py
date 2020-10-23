@@ -14,27 +14,16 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""Definitions of basic Eve concepts."""
+"""Visitor classes to work with IR trees."""
 
 
 import collections.abc
 import copy
 import operator
 
-from . import concepts
+from . import concepts, type_definitions
+from ._typing import Any, Callable, Collection, Iterable, MutableSequence, MutableSet, Tuple, Union
 from .concepts import NOTHING
-from .typing import (
-    Any,
-    Callable,
-    ClassVar,
-    Collection,
-    Iterable,
-    MutableSequence,
-    MutableSet,
-    Tuple,
-    Type,
-    Union,
-)
 
 
 class NodeVisitor:
@@ -59,8 +48,6 @@ class NodeVisitor:
     allows modifications.
     """
 
-    ATOMIC_COLLECTION_TYPES: ClassVar[Tuple[Type, ...]] = (str, bytes, bytearray)
-
     def visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
         visitor = self.generic_visit
 
@@ -80,19 +67,8 @@ class NodeVisitor:
         return visitor(node, **kwargs)
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
-        items: Iterable[Tuple[Any, Any]] = []
-        if isinstance(node, concepts.Node):
-            items = list(node.iter_children())
-        elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
-            node, self.ATOMIC_COLLECTION_TYPES
-        ):
-            items = enumerate(node)
-        elif isinstance(node, collections.abc.Mapping):
-            items = node.items()
-
-        # Process selected items (if any)
-        for _, value in items:
-            self.visit(value, **kwargs)
+        for child in concepts.generic_iter_children(node):
+            self.visit(child, **kwargs)
 
 
 class NodeTranslator(NodeVisitor):
@@ -119,9 +95,9 @@ class NodeTranslator(NodeVisitor):
         self.memo = memo or {}
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
-        result: Any
+        result: Any = None
         if isinstance(node, (concepts.Node, collections.abc.Collection)) and not isinstance(
-            node, self.ATOMIC_COLLECTION_TYPES
+            node, type_definitions.ATOMIC_COLLECTION_TYPES
         ):
             tmp_items: Collection[concepts.TreeNode] = []
             if isinstance(node, concepts.Node):
@@ -175,7 +151,7 @@ class NodeModifier(NodeVisitor):
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
         result: Any = node
         if isinstance(node, (concepts.Node, collections.abc.Collection)) and not isinstance(
-            node, self.ATOMIC_COLLECTION_TYPES
+            node, type_definitions.ATOMIC_COLLECTION_TYPES
         ):
             items: Iterable[Tuple[Any, Any]] = []
             tmp_items: Collection[concepts.TreeNode] = []

@@ -16,27 +16,36 @@
 
 """Eve: a stencil toolchain in pure Python."""
 
-# flake8: noqa
+# flake8: noqa  # disable flake8 because of non-used imports warnings
+# Disable isort to avoid circular imports
 from .version import __version__, __versioninfo__  # isort:skip
 
-from . import codegen, concepts, exceptions, traits, type_definitions, typing, utils
+from . import _typing  # isort:skip
+from . import exceptions, type_definitions  # isort:skip
+from . import utils  # isort:skip
+from . import concepts  # isort:skip
+from . import iterators, traits, visitors  # isort:skip
+from . import codegen, tree_utils  # isort:skip
+
+
 from .concepts import (
-    NOTHING,
     FieldKind,
     FrozenModel,
     FrozenNode,
     Model,
     Node,
     SourceLocation,
-    UIDGenerator,
     VType,
     field,
     in_field,
     out_field,
-    symbol_field,
 )
+from .iterators import traverse_tree
+from .traits import SymbolTableTrait
 from .tree_utils import FindNodes
 from .type_definitions import (
+    DELETE,
+    NOTHING,
     Bool,
     Bytes,
     Enum,
@@ -53,5 +62,6 @@ from .type_definitions import (
     StrictFloat,
     StrictInt,
     StrictStr,
+    SymbolName,
 )
 from .visitors import NodeModifier, NodeTranslator, NodeVisitor
