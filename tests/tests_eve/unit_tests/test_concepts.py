@@ -87,3 +87,27 @@ class TestNode:
 
         assert public_names <= field_names
         assert all(name.endswith("_") for name in field_names - public_names)
+
+        assert all(
+            node1 is node2
+            for (name, node1), node2 in zip(
+                sample_node.iter_children(), sample_node.iter_children_nodes()
+            )
+        )
+
+    def test_node_metadata(self, sample_node):
+        assert all(
+            name in sample_node.__node_attributes__ for name, _ in sample_node.iter_attributes()
+        )
+        assert all(
+            isinstance(metadata, dict)
+            and isinstance(metadata["definition"], pydantic.fields.ModelField)
+            for metadata in sample_node.__node_attributes__.values()
+        )
+
+        assert all(name in sample_node.__node_children__ for name, _ in sample_node.iter_children())
+        assert all(
+            isinstance(metadata, dict)
+            and isinstance(metadata["definition"], pydantic.fields.ModelField)
+            for metadata in sample_node.__node_children__.values()
+        )
