@@ -17,6 +17,8 @@
 """Tools for source code generation."""
 
 
+from __future__ import annotations
+
 import abc
 import collections.abc
 import contextlib
@@ -161,7 +163,7 @@ class Name:
     words: List[str]
 
     @classmethod
-    def from_string(cls, name: str, case_style: utils.CaseStyleConverter.CASE_STYLE) -> "Name":
+    def from_string(cls, name: str, case_style: utils.CaseStyleConverter.CASE_STYLE) -> Name:
         return cls(utils.CaseStyleConverter.split(name, case_style))
 
     def __init__(self, words: utils.AnyWordsIterable) -> None:
@@ -220,7 +222,7 @@ class TextBlock:
         self.end_line = end_line
         self.lines: List[str] = []
 
-    def append(self, new_line: str, *, update_indent: int = 0) -> "TextBlock":
+    def append(self, new_line: str, *, update_indent: int = 0) -> TextBlock:
         if update_indent > 0:
             self.indent(update_indent)
         elif update_indent < 0:
@@ -230,7 +232,7 @@ class TextBlock:
 
         return self
 
-    def extend(self, new_lines: AnyTextSequence, *, dedent: bool = False) -> "TextBlock":
+    def extend(self, new_lines: AnyTextSequence, *, dedent: bool = False) -> TextBlock:
         assert isinstance(new_lines, (collections.abc.Sequence, TextBlock))
 
         if dedent:
@@ -247,21 +249,21 @@ class TextBlock:
 
         return self
 
-    def empty_line(self, count: int = 1) -> "TextBlock":
+    def empty_line(self, count: int = 1) -> TextBlock:
         self.lines.extend([""] * count)
         return self
 
-    def indent(self, steps: int = 1) -> "TextBlock":
+    def indent(self, steps: int = 1) -> TextBlock:
         self.indent_level += steps
         return self
 
-    def dedent(self, steps: int = 1) -> "TextBlock":
+    def dedent(self, steps: int = 1) -> TextBlock:
         assert self.indent_level >= steps
         self.indent_level -= steps
         return self
 
     @contextlib.contextmanager
-    def indented(self, steps: int = 1) -> Iterator["TextBlock"]:
+    def indented(self, steps: int = 1) -> Iterator[TextBlock]:
         """Context manager creator for temporary indentation of sources.
 
         This context manager simplifies the usage of indent/dedent in
@@ -297,7 +299,7 @@ class TextBlock:
         """Indentation string for new lines (in the current state)."""
         return self.indent_char * (self.indent_level * self.indent_size)
 
-    def __iadd__(self, source_line: Union[str, AnyTextSequence]) -> "TextBlock":
+    def __iadd__(self, source_line: Union[str, AnyTextSequence]) -> TextBlock:
         if isinstance(source_line, str):
             return self.append(source_line)
         else:
@@ -321,7 +323,7 @@ class Template(abc.ABC):
     """
 
     @classmethod
-    def from_file(cls: Type[TemplateT], file_path: Union[str, os.PathLike]) -> "Template":
+    def from_file(cls: Type[TemplateT], file_path: Union[str, os.PathLike]) -> Template:
         if cls is Template:
             raise RuntimeError("This method can only be called in concrete Template subclasses")
 

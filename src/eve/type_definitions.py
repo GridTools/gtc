@@ -17,6 +17,8 @@
 """Definitions of useful field and general types."""
 
 
+from __future__ import annotations
+
 import enum
 import functools
 import re
@@ -75,7 +77,7 @@ class Enum(enum.Enum):
         yield cls._strict_type_validator
 
     @classmethod
-    def _strict_type_validator(cls, v: Any) -> enum.Enum:
+    def _strict_type_validator(cls, v: Any) -> Enum:
         if not isinstance(v, cls):
             raise TypeError(f"Invalid value type [expected: {cls}, received: {v.__class__}]")
         return v
@@ -89,7 +91,7 @@ class IntEnum(enum.IntEnum):
         yield cls._strict_type_validator
 
     @classmethod
-    def _strict_type_validator(cls, v: Any) -> enum.IntEnum:
+    def _strict_type_validator(cls, v: Any) -> IntEnum:
         if not isinstance(v, cls):
             raise TypeError(f"Invalid value type [expected: {cls}, received: {v.__class__}]")
         return v
@@ -103,7 +105,7 @@ class StrEnum(str, enum.Enum):
         yield cls._strict_type_validator
 
     @classmethod
-    def _strict_type_validator(cls, v: Any) -> "StrEnum":
+    def _strict_type_validator(cls, v: Any) -> StrEnum:
         if not isinstance(v, cls):
             raise TypeError(f"Invalid value type [expected: {cls}, received: {v.__class__}]")
         return v
@@ -120,7 +122,7 @@ class SymbolName(str):
 
     @staticmethod
     @functools.lru_cache
-    def constrained(regex: str) -> Type["SymbolName"]:
+    def constrained(regex: str) -> Type[SymbolName]:
         xxh64 = xxhash.xxh64()
         xxh64.update(regex.encode())
         subclass_name = f"SymbolName_{xxh64.hexdigest()[-8:]}"
@@ -150,7 +152,7 @@ class SymbolName(str):
         field_schema.update(pattern=cls.NAME_REGEX.pattern)
 
     @classmethod
-    def validate(cls, v: Any) -> "SymbolName":
+    def validate(cls, v: Any) -> SymbolName:
         return cls(v)
 
     def __init__(self, name: str, *, symtable: Optional[Mapping[str, Any]] = None) -> None:
@@ -174,7 +176,7 @@ class SymbolRef(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, v: Any) -> "SymbolRef":
+    def validate(cls, v: Any) -> SymbolRef:
         return cls(v)
 
     def __init__(self, name: str, *, context: Optional[Mapping[str, Any]] = None) -> None:

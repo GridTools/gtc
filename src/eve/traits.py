@@ -17,6 +17,8 @@
 """Definitions of Trait classes."""
 
 
+from __future__ import annotations
+
 import pydantic
 
 from . import concepts, iterators
@@ -42,7 +44,7 @@ class SymbolTableTrait(concepts.Model):
 
     @pydantic.root_validator(skip_on_failure=True)
     def _collect_symbols_validator(  # type: ignore  # validators are classmethods
-        cls: Type["SymbolTableTrait"], values: Dict[str, Any]
+        cls: Type[SymbolTableTrait], values: Dict[str, Any]
     ) -> Dict[str, Any]:
         values["symtable_attr_"] = cls._collect_symbols(values)
         return values

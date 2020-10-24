@@ -17,6 +17,8 @@
 """Definitions of basic Eve concepts."""
 
 
+from __future__ import annotations
+
 import collections.abc
 import functools
 
@@ -57,7 +59,7 @@ class FieldKind(StrEnum):
 
 
 class FieldConstraintsDict(TypedDict, total=False):
-    vtype: Union["VType", Tuple["VType", ...]]
+    vtype: Union[VType, Tuple[VType, ...]]
 
 
 class FieldMetadataDict(TypedDict, total=False):
