@@ -133,6 +133,12 @@ TreeNode = Union[AnyNode, Union[List[LeafNode], Dict[Any, LeafNode], Set[LeafNod
 
 
 class NodeMetaclass(pydantic.main.ModelMetaclass):
+    """Custom metaclass for Node classes (inherits from pydantic metaclass).
+
+    Customize the creation of Node classes adding Eve specific attributes.
+
+    """
+
     @no_type_check
     def __new__(mcs, name, bases, namespace, **kwargs):
         # Optional preprocessing of class namespace before creation:
@@ -162,6 +168,8 @@ class NodeMetaclass(pydantic.main.ModelMetaclass):
 class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
     """Base class representing an IR node.
 
+    It is currently implemented as a pydantic Model with some extra features.
+
     Field values should be either:
 
         * builtin types: `bool`, `bytes`, `int`, `float`, `str`
@@ -170,10 +178,18 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         * supported collections (:class:`List`, :class:`Dict`, :class:`Set`)
             of any of the previous items
 
-    Field names may not start with "_". Field names ending with "_" are
-    considered implementation helpers and will not appear in the node iterators.
-    Field names ending with "_attr_" are considered meta-attributes of the node,
-    not children.
+    Field naming scheme:
+
+        * Field names starting with "_" are ignored by pydantic and Eve. They
+            will not be considered as `fields` and thus none of the pydantic
+            features will work (type coercion, validators, etc.).
+        * Field names ending with "_" are ignored only by Eve, not by pydantic.
+            This means that all pydantic features will work on these fields,
+            but they will be invisible for Eve. They are reserved for internal Eve
+            use and should not be defined by regular users.
+        * Field names ending with "_attr_" are considered implementation fields
+            not children. They are intended to be defined by users when needed,
+            typically to cache derived, non-essential information on the node.
 
     """
 
@@ -211,11 +227,13 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
 
 class Node(BaseNode):
+    """Default public name for a base node class."""
+
     pass
 
 
 class FrozenNode(Node):
-    """Base inmutable node class."""
+    """Default public name for an inmutable base node class."""
 
     class Config(FrozenModelConfig):
         pass
@@ -228,6 +246,15 @@ TreeIterationItem = Union[Any, Tuple[KeyValue, Any]]
 def generic_iter_children(
     node: TreeNode, *, with_keys: bool = False
 ) -> Iterable[Union[Any, Tuple[KeyValue, Any]]]:
+    """Create an iterator to traverse values as Eve tree nodes.
+
+    Args:
+        with_keys: Return tuples of (key, object) values where keys are
+            the reference to the object node in the parent.
+            Defaults to `False`.
+
+    """
+
     children_iterator: Iterable[Union[Any, Tuple[KeyValue, Any]]] = iter(())
     if isinstance(node, Node):
         children_iterator = node.iter_children() if with_keys else node.iter_children_nodes()
