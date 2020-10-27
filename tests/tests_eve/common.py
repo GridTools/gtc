@@ -193,14 +193,12 @@ class SimpleNodeWithOptionals(Node):
 
 
 class SimpleNodeWithHiddenMembers(Node):
-
     hidden_attr_: Int
     int_value: Int
     hidden_value_: Int
 
 
 class SimpleNodeWithLoc(Node):
-
     int_value: Int
     float_value: Float
     str_value: Str
@@ -208,7 +206,6 @@ class SimpleNodeWithLoc(Node):
 
 
 class SimpleNodeWithCollections(Node):
-
     int_list: List[Int]
     str_set: Set[Str]
     str_to_int_dict: Dict[Str, Int]
@@ -216,7 +213,6 @@ class SimpleNodeWithCollections(Node):
 
 
 class SimpleNodeWithAbstractCollections(Node):
-
     int_sequence: Sequence[Int]
     str_set: Set[Str]
     str_to_int_mapping: Mapping[Str, Int]

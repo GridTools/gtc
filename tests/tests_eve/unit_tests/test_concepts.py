@@ -14,7 +14,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import random  # noqa: F401
 
 import pydantic
 import pytest

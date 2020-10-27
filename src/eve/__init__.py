@@ -20,7 +20,7 @@
 # Disable isort to avoid circular imports
 from .version import __version__, __versioninfo__  # isort:skip
 
-from . import _typing  # isort:skip
+from . import _typing as typing  # isort:skip
 from . import exceptions, type_definitions  # isort:skip
 from . import utils  # isort:skip
 from . import concepts  # isort:skip
