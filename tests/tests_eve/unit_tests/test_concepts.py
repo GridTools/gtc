@@ -91,7 +91,7 @@ class TestNode:
         assert all(
             node1 is node2
             for (name, node1), node2 in zip(
-                sample_node.iter_children(), sample_node.iter_children_nodes()
+                sample_node.iter_children(), sample_node.iter_children_values()
             )
         )
 

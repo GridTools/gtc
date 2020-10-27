@@ -218,7 +218,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
             if not (name.endswith(_EVE_NODE_ATTR_SUFFIX) or name.endswith(_EVE_NODE_IMPL_SUFFIX)):
                 yield name, getattr(self, name)
 
-    def iter_children_nodes(self) -> Generator[Any, None, None]:
+    def iter_children_values(self) -> Generator[Any, None, None]:
         for _, node in self.iter_children():
             yield node
 
@@ -257,7 +257,7 @@ def generic_iter_children(
 
     children_iterator: Iterable[Union[Any, Tuple[KeyValue, Any]]] = iter(())
     if isinstance(node, Node):
-        children_iterator = node.iter_children() if with_keys else node.iter_children_nodes()
+        children_iterator = node.iter_children() if with_keys else node.iter_children_values()
     elif isinstance(node, collections.abc.Sequence) and not isinstance(
         node, type_definitions.ATOMIC_COLLECTION_TYPES
     ):
