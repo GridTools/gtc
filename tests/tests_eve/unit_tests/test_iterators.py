@@ -102,9 +102,9 @@ def test_traverse_levels(bfs_ordered_tree):
 def test_traverse_tree(tree):
     traversals = []
     for order in eve.iterators.TraversalOrder:
-        for with_keys in [True, False]:
-            traversals.append(
-                [value for value in eve.traverse_tree(tree, order, with_keys=with_keys)]
-            )
+        values = [value for value in eve.traverse_tree(tree, order, with_keys=True)]
+        assert all(isinstance(v, tuple) for v in values)
+        traversals.append(values)
+        traversals.append([value for value in eve.traverse_tree(tree, order)])
 
     assert all(len(traversals[0]) == len(t) for t in traversals)

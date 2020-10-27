@@ -19,6 +19,7 @@
 
 import collections.abc
 import enum
+import hashlib
 import itertools
 import pickle
 import re
@@ -128,12 +129,16 @@ def shash(*args: Any, hash_algorithm: Optional[Any] = None) -> str:
 
     Args:
         hash_algorithm: object implementing the `hash algorithm` interface
-            from :mod:`hashlib`. Defaults to :class:`xxhash.xxh64`.
+            from :mod:`hashlib` or canonical name (`str`) of the
+            hash algorithm as defined in :mod:`hashlib`.
+            Defaults to :class:`xxhash.xxh64`.
 
     """
 
     if hash_algorithm is None:
         hash_algorithm = xxhash.xxh64()
+    elif isinstance(hash_algorithm, str):
+        hash_algorithm = hashlib.new(hash_algorithm)
 
     hash_algorithm.update(pickle.dumps(args))
     result = hash_algorithm.hexdigest()

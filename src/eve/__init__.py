@@ -16,6 +16,7 @@
 
 """Eve: a stencil toolchain in pure Python."""
 
+
 # flake8: noqa  # disable flake8 because of non-used imports warnings
 # Disable isort to avoid circular imports
 from .version import __version__, __versioninfo__  # isort:skip

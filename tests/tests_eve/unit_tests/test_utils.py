@@ -14,10 +14,13 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import dataclasses
 import hashlib
 import string
+from typing import Any, List
 
 import numpy as np
+import pydantic
 import pytest
 
 import eve.utils
@@ -105,50 +108,82 @@ def test_register_subclasses():
     )
 
 
-@pytest.fixture
-def unique_data_items():
-    items = [
-        1,
-        "1",
-        True,
-        "True",
-        "true",
-        False,
-        "False",
-        (1,),
-        [1],
-        (True,),
-        ["true"],
-        [(1,)],
-        [[1]],
-        [[[1]]],
-        {1},
-        {True},
-        {"a": 0},
-        {"A": 0},
-        {"b": 0},
-        {"a": False},
-        {"b": False},
-        {"a": "0"},
-        {"a": "False"},
-        {"a": ("False",)},
-        {"a": ["False"]},
-        {"a": (False,)},
-        {"a": "false"},
-        {"a": [0]},
-        {"a": [[0]]},
-        {"a": [(0,)]},
+class ModelClass(pydantic.BaseModel):
+    data: Any
+    data_list: List[Any]
+
+
+@dataclasses.dataclass
+class DataClass:
+    data: Any
+    data_list: List[Any]
+
+
+@pytest.fixture(
+    params=[
+        [
+            1,
+            "1",
+            True,
+            "True",
+            "true",
+            False,
+            (True,),
+            [True],
+            {True},
+            {True: True},
+            {True: ()},
+            [(True,)],
+            ["true"],
+        ],
+        [0, False, (False,), [False], {False},],  # noqa: E231
+        [(), [], frozenset()],
+        [[(1,)], [[1]], [[[1]]], [1], {1}],
+        [
+            {"a": 0},
+            {"A": 0},
+            {"b": 0},
+            {"a": False},
+            {"b": False},
+            {"a": "0"},
+            {"a": "False"},
+            {"a": ("False",)},
+            {"a": ["False"]},
+            {"a": (False,)},
+            {"a": "false"},
+            {"a": [0]},
+            {"a": [[0]]},
+            {"a": [(0,)]},
+        ],
     ]
-    yield items
+)
+def unique_data_items(request):
+    input_data = request.param
+
+    yield input_data + [
+        DataClass(data=input_data[0], data_list=input_data),
+        ModelClass(data=input_data[0], data_list=input_data),
+    ]
 
 
-@pytest.fixture(params=[None, hashlib.md5(), hashlib.sha1(), hashlib.sha256()])
+@pytest.fixture(
+    params=[None, hashlib.md5(), "md5", hashlib.sha1(), "sha1", hashlib.sha256(), "sha256"]
+)
 def hash_algorithm(request):
     yield request.param
 
 
 def test_shash(unique_data_items, hash_algorithm):
     from eve.utils import shash
+
+    for item in unique_data_items:
+        if hasattr(hash_algorithm, "copy"):
+            h1 = hash_algorithm.copy()
+            h2 = hash_algorithm.copy()
+        else:
+            h1 = hash_algorithm
+            h2 = hash_algorithm
+        assert shash(item, hash_algorithm=h1) == shash(item, hash_algorithm=h2)
 
     hashes = set(shash(item, hash_algorithm=hash_algorithm) for item in unique_data_items)
     assert len(hashes) == len(unique_data_items)
