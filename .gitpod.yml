@@ -24,7 +24,7 @@ tasks:
             # gp preview file://$GITPOD_REPO_ROOT/docs/_build/html/index.html
       command: |
           ln -s $GITPOD_REPO_ROOT/.jupyter ~/
-          jupyter-lab --notebook-dir=$GITPOD_REPO_ROOT/examples/workshop
+          jupyter-lab --notebook-dir=$GITPOD_REPO_ROOT/examples/workshop --NotebookApp.allow_origin=\'$(gp url 8888)\'
 
 github:
     prebuilds:
