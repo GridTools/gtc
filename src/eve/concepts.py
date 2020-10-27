@@ -173,6 +173,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
     Field values should be either:
 
         * builtin types: `bool`, `bytes`, `int`, `float`, `str`
+        * enum.Enum types
         * other :class:`Node` subclasses
         * other :class:`pydantic.BaseModel` subclasses
         * supported collections (:class:`List`, :class:`Dict`, :class:`Set`)
