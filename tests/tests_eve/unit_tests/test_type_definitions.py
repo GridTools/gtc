@@ -17,7 +17,10 @@
 
 from __future__ import annotations
 
+import pydantic
 import pytest
+
+import eve
 
 
 def test_sentinels():
@@ -49,3 +52,16 @@ def test_symbol_types():
         LettersOnlySymbol("name_a")
     with pytest.raises(ValueError, match="Invalid name value"):
         LettersOnlySymbol("name01")
+
+
+class TestSourceLocation:
+    def test_valid_position(self):
+        eve.type_definitions.SourceLocation(line=1, column=1, source="source")
+
+    def test_invalid_position(self):
+        with pytest.raises(pydantic.ValidationError):
+            eve.type_definitions.SourceLocation(line=1, column=-1, source="source")
+
+    def test_str(self):
+        loc = eve.type_definitions.SourceLocation(line=1, column=1, source="source")
+        assert str(loc) == "<source: Line 1, Col 1>"

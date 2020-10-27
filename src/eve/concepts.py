@@ -42,7 +42,7 @@ from ._typing import (
     Union,
     no_type_check,
 )
-from .type_definitions import NOTHING, IntEnum, PositiveInt, Str, StrEnum
+from .type_definitions import NOTHING, IntEnum, Str, StrEnum
 
 
 # -- Attributes and fields --
@@ -280,18 +280,3 @@ class VType(FrozenModel):
 
     def __init__(self, name: str) -> None:
         super().__init__(name=name)
-
-
-class SourceLocation(FrozenModel):
-    """Source code location (line, column, source)."""
-
-    line: PositiveInt
-    column: PositiveInt
-    source: Str
-
-    def __init__(self, line: int, column: int, source: str) -> None:
-        super().__init__(line=line, column=column, source=source)
-
-    def __str__(self) -> str:
-        src = self.source or ""
-        return f"<{src}: Line {self.line}, Col {self.column}>"

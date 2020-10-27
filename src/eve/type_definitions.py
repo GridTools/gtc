@@ -24,6 +24,7 @@ import functools
 import re
 
 import boltons.typeutils
+import pydantic
 import xxhash
 from boltons.typeutils import classproperty  # noqa: F401
 from pydantic import (  # noqa: F401
@@ -192,3 +193,22 @@ class SymbolRef(str):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({super().__repr__()})"
+
+
+class SourceLocation(pydantic.BaseModel):
+    """Source code location (line, column, source)."""
+
+    line: PositiveInt
+    column: PositiveInt
+    source: Str
+
+    def __init__(self, line: int, column: int, source: str) -> None:
+        super().__init__(line=line, column=column, source=source)
+
+    def __str__(self) -> str:
+        src = self.source or ""
+        return f"<{src}: Line {self.line}, Col {self.column}>"
+
+    class Config:
+        extra = "forbid"
+        allow_mutation = False

@@ -18,22 +18,7 @@
 import pydantic
 import pytest
 
-import eve
-
 from .. import common
-
-
-class TestSourceLocation:
-    def test_valid_position(self):
-        eve.SourceLocation(line=1, column=1, source="source")
-
-    def test_invalid_position(self):
-        with pytest.raises(pydantic.ValidationError):
-            eve.SourceLocation(line=1, column=-1, source="source")
-
-    def test_str(self):
-        loc = eve.SourceLocation(line=1, column=1, source="source")
-        assert str(loc) == "<source: Line 1, Col 1>"
 
 
 class TestNode:
