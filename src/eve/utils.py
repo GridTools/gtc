@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""General utility functions. Some functionalities are directly imported from dependecies."""
+"""General utility functions. Some functionalities are directly imported from dependencies."""
 
 
 import collections.abc
