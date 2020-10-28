@@ -436,9 +436,9 @@ class TemplatedGenerator(NodeVisitor):
     When a template is used, the following keys will be passed to the template
     instance:
 
-        * `**node_fields`: all the node children and attributes by name.
-        * `_attrs`: a `dict` instance with the results of visiting all
-            the node attributes.
+        * `**node_fields`: all the node children and implementation fields by name.
+        * `_impl`: a `dict` instance with the results of visiting all
+            the node implementation fields.
         * `_children`: a `dict` instance with the results of visiting all
             the node children.
         * `_this_node`: the actual node instance (before visiting children).
@@ -513,7 +513,7 @@ class TemplatedGenerator(NodeVisitor):
                     template,
                     node,
                     self.transform_children(node, **kwargs),
-                    self.transform_attrs(node, **kwargs),
+                    self.transform_impl_fields(node, **kwargs),
                     **kwargs,
                 )
         elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
@@ -545,16 +545,16 @@ class TemplatedGenerator(NodeVisitor):
         template: Template,
         node: Node,
         transformed_children: Mapping[str, Any],
-        transformed_attrs: Mapping[str, Any],
+        transformed_impl_fields: Mapping[str, Any],
         **kwargs: Any,
     ) -> str:
         """Render a template using node instance data (see class documentation)."""
 
         return template.render(
             **transformed_children,
-            **transformed_attrs,
+            **transformed_impl_fields,
             _children=transformed_children,
-            _attrs=transformed_attrs,
+            _impl=transformed_impl_fields,
             _this_node=node,
             _this_generator=self,
             _this_module=sys.modules[type(self).__module__],
@@ -564,5 +564,5 @@ class TemplatedGenerator(NodeVisitor):
     def transform_children(self, node: Node, **kwargs: Any) -> Dict[str, Any]:
         return {key: self.visit(value, **kwargs) for key, value in node.iter_children()}
 
-    def transform_attrs(self, node: Node, **kwargs: Any) -> Dict[str, Any]:
+    def transform_impl_fields(self, node: Node, **kwargs: Any) -> Dict[str, Any]:
         return {key: self.visit(value, **kwargs) for key, value in node.iter_impl_fields()}
