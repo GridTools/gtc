@@ -66,7 +66,7 @@ def filter_map(
         iterable: iterable object to be processed.
         delete_sentinel: sentinel object which marks items to be deleted from the
             the output (note that comparison is made by identity NOT by value).
-            
+
     Notes:
         The default `delete_sentinel` value (`type_definitions.DELETE`) can also
         be accessed as `filter_map.DELETE`.
