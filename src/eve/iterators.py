@@ -28,7 +28,7 @@ from .type_definitions import Enum
 class TraversalOrder(Enum):
     PRE_ORDER = "pre"
     POST_ORDER = "post"
-    LEVEL_ORDER = "level"
+    LEVELS_ORDER = "levels"
 
 
 def traverse_pre(

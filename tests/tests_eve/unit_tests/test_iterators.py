@@ -93,7 +93,7 @@ def test_traverse_post(dfs_ordered_tree):
 
 def test_traverse_levels(bfs_ordered_tree):
     values = [
-        value for value in eve.iterators.traverse_level(bfs_ordered_tree) if isinstance(value, int)
+        value for value in eve.iterators.traverse_levels(bfs_ordered_tree) if isinstance(value, int)
     ]
     assert values == list(sorted(values))
 
