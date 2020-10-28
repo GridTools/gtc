@@ -45,12 +45,12 @@ from ._typing import (
 from .type_definitions import NOTHING, IntEnum, Str, StrEnum
 
 
-# -- Attributes and fields --
-class AttributeMetadataDict(TypedDict, total=False):
+# -- Fields --
+class ImplFieldMetadataDict(TypedDict, total=False):
     info: pydantic.fields.FieldInfo
 
 
-NodeAttributeMetadataDict = Dict[str, AttributeMetadataDict]
+NodeImplFieldMetadataDict = Dict[str, ImplFieldMetadataDict]
 
 
 class FieldKind(StrEnum):
@@ -148,18 +148,18 @@ class NodeMetaclass(pydantic.main.ModelMetaclass):
 
         # Postprocess created class:
         # Add metadata class members
-        attributes_metadata = {}
+        impl_fields_metadata = {}
         children_metadata = {}
         for name, model_field in cls.__fields__.items():
             if name.endswith(_EVE_NODE_IMPL_SUFFIX):
-                attributes_metadata[name] = {"definition": model_field}
+                impl_fields_metadata[name] = {"definition": model_field}
             elif not name.endswith(_EVE_NODE_INTERNAL_SUFFIX):
                 children_metadata[name] = {
                     "definition": model_field,
                     **model_field.field_info.extra.get(_EVE_METADATA_KEY, {}),
                 }
 
-        cls.__node_attributes__ = attributes_metadata
+        cls.__node_impl_fields__ = impl_fields_metadata
         cls.__node_children__ = children_metadata
 
         return cls
@@ -193,11 +193,11 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     """
 
-    __node_attributes__: ClassVar[NodeAttributeMetadataDict]
+    __node_impl_fields__: ClassVar[NodeImplFieldMetadataDict]
     __node_children__: ClassVar[NodeChildrenMetadataDict]
 
     # Node fields
-    #: Unique node-id (meta-attribute)
+    #: Unique node-id (implementation field)
     id_: Optional[Str] = None
 
     @pydantic.validator("id_", pre=True, always=True)
@@ -208,7 +208,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
             raise TypeError(f"id_ is not an 'str' instance ({type(v)})")
         return v
 
-    def iter_attributes(self) -> Generator[Tuple[str, Any], None, None]:
+    def iter_impl_fields(self) -> Generator[Tuple[str, Any], None, None]:
         for name, _ in self.__fields__.items():
             if name.endswith(_EVE_NODE_IMPL_SUFFIX):
                 yield name, getattr(self, name)
