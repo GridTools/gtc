@@ -74,7 +74,7 @@ def traverse_post(
         yield node
 
 
-def traverse_level(
+def traverse_levels(
     node: concepts.TreeNode,
     *,
     with_keys: bool = False,
@@ -95,13 +95,13 @@ def traverse_level(
         __queue__.extend(concepts.generic_iter_children(node, with_keys=True))
         if __queue__:
             key, child = __queue__.pop(0)
-            yield from traverse_level(child, with_keys=True, __key__=key, __queue__=__queue__)
+            yield from traverse_levels(child, with_keys=True, __key__=key, __queue__=__queue__)
     else:
         yield node
         __queue__.extend(concepts.generic_iter_children(node, with_keys=False))
         if __queue__:
             child = __queue__.pop(0)
-            yield from traverse_level(child, with_keys=False, __queue__=__queue__)
+            yield from traverse_levels(child, with_keys=False, __queue__=__queue__)
 
 
 def traverse_tree(
