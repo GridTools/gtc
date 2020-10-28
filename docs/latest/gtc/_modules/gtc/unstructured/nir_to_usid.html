@@ -331,7 +331,7 @@
                 <span class="n">usid</span><span class="o">.</span><span class="n">SidComposite</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">chain</span><span class="p">),</span> <span class="n">entries</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">chain</span><span class="p">)</span>
             <span class="p">)</span>  <span class="c1"># TODO _conn via property</span>
 
-        <span class="n">kernel_name</span> <span class="o">=</span> <span class="s2">&quot;kernel_&quot;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">id_attr_</span>
+        <span class="n">kernel_name</span> <span class="o">=</span> <span class="s2">&quot;kernel_&quot;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">id_</span>
         <span class="n">kernel</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">Kernel</span><span class="p">(</span>
             <span class="n">ast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span>
                 <span class="n">node</span><span class="o">.</span><span class="n">stmt</span><span class="p">,</span>

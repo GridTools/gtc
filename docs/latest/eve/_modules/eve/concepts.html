@@ -199,12 +199,12 @@
 <span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">NOTHING</span><span class="p">,</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">Str</span><span class="p">,</span> <span class="n">StrEnum</span>
 
 
-<span class="c1"># -- Attributes and fields --</span>
-<div class="viewcode-block" id="AttributeMetadataDict"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.AttributeMetadataDict">[docs]</a><span class="k">class</span> <span class="nc">AttributeMetadataDict</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="c1"># -- Fields --</span>
+<div class="viewcode-block" id="ImplFieldMetadataDict"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.ImplFieldMetadataDict">[docs]</a><span class="k">class</span> <span class="nc">ImplFieldMetadataDict</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">info</span><span class="p">:</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">FieldInfo</span></div>
 
 
-<span class="n">NodeAttributeMetadataDict</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AttributeMetadataDict</span><span class="p">]</span>
+<span class="n">NodeImplFieldMetadataDict</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ImplFieldMetadataDict</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="FieldKind"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.FieldKind">[docs]</a><span class="k">class</span> <span class="nc">FieldKind</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
@@ -277,8 +277,8 @@
 
 
 <span class="c1"># -- Nodes --</span>
+<span class="n">_EVE_NODE_INTERNAL_SUFFIX</span> <span class="o">=</span> <span class="s2">&quot;__&quot;</span>
 <span class="n">_EVE_NODE_IMPL_SUFFIX</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span>
-<span class="n">_EVE_NODE_ATTR_SUFFIX</span> <span class="o">=</span> <span class="s2">&quot;_attr_&quot;</span>
 
 <span class="n">AnyNode</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;AnyNode&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s2">&quot;BaseNode&quot;</span><span class="p">)</span>
 <span class="n">ValueNode</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]</span>
@@ -302,18 +302,18 @@
 
         <span class="c1"># Postprocess created class:</span>
         <span class="c1"># Add metadata class members</span>
-        <span class="n">attributes_metadata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">impl_fields_metadata</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">children_metadata</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">model_field</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__fields__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_ATTR_SUFFIX</span><span class="p">):</span>
-                <span class="n">attributes_metadata</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;definition&quot;</span><span class="p">:</span> <span class="n">model_field</span><span class="p">}</span>
-            <span class="k">elif</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">):</span>
+                <span class="n">impl_fields_metadata</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;definition&quot;</span><span class="p">:</span> <span class="n">model_field</span><span class="p">}</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_INTERNAL_SUFFIX</span><span class="p">):</span>
                 <span class="n">children_metadata</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;definition&quot;</span><span class="p">:</span> <span class="n">model_field</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">model_field</span><span class="o">.</span><span class="n">field_info</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_EVE_METADATA_KEY</span><span class="p">,</span> <span class="p">{}),</span>
                 <span class="p">}</span>
 
-        <span class="bp">cls</span><span class="o">.</span><span class="n">__node_attributes__</span> <span class="o">=</span> <span class="n">attributes_metadata</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__node_impl_fields__</span> <span class="o">=</span> <span class="n">impl_fields_metadata</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">__node_children__</span> <span class="o">=</span> <span class="n">children_metadata</span>
 
         <span class="k">return</span> <span class="bp">cls</span></div>
@@ -338,39 +338,40 @@
 <span class="sd">        * Field names starting with &quot;_&quot; are ignored by pydantic and Eve. They</span>
 <span class="sd">            will not be considered as `fields` and thus none of the pydantic</span>
 <span class="sd">            features will work (type coercion, validators, etc.).</span>
-<span class="sd">        * Field names ending with &quot;_&quot; are ignored only by Eve, not by pydantic.</span>
-<span class="sd">            This means that all pydantic features will work on these fields,</span>
-<span class="sd">            but they will be invisible for Eve. They are reserved for internal Eve</span>
-<span class="sd">            use and should not be defined by regular users.</span>
-<span class="sd">        * Field names ending with &quot;_attr_&quot; are considered implementation fields</span>
-<span class="sd">            not children. They are intended to be defined by users when needed,</span>
+<span class="sd">        * Field names ending with &quot;__&quot; are reserved for internal Eve use and</span>
+<span class="sd">            should NOT be defined by regular users. All pydantic features will</span>
+<span class="sd">            work on these fields anyway but they will be invisible for Eve users.</span>
+<span class="sd">        * Field names ending with &quot;_&quot; are considered implementation fields</span>
+<span class="sd">            not children nodes. They are intended to be defined by users when needed,</span>
 <span class="sd">            typically to cache derived, non-essential information on the node.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">__node_attributes__</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">NodeAttributeMetadataDict</span><span class="p">]</span>
+    <span class="n">__node_impl_fields__</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">NodeImplFieldMetadataDict</span><span class="p">]</span>
     <span class="n">__node_children__</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">NodeChildrenMetadataDict</span><span class="p">]</span>
 
     <span class="c1"># Node fields</span>
-    <span class="c1">#: Unique node-id (meta-attribute)</span>
-    <span class="n">id_attr_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: Unique node-id (implementation field)</span>
+    <span class="n">id_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="nd">@pydantic</span><span class="o">.</span><span class="n">validator</span><span class="p">(</span><span class="s2">&quot;id_attr_&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_id_attr_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">AnyNode</span><span class="p">],</span> <span class="n">v</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># type: ignore  # validators are classmethods</span>
+    <span class="nd">@pydantic</span><span class="o">.</span><span class="n">validator</span><span class="p">(</span><span class="s2">&quot;id_&quot;</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_id_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">AnyNode</span><span class="p">],</span> <span class="n">v</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># type: ignore  # validators are classmethods</span>
         <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">v</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">UIDGenerator</span><span class="o">.</span><span class="n">sequential_id</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__qualname__</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;id_attr_ is not an &#39;str&#39; instance (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;id_ is not an &#39;str&#39; instance (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span>
 
-<div class="viewcode-block" id="BaseNode.iter_attributes"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.iter_attributes">[docs]</a>    <span class="k">def</span> <span class="nf">iter_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<div class="viewcode-block" id="BaseNode.iter_impl_fields"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.iter_impl_fields">[docs]</a>    <span class="k">def</span> <span class="nf">iter_impl_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_ATTR_SUFFIX</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">):</span>
                 <span class="k">yield</span> <span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseNode.iter_children"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.iter_children">[docs]</a>    <span class="k">def</span> <span class="nf">iter_children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_ATTR_SUFFIX</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_INTERNAL_SUFFIX</span><span class="p">)</span>
+            <span class="p">):</span>
                 <span class="k">yield</span> <span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseNode.iter_children_values"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.iter_children_values">[docs]</a>    <span class="k">def</span> <span class="nf">iter_children_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>

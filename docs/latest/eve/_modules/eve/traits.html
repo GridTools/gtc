@@ -181,7 +181,7 @@
 
 
 <div class="viewcode-block" id="SymbolTableTrait"><a class="viewcode-back" href="../../_source/eve.html#eve.traits.SymbolTableTrait">[docs]</a><span class="k">class</span> <span class="nc">SymbolTableTrait</span><span class="p">(</span><span class="n">concepts</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-    <span class="n">symtable_attr_</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">symtable_</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_collect_symbols</span><span class="p">(</span><span class="n">root_node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">TreeNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
@@ -200,11 +200,11 @@
     <span class="k">def</span> <span class="nf">_collect_symbols_validator</span><span class="p">(</span>  <span class="c1"># type: ignore  # validators are classmethods</span>
         <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">SymbolTableTrait</span><span class="p">],</span> <span class="n">values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="n">values</span><span class="p">[</span><span class="s2">&quot;symtable_attr_&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_collect_symbols</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">values</span><span class="p">[</span><span class="s2">&quot;symtable_&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_collect_symbols</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">values</span>
 
 <div class="viewcode-block" id="SymbolTableTrait.collect_symbols"><a class="viewcode-back" href="../../_source/eve.html#eve.traits.SymbolTableTrait.collect_symbols">[docs]</a>    <span class="k">def</span> <span class="nf">collect_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">symtable_attr_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symtable_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>
