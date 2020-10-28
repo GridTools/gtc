@@ -74,6 +74,7 @@ def filter_map(
             yield result
 
 
+#: Shortcut to the global DELETE sentinel value
 filter_map.DELETE = DELETE  # type: ignore
 
 
