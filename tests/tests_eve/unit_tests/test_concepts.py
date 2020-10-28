@@ -27,37 +27,36 @@ class TestNode:
             invalid_sample_node_maker()
 
     def test_mutability(self, sample_node):
-        sample_node.id_attr_ = None
+        sample_node.id_ = None
 
     def test_inmutability(self, frozen_sample_node):
         with pytest.raises(TypeError):
-            frozen_sample_node.id_attr_ = None
+            frozen_sample_node.id_ = None
 
     def test_unique_id(self, sample_node_maker):
         node_a = sample_node_maker()
         node_b = sample_node_maker()
         node_c = sample_node_maker()
 
-        assert node_a.id_attr_ != node_b.id_attr_ != node_c.id_attr_
+        assert node_a.id_ != node_b.id_ != node_c.id_
 
     def test_custom_id(self, source_location, sample_node_maker):
         custom_id = "my_custom_id"
-        my_node = common.LocationNode(id_attr_=custom_id, loc=source_location)
+        my_node = common.LocationNode(id_=custom_id, loc=source_location)
         other_node = sample_node_maker()
 
-        assert my_node.id_attr_ == custom_id
-        assert my_node.id_attr_ != other_node.id_attr_
+        assert my_node.id_ == custom_id
+        assert my_node.id_ != other_node.id_
 
-        with pytest.raises(pydantic.ValidationError, match="id_attr_"):
-            common.LocationNode(id_attr_=32, loc=source_location)
+        with pytest.raises(pydantic.ValidationError, match="id_"):
+            common.LocationNode(id_=32, loc=source_location)
 
-    def test_attributes(self, sample_node):
-        attribute_names = set(name for name, _ in sample_node.iter_attributes())
+    def test_impl_fields(self, sample_node):
+        impl_names = set(name for name, _ in sample_node.iter_attributes())
 
-        assert all(name.endswith("_attr_") for name in attribute_names)
+        assert all(name.endswith("_") and not name.endswith("__") for name in impl_names)
         assert (
-            set(name for name in sample_node.__fields__.keys() if name.endswith("_attr_"))
-            == attribute_names
+            set(name for name in sample_node.__fields__.keys() if name.endswith("_")) == impl_names
         )
 
     def test_children(self, sample_node):
@@ -66,7 +65,7 @@ class TestNode:
         public_names = attribute_names | children_names
         field_names = set(sample_node.__fields__.keys())
 
-        assert not any(name.endswith("_attr_") for name in children_names)
+        assert not any(name.endswith("__") for name in children_names)
         assert not any(name.endswith("_") for name in children_names)
 
         assert public_names <= field_names

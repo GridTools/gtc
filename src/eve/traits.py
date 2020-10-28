@@ -27,7 +27,7 @@ from .type_definitions import SymbolName
 
 
 class SymbolTableTrait(concepts.Model):
-    symtable_attr_: Dict[str, Any] = pydantic.Field(default_factory=dict)
+    symtable_: Dict[str, Any] = pydantic.Field(default_factory=dict)
 
     @staticmethod
     def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, Any]:
@@ -46,8 +46,8 @@ class SymbolTableTrait(concepts.Model):
     def _collect_symbols_validator(  # type: ignore  # validators are classmethods
         cls: Type[SymbolTableTrait], values: Dict[str, Any]
     ) -> Dict[str, Any]:
-        values["symtable_attr_"] = cls._collect_symbols(values)
+        values["symtable_"] = cls._collect_symbols(values)
         return values
 
     def collect_symbols(self) -> None:
-        self.symtable_attr_ = self._collect_symbols(self)
+        self.symtable_ = self._collect_symbols(self)

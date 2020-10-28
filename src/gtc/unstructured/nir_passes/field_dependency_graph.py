@@ -62,9 +62,9 @@ class _FieldWriteDependencyGraph(NodeVisitor):
             self.graph.add_edge(source, kwargs["current_write"], extent=node.extent)
 
     def visit_AssignStmt(self, node: AssignStmt, **kwargs):
-        self.graph.add_node(node.left.id_attr_)  # make IR nodes hashable?
-        self.visit(node.right, current_write=node.left.id_attr_)
-        self.last_write_access[node.left.name] = node.left.id_attr_
+        self.graph.add_node(node.left.id_)  # make IR nodes hashable?
+        self.visit(node.right, current_write=node.left.id_)
+        self.last_write_access[node.left.name] = node.left.id_
 
 
 def generate_dependency_graph(loops: List[HorizontalLoop]) -> nx.DiGraph:

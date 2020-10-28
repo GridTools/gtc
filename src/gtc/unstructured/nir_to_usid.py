@@ -177,7 +177,7 @@ class NirToUsid(eve.NodeTranslator):
                 usid.SidComposite(name=str(chain), entries=v, location=chain)
             )  # TODO _conn via property
 
-        kernel_name = "kernel_" + node.id_attr_
+        kernel_name = "kernel_" + node.id_
         kernel = usid.Kernel(
             ast=self.visit(
                 node.stmt,

@@ -123,8 +123,8 @@ class FrozenModel(pydantic.BaseModel):
 
 
 # -- Nodes --
+_EVE_NODE_INTERNAL_SUFFIX = "__"
 _EVE_NODE_IMPL_SUFFIX = "_"
-_EVE_NODE_ATTR_SUFFIX = "_attr_"
 
 AnyNode = TypeVar("AnyNode", bound="BaseNode")
 ValueNode = Union[bool, bytes, int, float, str, IntEnum, StrEnum]
@@ -151,9 +151,9 @@ class NodeMetaclass(pydantic.main.ModelMetaclass):
         attributes_metadata = {}
         children_metadata = {}
         for name, model_field in cls.__fields__.items():
-            if name.endswith(_EVE_NODE_ATTR_SUFFIX):
+            if name.endswith(_EVE_NODE_IMPL_SUFFIX):
                 attributes_metadata[name] = {"definition": model_field}
-            elif not name.endswith(_EVE_NODE_IMPL_SUFFIX):
+            elif not name.endswith(_EVE_NODE_INTERNAL_SUFFIX):
                 children_metadata[name] = {
                     "definition": model_field,
                     **model_field.field_info.extra.get(_EVE_METADATA_KEY, {}),
@@ -184,12 +184,11 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         * Field names starting with "_" are ignored by pydantic and Eve. They
             will not be considered as `fields` and thus none of the pydantic
             features will work (type coercion, validators, etc.).
-        * Field names ending with "_" are ignored only by Eve, not by pydantic.
-            This means that all pydantic features will work on these fields,
-            but they will be invisible for Eve. They are reserved for internal Eve
-            use and should not be defined by regular users.
-        * Field names ending with "_attr_" are considered implementation fields
-            not children. They are intended to be defined by users when needed,
+        * Field names ending with "__" are reserved for internal Eve use and
+            should NOT be defined by regular users. All pydantic features will
+            work on these fields anyway but they will be invisible for Eve users.
+        * Field names ending with "_" are considered implementation fields
+            not children nodes. They are intended to be defined by users when needed,
             typically to cache derived, non-essential information on the node.
 
     """
@@ -199,24 +198,26 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     # Node fields
     #: Unique node-id (meta-attribute)
-    id_attr_: Optional[Str] = None
+    id_: Optional[Str] = None
 
-    @pydantic.validator("id_attr_", pre=True, always=True)
-    def _id_attr_validator(cls: Type[AnyNode], v: Optional[str]) -> str:  # type: ignore  # validators are classmethods
+    @pydantic.validator("id_", pre=True, always=True)
+    def _id_validator(cls: Type[AnyNode], v: Optional[str]) -> str:  # type: ignore  # validators are classmethods
         if v is None:
             v = utils.UIDGenerator.sequential_id(prefix=cls.__qualname__)
         if not isinstance(v, str):
-            raise TypeError(f"id_attr_ is not an 'str' instance ({type(v)})")
+            raise TypeError(f"id_ is not an 'str' instance ({type(v)})")
         return v
 
     def iter_attributes(self) -> Generator[Tuple[str, Any], None, None]:
         for name, _ in self.__fields__.items():
-            if name.endswith(_EVE_NODE_ATTR_SUFFIX):
+            if name.endswith(_EVE_NODE_IMPL_SUFFIX):
                 yield name, getattr(self, name)
 
     def iter_children(self) -> Generator[Tuple[str, Any], None, None]:
         for name, _ in self.__fields__.items():
-            if not (name.endswith(_EVE_NODE_ATTR_SUFFIX) or name.endswith(_EVE_NODE_IMPL_SUFFIX)):
+            if not (
+                name.endswith(_EVE_NODE_IMPL_SUFFIX) or name.endswith(_EVE_NODE_INTERNAL_SUFFIX)
+            ):
                 yield name, getattr(self, name)
 
     def iter_children_values(self) -> Generator[Any, None, None]:

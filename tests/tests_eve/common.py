@@ -192,10 +192,10 @@ class SimpleNodeWithOptionals(Node):
     str_value: Optional[Str]
 
 
-class SimpleNodeWithHiddenMembers(Node):
-    hidden_attr_: Int
+class SimpleNodeWithImplMembers(Node):
+    value_impl_: Int
     int_value: Int
-    hidden_value_: Int
+    another_value_impl_: Int
 
 
 class SimpleNodeWithLoc(Node):
@@ -285,12 +285,12 @@ def make_simple_node_with_optionals(fixed: bool = False) -> SimpleNodeWithOption
     return SimpleNodeWithOptionals(int_value=int_value, float_value=float_value)
 
 
-def make_simple_node_with_hidden_members(fixed: bool = False) -> SimpleNodeWithHiddenMembers:
+def make_simple_node_with_impl_members(fixed: bool = False) -> SimpleNodeWithImplMembers:
     factories = Factories if fixed else RandomFactories
     int_value = factories.make_int()
 
-    return SimpleNodeWithHiddenMembers(
-        hidden_attr_=int_value, int_value=int_value, hidden_value_=int_value
+    return SimpleNodeWithImplMembers(
+        value_impl_=int_value, int_value=int_value, another_value_impl_=int_value
     )
 
 
