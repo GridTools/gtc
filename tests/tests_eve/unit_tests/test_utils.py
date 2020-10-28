@@ -43,12 +43,6 @@ def test_filter_map():
         for i, str_i in filter_map(map_int_to_string, range(LENGTH))
     )
 
-    def remove_(int_or_float):
-        if not isinstance(int_or_float, int):
-            return filter_map.DELETE
-        else:
-            return int_or_float, str(int_or_float)
-
     odds = list(filter_map(lambda x: x if x % 2 else None, range(LENGTH), delete_sentinel=None))
     assert all(isinstance(i, int) and ((i % 2) != 0) for i in odds)
     assert len(odds) == LENGTH // 2
