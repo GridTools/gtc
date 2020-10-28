@@ -168,11 +168,18 @@
 <span class="c1">#</span>
 <span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
 
-<span class="sd">&quot;&quot;&quot;Definitions of useful types.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Definitions of useful field and general types.&quot;&quot;&quot;</span>
 
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">re</span>
 
+<span class="kn">import</span> <span class="nn">boltons.typeutils</span>
+<span class="kn">import</span> <span class="nn">pydantic</span>
+<span class="kn">import</span> <span class="nn">xxhash</span>
 <span class="kn">from</span> <span class="nn">boltons.typeutils</span> <span class="kn">import</span> <span class="n">classproperty</span>  <span class="c1"># noqa: F401</span>
 <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
     <span class="n">NegativeFloat</span><span class="p">,</span>
@@ -186,7 +193,19 @@
     <span class="n">validator</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">.typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span>
+<span class="kn">from</span> <span class="nn">._typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span>
+
+
+<span class="c1">#: Marker value used to avoid confusion with `None`</span>
+<span class="c1">#: (specially in contexts where `None` could be a valid value)</span>
+<span class="n">NOTHING</span> <span class="o">=</span> <span class="n">boltons</span><span class="o">.</span><span class="n">typeutils</span><span class="o">.</span><span class="n">make_sentinel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;NOTHING&quot;</span><span class="p">,</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;NOTHING&quot;</span><span class="p">)</span>
+
+<span class="c1">#: Marker value used as a sentinel value to delete items</span>
+<span class="n">DELETE</span> <span class="o">=</span> <span class="n">boltons</span><span class="o">.</span><span class="n">typeutils</span><span class="o">.</span><span class="n">make_sentinel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;DELETE&quot;</span><span class="p">,</span> <span class="n">var_name</span><span class="o">=</span><span class="s2">&quot;DELETE&quot;</span><span class="p">)</span>
+
+
+<span class="c1">#: Collection types considered as single elements</span>
+<span class="n">ATOMIC_COLLECTION_TYPES</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">)</span>
 
 
 <span class="c1">#: Typing definitions for `__get_validators__()` methods (defined but not exported in `pydantic.typing`)</span>
@@ -213,7 +232,7 @@
         <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_strict_type_validator</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_strict_type_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_strict_type_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Enum</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid value type [expected: </span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2">, received: </span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span></div>
@@ -227,7 +246,7 @@
         <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_strict_type_validator</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_strict_type_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_strict_type_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IntEnum</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid value type [expected: </span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2">, received: </span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span></div>
@@ -241,7 +260,7 @@
         <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_strict_type_validator</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_strict_type_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;StrEnum&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_strict_type_validator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StrEnum</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid value type [expected: </span><span class="si">{</span><span class="bp">cls</span><span class="si">}</span><span class="s2">, received: </span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span>
@@ -249,6 +268,104 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="SymbolName"><a class="viewcode-back" href="../../_source/eve.html#eve.type_definitions.SymbolName">[docs]</a><span class="k">class</span> <span class="nc">SymbolName</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Name of a symbol.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME_REGEX</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z_]\w*&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SymbolName.constrained"><a class="viewcode-back" href="../../_source/eve.html#eve.type_definitions.SymbolName.constrained">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span>
+    <span class="k">def</span> <span class="nf">constrained</span><span class="p">(</span><span class="n">regex</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">SymbolName</span><span class="p">]:</span>
+        <span class="n">xxh64</span> <span class="o">=</span> <span class="n">xxhash</span><span class="o">.</span><span class="n">xxh64</span><span class="p">()</span>
+        <span class="n">xxh64</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">regex</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+        <span class="n">subclass_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SymbolName_</span><span class="si">{</span><span class="n">xxh64</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[</span><span class="o">-</span><span class="mi">8</span><span class="p">:]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">namespace</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">NAME_REGEX</span><span class="o">=</span><span class="n">regex</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">subclass_name</span><span class="p">,</span> <span class="p">(</span><span class="n">SymbolName</span><span class="p">,),</span> <span class="n">namespace</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># type: ignore  # mypy issues 4335, 4660</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">&quot;NAME_REGEX&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">NAME_REGEX</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing or invalid &#39;NAME_REGEX&#39; member in &#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; class.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">NAME_REGEX</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">NAME_REGEX</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">NAME_REGEX</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">re</span><span class="o">.</span><span class="n">error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid regular expression definition in &#39;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__get_validators__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PydanticCallableGenerator</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validate</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__modify_schema__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">field_schema</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">field_schema</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">NAME_REGEX</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SymbolName.validate"><a class="viewcode-back" href="../../_source/eve.html#eve.type_definitions.SymbolName.validate">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SymbolName</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">symtable</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid string argument &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">NAME_REGEX</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid name value &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; does not match re(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME_REGEX</span><span class="o">.</span><span class="n">pattern</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_symtable</span> <span class="o">=</span> <span class="n">symtable</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="SymbolRef"><a class="viewcode-back" href="../../_source/eve.html#eve.type_definitions.SymbolRef">[docs]</a><span class="k">class</span> <span class="nc">SymbolRef</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reference to a symbol.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__get_validators__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PydanticCallableGenerator</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="bp">cls</span><span class="o">.</span><span class="n">validate</span>
+
+<div class="viewcode-block" id="SymbolRef.validate"><a class="viewcode-back" href="../../_source/eve.html#eve.type_definitions.SymbolRef.validate">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SymbolRef</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid string argument &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span>
+
+<div class="viewcode-block" id="SymbolRef.node"><a class="viewcode-back" href="../../_source/eve.html#eve.type_definitions.SymbolRef.node">[docs]</a>    <span class="k">def</span> <span class="nf">node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="SourceLocation"><a class="viewcode-back" href="../../_source/eve.html#eve.type_definitions.SourceLocation">[docs]</a><span class="k">class</span> <span class="nc">SourceLocation</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Source code location (line, column, source).&quot;&quot;&quot;</span>
+
+    <span class="n">line</span><span class="p">:</span> <span class="n">PositiveInt</span>
+    <span class="n">column</span><span class="p">:</span> <span class="n">PositiveInt</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Str</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">line</span><span class="o">=</span><span class="n">line</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">column</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s2">: Line </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">line</span><span class="si">}</span><span class="s2">, Col </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+
+<div class="viewcode-block" id="SourceLocation.Config"><a class="viewcode-back" href="../../_source/eve.html#eve.type_definitions.SourceLocation.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;forbid&quot;</span>
+        <span class="n">allow_mutation</span> <span class="o">=</span> <span class="kc">False</span></div></div>
 </pre></div>
 
            </div>

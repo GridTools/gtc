@@ -28,6 +28,14 @@ eve.exceptions module
    :undoc-members:
    :show-inheritance:
 
+eve.iterators module
+--------------------
+
+.. automodule:: eve.iterators
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 eve.traits module
 -----------------
 
@@ -48,14 +56,6 @@ eve.type\_definitions module
 ----------------------------
 
 .. automodule:: eve.type_definitions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-eve.typing module
------------------
-
-.. automodule:: eve.typing
    :members:
    :undoc-members:
    :show-inheritance:
