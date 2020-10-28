@@ -46,7 +46,7 @@ from ._typing import Any, Callable, Dict, Generator, Mapping, Optional, Type
 #: (specially in contexts where `None` could be a valid value)
 NOTHING = boltons.typeutils.make_sentinel(name="NOTHING", var_name="NOTHING")
 
-#: Marker value used by as a sentinel value to delete items
+#: Marker value used as a sentinel value to delete items
 DELETE = boltons.typeutils.make_sentinel(name="DELETE", var_name="DELETE")
 
 
