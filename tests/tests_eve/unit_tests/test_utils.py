@@ -14,10 +14,11 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import copy
 import dataclasses
 import hashlib
 import string
-from typing import Any, List
+from typing import Any
 
 import numpy as np
 import pydantic
@@ -110,13 +111,11 @@ def test_register_subclasses():
 
 class ModelClass(pydantic.BaseModel):
     data: Any
-    data_list: List[Any]
 
 
 @dataclasses.dataclass
 class DataClass:
     data: Any
-    data_list: List[Any]
 
 
 @pytest.fixture(
@@ -136,7 +135,7 @@ class DataClass:
             [(True,)],
             ["true"],
         ],
-        [0, False, (False,), [False], {False},],  # noqa: E231
+        [0, False, (False,), [False], {False}],
         [(), [], frozenset()],
         [[(1,)], [[1]], [[[1]]], [1], {1}],
         [
@@ -161,8 +160,10 @@ def unique_data_items(request):
     input_data = request.param
 
     yield input_data + [
-        DataClass(data=input_data[0], data_list=input_data),
-        ModelClass(data=input_data[0], data_list=input_data),
+        DataClass(data=input_data),
+        DataClass(data=input_data[0]),
+        ModelClass(data=input_data),
+        ModelClass(data=input_data[0]),
     ]
 
 
@@ -176,6 +177,7 @@ def hash_algorithm(request):
 def test_shash(unique_data_items, hash_algorithm):
     from eve.utils import shash
 
+    # Test hash consistency
     for item in unique_data_items:
         if hasattr(hash_algorithm, "copy"):
             h1 = hash_algorithm.copy()
@@ -183,8 +185,9 @@ def test_shash(unique_data_items, hash_algorithm):
         else:
             h1 = hash_algorithm
             h2 = hash_algorithm
-        assert shash(item, hash_algorithm=h1) == shash(item, hash_algorithm=h2)
+        assert shash(item, hash_algorithm=h1) == shash(copy.deepcopy(item), hash_algorithm=h2)
 
+    # Test hash specificity
     hashes = set(shash(item, hash_algorithm=hash_algorithm) for item in unique_data_items)
     assert len(hashes) == len(unique_data_items)
 
