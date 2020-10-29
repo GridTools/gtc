@@ -171,7 +171,7 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
         """<%
             sid_deref = symbol_tbl_sids[_this_node.sid]
             sid_entry_deref = sid_deref.symbol_tbl[_this_node.name]
-        %>*gridtools::device::at_key<${ sid_entry_deref.tag_name }>(${ sid_deref.ptr_name })"""
+        %>*gridtools::host_device::at_key<${ sid_entry_deref.tag_name }>(${ sid_deref.ptr_name })"""
     )
 
     AssignStmt = as_fmt("{left} = {right};")
@@ -186,21 +186,21 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
             body_location = _this_generator.LOCATION_TYPE_TO_STR[sid_deref.location.elements[-1]] if sid_deref else None
         %>
         for (int neigh = 0; neigh < gridtools::next::connectivity::max_neighbors(${ conn_deref.name }); ++neigh) {
-            auto absolute_neigh_index = *gridtools::device::at_key<${ conn_deref.neighbor_tbl_tag }>(${ outer_sid_deref.ptr_name});
+            auto absolute_neigh_index = *gridtools::host_device::at_key<${ conn_deref.neighbor_tbl_tag }>(${ outer_sid_deref.ptr_name});
             if (absolute_neigh_index != gridtools::next::connectivity::skip_value(${ conn_deref.name })) {
                 % if sid_deref:
                     auto ${ sid_deref.ptr_name } = ${ sid_deref.origin_name }();
                     gridtools::sid::shift(
-                        ${ sid_deref.ptr_name }, gridtools::device::at_key<${ body_location }>(${ sid_deref.strides_name }), absolute_neigh_index);
+                        ${ sid_deref.ptr_name }, gridtools::host_device::at_key<${ body_location }>(${ sid_deref.strides_name }), absolute_neigh_index);
                 % endif
 
                 // bodyparameters
                 ${ ''.join(body) }
                 // end body
             }
-            gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::device::at_key<neighbor>(${ outer_sid_deref.strides_name }), 1);
+            gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::host_device::at_key<neighbor>(${ outer_sid_deref.strides_name }), 1);
         }
-        gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::device::at_key<neighbor>(${ outer_sid_deref.strides_name }),
+        gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::host_device::at_key<neighbor>(${ outer_sid_deref.strides_name }),
             -gridtools::next::connectivity::max_neighbors(${ conn_deref.name }));
 
         """
@@ -274,9 +274,7 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
 
 class UsidGpuCodeGenerator(UsidCodeGenerator):
 
-    cache_allocator_ = (
-        "gridtools::sid::device::make_cached_allocator(&gridtools::cuda_util::cuda_malloc<char[]>);"
-    )
+    cache_allocator_ = "gridtools::sid::host_device::make_cached_allocator(&gridtools::cuda_util::cuda_malloc<char[]>);"
 
     headers_ = UsidCodeGenerator.headers_ + [
         "<gridtools/next/cuda_util.hpp>",
@@ -318,7 +316,7 @@ class UsidGpuCodeGenerator(UsidCodeGenerator):
                 return;
             % if len(prim_sid.entries) > 0:
             auto ${ prim_sid.ptr_name } = ${ prim_sid.origin_name }();
-            gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::device::at_key<
+            gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::host_device::at_key<
                 ${ _this_generator.LOCATION_TYPE_TO_STR[prim_sid.location.elements[-1]] }
                 >(${ prim_sid.strides_name }), idx);
             % endif
@@ -330,7 +328,9 @@ class UsidGpuCodeGenerator(UsidCodeGenerator):
 
 class UsidNaiveCodeGenerator(UsidCodeGenerator):
 
-    cache_allocator_ = "gridtools::sid::device::make_cached_allocator(&std::make_unique<char[]>);"
+    cache_allocator_ = (
+        "gridtools::sid::host_device::make_cached_allocator(&std::make_unique<char[]>);"
+    )
 
     KernelCall = as_mako(
         """
@@ -354,7 +354,7 @@ class UsidNaiveCodeGenerator(UsidCodeGenerator):
             for(std::size_t idx = 0; idx < gridtools::next::connectivity::size(${ prim_conn.name }); idx++) {
                 % if len(prim_sid.entries) > 0:
                 auto ${ prim_sid.ptr_name } = ${ prim_sid.origin_name }();
-                gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::device::at_key<
+                gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::host_device::at_key<
                     ${ _this_generator.LOCATION_TYPE_TO_STR[prim_sid.location.elements[-1]] }
                     >(${ prim_sid.strides_name }), idx);
                 % endif
