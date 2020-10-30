@@ -124,7 +124,7 @@ class NodeTranslator(NodeVisitor):
                 )
 
         else:
-            result = copy.deepcopy(node, memo=self.memo)
+            result = copy.deepcopy(node, memo=getattr(self, "memo", None))
 
         return result
 
