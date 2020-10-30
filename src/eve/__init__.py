@@ -65,4 +65,4 @@ from .type_definitions import (
     StrictStr,
     SymbolName,
 )
-from .visitors import NodeModifier, NodeTranslator, NodeVisitor
+from .visitors import NodeMutator, NodeTranslator, NodeVisitor

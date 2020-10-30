@@ -68,8 +68,8 @@ def filter_map(
             the output (note that comparison is made by identity NOT by value).
 
     Notes:
-        The default `delete_sentinel` value (`type_definitions.DELETE`) can also
-        be accessed as `filter_map.DELETE`.
+        The default `delete_sentinel` value (:data:`eve.DELETE`) can also be
+        accessed as :data:`filter_map.DELETE`.
 
     """
     for item in iterable:
