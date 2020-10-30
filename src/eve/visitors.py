@@ -47,8 +47,8 @@ class NodeVisitor:
 
         1. A ``self.visit_NODE_CLASS_NAME()`` method where `NODE_CLASS_NAME`
            matches ``type(node).__name__``.
-        2. A ``self.visit_BASE_NODE_CLASS_NAME()`` method where
-           `BASE_NODE_CLASS_NAME` matches ``base.__name__``, and `base` is
+        2. A ``self.visit_NODE_BASE_CLASS_NAME()`` method where
+           `NODE_BASE_CLASS_NAME` matches ``base.__name__``, and `base` is
            one of the node base classes (evaluated following the order
            given in ``type(node).__mro__``).
         3. ``self.generic_visit()``.

@@ -419,19 +419,31 @@ class MakoTemplate(Template):
 
 
 class TemplatedGenerator(NodeVisitor):
-    """A code generator visitor using :class:`TextTemplate` s.
+    """A code generator visitor using :class:`TextTemplate`.
 
-    The order followed to choose a `dump()` function for instances of
-    :class:`eve.Node` is the following:
+    The order followed to choose a `dump()` function for node values is the following:
 
-        1. A ``self.visit_NODE_TYPE_NAME()`` method where `NODE_TYPE_NAME`
-           matches ``NODE_CLASS.__name__``, and ``NODE_CLASS`` is the
-           actual type of the node or any of its superclasses
-           following MRO order.
-        2. A ``NODE_TYPE_NAME`` class variable of type :class:``Template``,
-           where ``NODE_TYPE_NAME`` matches ``NODE_CLASS.__name__``, and
-           ``NODE_CLASS`` is the actual type of the node or any of its
-           superclasses following MRO order.
+        1. A ``self.visit_NODE_CLASS_NAME()`` method where `NODE_CLASS_NAME`
+           matches ``type(node).__name__``.
+        2. A ``self.visit_NODE_BASE_CLASS_NAME()`` method where
+           `NODE_BASE_CLASS_NAME` matches ``base.__name__``, and `base` is
+           one of the node base classes (evaluated following the order
+           given in ``type(node).__mro__``).
+
+        If `node` is an instance of :class:`eve.Node` and a `visit_` method has
+        not been found, `TemplatedGenerator` will look for an appropriate
+        :class:`Template` definition:
+
+        3. A ``NODE_CLASS_NAME`` class variable of type :class:`Template`,
+           where ``NODE_CLASS_NAME`` matches ``type(node).__name__``.
+        4. A ``NODE_BASE_CLASS_NAME`` class variable of type :class:`Template`,
+           where ``NODE_BASE_CLASS_NAME`` matches ``base.__name__``, and
+           `base` is one of the node base classes (evaluated following the
+           order given in ``type(node).__mro__``).
+
+        In any other case (templates cannot be used for instances of arbitrary types),
+        steps 3 and 4 will be substituted by a call to the :meth:`self.generic_dump()`
+        method.
 
     When a template is used, the following keys will be passed to the template
     instance:
@@ -443,12 +455,8 @@ class TemplatedGenerator(NodeVisitor):
           the node children.
         * ``_this_node``: the actual node instance (before visiting children).
         * ``_this_generator``: the current generator instance.
-        * ``_this_module``: the generator's module instance .
+        * ``_this_module``: the generator's module instance.
         * ``**kwargs``: the keyword arguments received by the visiting method.
-
-    Class variable templates cannot be used for instances of other types
-    (not :class:`eve.Node` subclasses). Step 2 will be therefore substituted
-    by a call to the :meth:`self.generic_dump()` method.
 
     """
 
