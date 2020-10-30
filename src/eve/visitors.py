@@ -130,9 +130,9 @@ class NodeTranslator(NodeVisitor):
     you must either transform the child nodes yourself or call the
     :meth:`generic_visit` method for the node first.
 
-    Usually you use the transformer like this::
+    Usually you use a NodeTranslator like this::
 
-       node = YourTranslator.apply(node)
+       output_node = YourTranslator.apply(input_node)
 
     """
 
@@ -193,9 +193,10 @@ class NodeMutator(NodeVisitor):
     a new inmutable collection instance will be created without the removed\
     element.
 
-    Usually you use the transformer like this::
+    Usually you use a NodeMutator like this::
 
-       node = YourTransformer().visit(node)
+       YourMutator.apply(node)
+
     """
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
