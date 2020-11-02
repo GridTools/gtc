@@ -189,8 +189,8 @@ class NodeMutator(NodeVisitor):
     you must either transform the child nodes yourself or call the
     :meth:`generic_visit` method for the node first. In case a child node
     is a mutable collection of elements, and one of this element is meant
-    to be deleted, it will deleted in place. If the collection is inmutable,
-    a new inmutable collection instance will be created without the removed\
+    to be deleted, it will deleted in place. If the collection is immutable,
+    a new immutable collection instance will be created without the removed
     element.
 
     Usually you use a NodeMutator like this::
