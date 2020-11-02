@@ -60,6 +60,14 @@ eve.type\_definitions module
    :undoc-members:
    :show-inheritance:
 
+eve.typingx module
+------------------
+
+.. automodule:: eve.typingx
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 eve.utils module
 ----------------
 

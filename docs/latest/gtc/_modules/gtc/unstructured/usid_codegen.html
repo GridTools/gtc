@@ -325,7 +325,7 @@
         <span class="sd">&quot;&quot;&quot;&lt;%</span>
 <span class="sd">            sid_deref = symbol_tbl_sids[_this_node.sid]</span>
 <span class="sd">            sid_entry_deref = sid_deref.symbol_tbl[_this_node.name]</span>
-<span class="sd">        %&gt;*gridtools::device::at_key&lt;${ sid_entry_deref.tag_name }&gt;(${ sid_deref.ptr_name })&quot;&quot;&quot;</span>
+<span class="sd">        %&gt;*gridtools::host_device::at_key&lt;${ sid_entry_deref.tag_name }&gt;(${ sid_deref.ptr_name })&quot;&quot;&quot;</span>
     <span class="p">)</span>
 
     <span class="n">AssignStmt</span> <span class="o">=</span> <span class="n">as_fmt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{left}</span><span class="s2"> = </span><span class="si">{right}</span><span class="s2">;&quot;</span><span class="p">)</span>
@@ -340,21 +340,21 @@
 <span class="sd">            body_location = _this_generator.LOCATION_TYPE_TO_STR[sid_deref.location.elements[-1]] if sid_deref else None</span>
 <span class="sd">        %&gt;</span>
 <span class="sd">        for (int neigh = 0; neigh &lt; gridtools::next::connectivity::max_neighbors(${ conn_deref.name }); ++neigh) {</span>
-<span class="sd">            auto absolute_neigh_index = *gridtools::device::at_key&lt;${ conn_deref.neighbor_tbl_tag }&gt;(${ outer_sid_deref.ptr_name});</span>
+<span class="sd">            auto absolute_neigh_index = *gridtools::host_device::at_key&lt;${ conn_deref.neighbor_tbl_tag }&gt;(${ outer_sid_deref.ptr_name});</span>
 <span class="sd">            if (absolute_neigh_index != gridtools::next::connectivity::skip_value(${ conn_deref.name })) {</span>
 <span class="sd">                % if sid_deref:</span>
 <span class="sd">                    auto ${ sid_deref.ptr_name } = ${ sid_deref.origin_name }();</span>
 <span class="sd">                    gridtools::sid::shift(</span>
-<span class="sd">                        ${ sid_deref.ptr_name }, gridtools::device::at_key&lt;${ body_location }&gt;(${ sid_deref.strides_name }), absolute_neigh_index);</span>
+<span class="sd">                        ${ sid_deref.ptr_name }, gridtools::host_device::at_key&lt;${ body_location }&gt;(${ sid_deref.strides_name }), absolute_neigh_index);</span>
 <span class="sd">                % endif</span>
 
 <span class="sd">                // bodyparameters</span>
 <span class="sd">                ${ &#39;&#39;.join(body) }</span>
 <span class="sd">                // end body</span>
 <span class="sd">            }</span>
-<span class="sd">            gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::device::at_key&lt;neighbor&gt;(${ outer_sid_deref.strides_name }), 1);</span>
+<span class="sd">            gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::host_device::at_key&lt;neighbor&gt;(${ outer_sid_deref.strides_name }), 1);</span>
 <span class="sd">        }</span>
-<span class="sd">        gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::device::at_key&lt;neighbor&gt;(${ outer_sid_deref.strides_name }),</span>
+<span class="sd">        gridtools::sid::shift(${ outer_sid_deref.ptr_name }, gridtools::host_device::at_key&lt;neighbor&gt;(${ outer_sid_deref.strides_name }),</span>
 <span class="sd">            -gridtools::next::connectivity::max_neighbors(${ conn_deref.name }));</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -429,7 +429,7 @@
 <div class="viewcode-block" id="UsidGpuCodeGenerator"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidGpuCodeGenerator">[docs]</a><span class="k">class</span> <span class="nc">UsidGpuCodeGenerator</span><span class="p">(</span><span class="n">UsidCodeGenerator</span><span class="p">):</span>
 
     <span class="n">cache_allocator_</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">&quot;gridtools::sid::device::make_cached_allocator(&amp;gridtools::cuda_util::cuda_malloc&lt;char[]&gt;);&quot;</span>
+        <span class="s2">&quot;gridtools::sid::make_cached_allocator(&amp;gridtools::cuda_util::cuda_malloc&lt;char[]&gt;);&quot;</span>
     <span class="p">)</span>
 
     <span class="n">headers_</span> <span class="o">=</span> <span class="n">UsidCodeGenerator</span><span class="o">.</span><span class="n">headers_</span> <span class="o">+</span> <span class="p">[</span>
@@ -472,7 +472,7 @@
 <span class="sd">                return;</span>
 <span class="sd">            % if len(prim_sid.entries) &gt; 0:</span>
 <span class="sd">            auto ${ prim_sid.ptr_name } = ${ prim_sid.origin_name }();</span>
-<span class="sd">            gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::device::at_key&lt;</span>
+<span class="sd">            gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::host_device::at_key&lt;</span>
 <span class="sd">                ${ _this_generator.LOCATION_TYPE_TO_STR[prim_sid.location.elements[-1]] }</span>
 <span class="sd">                &gt;(${ prim_sid.strides_name }), idx);</span>
 <span class="sd">            % endif</span>
@@ -484,7 +484,7 @@
 
 <div class="viewcode-block" id="UsidNaiveCodeGenerator"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.usid_codegen.UsidNaiveCodeGenerator">[docs]</a><span class="k">class</span> <span class="nc">UsidNaiveCodeGenerator</span><span class="p">(</span><span class="n">UsidCodeGenerator</span><span class="p">):</span>
 
-    <span class="n">cache_allocator_</span> <span class="o">=</span> <span class="s2">&quot;gridtools::sid::device::make_cached_allocator(&amp;std::make_unique&lt;char[]&gt;);&quot;</span>
+    <span class="n">cache_allocator_</span> <span class="o">=</span> <span class="s2">&quot;gridtools::sid::make_cached_allocator(&amp;std::make_unique&lt;char[]&gt;);&quot;</span>
 
     <span class="n">KernelCall</span> <span class="o">=</span> <span class="n">as_mako</span><span class="p">(</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -508,7 +508,7 @@
 <span class="sd">            for(std::size_t idx = 0; idx &lt; gridtools::next::connectivity::size(${ prim_conn.name }); idx++) {</span>
 <span class="sd">                % if len(prim_sid.entries) &gt; 0:</span>
 <span class="sd">                auto ${ prim_sid.ptr_name } = ${ prim_sid.origin_name }();</span>
-<span class="sd">                gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::device::at_key&lt;</span>
+<span class="sd">                gridtools::sid::shift(${ prim_sid.ptr_name }, gridtools::host_device::at_key&lt;</span>
 <span class="sd">                    ${ _this_generator.LOCATION_TYPE_TO_STR[prim_sid.location.elements[-1]] }</span>
 <span class="sd">                    &gt;(${ prim_sid.strides_name }), idx);</span>
 <span class="sd">                % endif</span>

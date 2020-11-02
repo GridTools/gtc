@@ -179,7 +179,8 @@
 <span class="kn">import</span> <span class="nn">pydantic</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">type_definitions</span><span class="p">,</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">._typing</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">NOTHING</span><span class="p">,</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">Str</span><span class="p">,</span> <span class="n">StrEnum</span>
+<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">AnyNoArgCallable</span><span class="p">,</span>
     <span class="n">ClassVar</span><span class="p">,</span>
@@ -196,7 +197,6 @@
     <span class="n">Union</span><span class="p">,</span>
     <span class="n">no_type_check</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">NOTHING</span><span class="p">,</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">Str</span><span class="p">,</span> <span class="n">StrEnum</span>
 
 
 <span class="c1"># -- Fields --</span>
@@ -287,18 +287,16 @@
 
 
 <div class="viewcode-block" id="NodeMetaclass"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.NodeMetaclass">[docs]</a><span class="k">class</span> <span class="nc">NodeMetaclass</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">ModelMetaclass</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Custom metaclass for Node classes (inherits from pydantic metaclass).</span>
+    <span class="sd">&quot;&quot;&quot;Custom metaclass for Node classes.</span>
 
 <span class="sd">    Customize the creation of Node classes adding Eve specific attributes.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@no_type_check</span>
-    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="n">mcls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Optional preprocessing of class namespace before creation:</span>
-        <span class="c1">#</span>
-
-        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">mcls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Postprocess created class:</span>
         <span class="c1"># Add metadata class members</span>
@@ -364,7 +362,9 @@
 
 <div class="viewcode-block" id="BaseNode.iter_impl_fields"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.iter_impl_fields">[docs]</a>    <span class="k">def</span> <span class="nf">iter_impl_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fields__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_EVE_NODE_IMPL_SUFFIX</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span>
+                <span class="n">_EVE_NODE_INTERNAL_SUFFIX</span>
+            <span class="p">):</span>
                 <span class="k">yield</span> <span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BaseNode.iter_children"><a class="viewcode-back" href="../../_source/eve.html#eve.concepts.BaseNode.iter_children">[docs]</a>    <span class="k">def</span> <span class="nf">iter_children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
