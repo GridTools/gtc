@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from typing import List
+from typing import List  # noqa
 
-from pydantic import validator
+from pydantic import validator  # noqa
 
 from eve import Node, Str
-from eve.codegen import FormatTemplate, MakoTemplate, TemplatedGenerator
+from eve.codegen import FormatTemplate, MakoTemplate, TemplatedGenerator  # noqa
 
 
 class Expr(Node):

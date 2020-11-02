@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
-from pydantic import validator
-
 from eve import Node, Str
 
 

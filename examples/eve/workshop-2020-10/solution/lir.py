@@ -15,14 +15,6 @@ class Literal:
     value: int
 
 
-class FunctionName(Expr):
-    value: Str
-
-
-class Literal(Expr):
-    value: Str
-
-
 class BinaryOp(Expr):
     left: Expr
     right: Expr
