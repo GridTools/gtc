@@ -11,7 +11,7 @@ class Expr(Node):
     pass
 
 
-class Literal:
+class Literal(Expr):
     value: int
 
 
