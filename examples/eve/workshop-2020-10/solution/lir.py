@@ -1,6 +1,10 @@
-from eve import Node, Str
-from pydantic import validator
+# -*- coding: utf-8 -*-
 from typing import List
+
+from pydantic import validator
+
+from eve import Node, Str
+from eve.codegen import FormatTemplate, MakoTemplate, TemplatedGenerator
 
 
 class Expr(Node):
@@ -74,10 +78,6 @@ class Fun(Node):
     name: Str
     params: List[FieldDecl]
     horizontal_loops: List[HorizontalLoop]
-
-
-from eve.codegen import FormatTemplate, TemplatedGenerator
-from eve.codegen import MakoTemplate
 
 
 class LIR_to_cpp(TemplatedGenerator):

@@ -1,6 +1,10 @@
-from eve import Node, Str
-from pydantic import validator
+# -*- coding: utf-8 -*-
 from typing import List
+
+from pydantic import validator
+
+from eve import Node, Str
+from eve.codegen import FormatTemplate, MakoTemplate, TemplatedGenerator
 
 
 class Expr(Node):
@@ -19,8 +23,6 @@ class BinaryOp(Expr):
 
 # TODO your IR here
 
-from eve.codegen import FormatTemplate, TemplatedGenerator
-from eve.codegen import MakoTemplate
 
 # TODO your code generator here
 
