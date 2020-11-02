@@ -274,7 +274,9 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
 
 class UsidGpuCodeGenerator(UsidCodeGenerator):
 
-    cache_allocator_ = "gridtools::sid::make_cached_allocator(&gridtools::cuda_util::cuda_malloc<char[]>);"
+    cache_allocator_ = (
+        "gridtools::sid::make_cached_allocator(&gridtools::cuda_util::cuda_malloc<char[]>);"
+    )
 
     headers_ = UsidCodeGenerator.headers_ + [
         "<gridtools/next/cuda_util.hpp>",
@@ -328,9 +330,7 @@ class UsidGpuCodeGenerator(UsidCodeGenerator):
 
 class UsidNaiveCodeGenerator(UsidCodeGenerator):
 
-    cache_allocator_ = (
-        "gridtools::sid::make_cached_allocator(&std::make_unique<char[]>);"
-    )
+    cache_allocator_ = "gridtools::sid::make_cached_allocator(&std::make_unique<char[]>);"
 
     KernelCall = as_mako(
         """
