@@ -323,51 +323,53 @@ values for duplicated keys.</p></li>
 <dt id="eve.codegen.TemplatedGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">TemplatedGenerator</code><a class="reference internal" href="../_modules/eve/codegen.html#TemplatedGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.TemplatedGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#eve.visitors.NodeVisitor" title="eve.visitors.NodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.visitors.NodeVisitor</span></code></a></p>
-<p>A code generator visitor using <code class="xref py py-class docutils literal notranslate"><span class="pre">TextTemplate</span></code> s.</p>
-<p>The order followed to choose a <cite>dump()</cite> function for instances of
-<code class="xref py py-class docutils literal notranslate"><span class="pre">eve.Node</span></code> is the following:</p>
+<p>A code generator visitor using <code class="xref py py-class docutils literal notranslate"><span class="pre">TextTemplate</span></code>.</p>
+<p>The order followed to choose a <cite>dump()</cite> function for node values is the following:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><dl class="simple">
-<dt>A <cite>self.visit_NODE_TYPE_NAME()</cite> method where <cite>NODE_TYPE_NAME</cite></dt><dd><p>matches <cite>NODE_CLASS.__name__</cite>, and <cite>NODE_CLASS</cite> is the
-actual type of the node or any of its superclasses
-following MRO order.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>A <cite>NODE_TYPE_NAME</cite> class variable of type <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a>,</dt><dd><p>where <cite>NODE_TYPE_NAME</cite> matches <cite>NODE_CLASS.__name__</cite>, and
-<cite>NODE_CLASS</cite> is the actual type of the node or any of its
-superclasses following MRO order.</p>
-</dd>
-</dl>
-</li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">self.visit_NODE_CLASS_NAME()</span></code> method where <cite>NODE_CLASS_NAME</cite>
+matches <code class="docutils literal notranslate"><span class="pre">type(node).__name__</span></code>.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">self.visit_NODE_BASE_CLASS_NAME()</span></code> method where
+<cite>NODE_BASE_CLASS_NAME</cite> matches <code class="docutils literal notranslate"><span class="pre">base.__name__</span></code>, and <cite>base</cite> is
+one of the node base classes (evaluated following the order
+given in <code class="docutils literal notranslate"><span class="pre">type(node).__mro__</span></code>).</p></li>
 </ol>
+<p>If <cite>node</cite> is an instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">eve.Node</span></code> and a <cite>visit_</cite> method has
+not been found, <cite>TemplatedGenerator</cite> will look for an appropriate
+<a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a> definition:</p>
+<ol class="arabic simple" start="3">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">NODE_CLASS_NAME</span></code> class variable of type <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a>,
+where <code class="docutils literal notranslate"><span class="pre">NODE_CLASS_NAME</span></code> matches <code class="docutils literal notranslate"><span class="pre">type(node).__name__</span></code>.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">NODE_BASE_CLASS_NAME</span></code> class variable of type <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a>,
+where <code class="docutils literal notranslate"><span class="pre">NODE_BASE_CLASS_NAME</span></code> matches <code class="docutils literal notranslate"><span class="pre">base.__name__</span></code>, and
+<cite>base</cite> is one of the node base classes (evaluated following the
+order given in <code class="docutils literal notranslate"><span class="pre">type(node).__mro__</span></code>).</p></li>
+</ol>
+<p>In any other case (templates cannot be used for instances of arbitrary types),
+steps 3 and 4 will be substituted by a call to the <code class="xref py py-meth docutils literal notranslate"><span class="pre">self.generic_dump()</span></code>
+method.</p>
 </div></blockquote>
-<p>When a template is used, the following keys will be passed to the template
-instance:</p>
+<p>The following keys are passed to template instances at rendering:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><cite>**node_fields</cite>: all the node children and implementation fields by name.</p></li>
-<li><dl class="simple">
-<dt><cite>_impl</cite>: a <cite>dict</cite> instance with the results of visiting all</dt><dd><p>the node implementation fields.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><cite>_children</cite>: a <cite>dict</cite> instance with the results of visiting all</dt><dd><p>the node children.</p>
-</dd>
-</dl>
-</li>
-<li><p><cite>_this_node</cite>: the actual node instance (before visiting children).</p></li>
-<li><p><cite>_this_generator</cite>: the current generator instance.</p></li>
-<li><p><cite>_this_module</cite>: the generator’s module instance .</p></li>
-<li><p><cite>**kwargs</cite>: the keyword arguments received by the visiting method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">**node_fields</span></code>: all the node children and implementation fields by name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_impl</span></code>: a <code class="docutils literal notranslate"><span class="pre">dict</span></code> instance with the results of visiting all
+the node implementation fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_children</span></code>: a <code class="docutils literal notranslate"><span class="pre">dict</span></code> instance with the results of visiting all
+the node children.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_this_node</span></code>: the actual node instance (before visiting children).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_this_generator</span></code>: the current generator instance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_this_module</span></code>: the generator’s module instance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>: the keyword arguments received by the visiting method.</p></li>
 </ul>
 </div></blockquote>
-<p>Class variable templates cannot be used for instances of other types
-(not <code class="xref py py-class docutils literal notranslate"><span class="pre">eve.Node</span></code> subclasses). Step 2 will be therefore substituted
-by a call to the <code class="xref py py-meth docutils literal notranslate"><span class="pre">self.generic_dump()</span></code> method.</p>
+<p>Visitor methods can trigger regular template rendering for the same node class
+by explicitly calling <a class="reference internal" href="#eve.codegen.TemplatedGenerator.generic_visit" title="eve.codegen.TemplatedGenerator.generic_visit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generic_visit()</span></code></a> (typically at the end), which will
+continue the search rendering algorithm at step 3. Thus, a common pattern to deal
+with complicated nodes is to define both a visitor method and a template for
+the same class, where the visitor method preprocess the node data and calls
+<a class="reference internal" href="#eve.codegen.TemplatedGenerator.generic_visit" title="eve.codegen.TemplatedGenerator.generic_visit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generic_visit()</span></code></a> at the end with additional keyword arguments which will
+be forwarded to the node template.</p>
 <dl class="py method">
 <dt id="eve.codegen.TemplatedGenerator.apply">
 <em class="property">classmethod </em><code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>AnyNode<span class="p">, </span>List<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Dict<span class="p">[</span>Any<span class="p">, </span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Set<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; Union<span class="p">[</span>str<span class="p">, </span>Collection<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><a class="reference internal" href="../_modules/eve/codegen.html#TemplatedGenerator.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.TemplatedGenerator.apply" title="Permalink to this definition">¶</a></dt>
@@ -1324,8 +1326,8 @@ the output (note that comparison is made by identity NOT by value).</p></li>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The default <cite>delete_sentinel</cite> value (<cite>type_definitions.DELETE</cite>) can also
-be accessed as <cite>filter_map.DELETE</cite>.</p>
+<p>The default <cite>delete_sentinel</cite> value (<code class="xref py py-data docutils literal notranslate"><span class="pre">eve.DELETE</span></code>) can also be
+accessed as <code class="xref py py-data docutils literal notranslate"><span class="pre">filter_map.DELETE</span></code>.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1383,26 +1385,32 @@ Defaults to <code class="xref py py-class docutils literal notranslate"><span cl
 <span id="eve-visitors-module"></span><h2>eve.visitors module<a class="headerlink" href="#module-eve.visitors" title="Permalink to this headline">¶</a></h2>
 <p>Visitor classes to work with IR trees.</p>
 <dl class="py class">
-<dt id="eve.visitors.NodeModifier">
-<em class="property">class </em><code class="sig-prename descclassname">eve.visitors.</code><code class="sig-name descname">NodeModifier</code><a class="reference internal" href="../_modules/eve/visitors.html#NodeModifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.visitors.NodeModifier" title="Permalink to this definition">¶</a></dt>
+<dt id="eve.visitors.NodeMutator">
+<em class="property">class </em><code class="sig-prename descclassname">eve.visitors.</code><code class="sig-name descname">NodeMutator</code><a class="reference internal" href="../_modules/eve/visitors.html#NodeMutator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.visitors.NodeMutator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#eve.visitors.NodeVisitor" title="eve.visitors.NodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.visitors.NodeVisitor</span></code></a></p>
-<p>Simple <a class="reference internal" href="#eve.visitors.NodeVisitor" title="eve.visitors.NodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeVisitor</span></code></a> subclass based on <code class="xref py py-class docutils literal notranslate"><span class="pre">ast.NodeTransformer</span></code> to modify nodes in place.</p>
-<p>The <cite>NodeTransformer</cite> will walk the tree and use the return value of
-the visitor methods to replace or remove the old node. If the
-return value of the visitor method is <code class="xref py py-obj docutils literal notranslate"><span class="pre">eve.NOTHING</span></code>,
-the node will be removed from its location, otherwise it is replaced
-with the return value. The return value may also be the original
-node, in which case no replacement takes place.</p>
+<p>Special <cite>NodeVisitor</cite> to modify nodes in place.</p>
+<p>A NodeMutator instance will walk the tree exactly as a regular
+<a class="reference internal" href="#eve.visitors.NodeVisitor" title="eve.visitors.NodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeVisitor</span></code></a> and use the return value of the visitor
+methods to replace or remove the old node. If the return value
+is <code class="xref py py-data docutils literal notranslate"><span class="pre">eve.NOTHING</span></code>, the node will be removed from its location,
+otherwise it is replaced with the return value. The return value
+may also be the original node, in which case no replacement takes place.</p>
 <p>Keep in mind that if the node you’re operating on has child nodes
 you must either transform the child nodes yourself or call the
-<a class="reference internal" href="#eve.visitors.NodeModifier.generic_visit" title="eve.visitors.NodeModifier.generic_visit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generic_visit()</span></code></a> method for the node first.</p>
-<p>Usually you use the transformer like this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">node</span> <span class="o">=</span> <span class="n">YourTransformer</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<a class="reference internal" href="#eve.visitors.NodeMutator.generic_visit" title="eve.visitors.NodeMutator.generic_visit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generic_visit()</span></code></a> method for the node first. In case a child node
+is a mutable collection of elements, and one of this element is meant
+to be deleted, it will deleted in place. If the collection is immutable,
+a new immutable collection instance will be created without the removed
+element.</p>
+<p>Usually you use a NodeMutator like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">YourMutator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 </pre></div>
 </div>
+<p class="rubric">Notes</p>
+<p>Check <a class="reference internal" href="#eve.visitors.NodeVisitor" title="eve.visitors.NodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeVisitor</span></code></a> documentation for more details.</p>
 <dl class="py method">
-<dt id="eve.visitors.NodeModifier.generic_visit">
-<code class="sig-name descname">generic_visit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>AnyNode<span class="p">, </span>List<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Dict<span class="p">[</span>Any<span class="p">, </span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Set<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/eve/visitors.html#NodeModifier.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.visitors.NodeModifier.generic_visit" title="Permalink to this definition">¶</a></dt>
+<dt id="eve.visitors.NodeMutator.generic_visit">
+<code class="sig-name descname">generic_visit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>AnyNode<span class="p">, </span>List<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Dict<span class="p">[</span>Any<span class="p">, </span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Set<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/eve/visitors.html#NodeMutator.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.visitors.NodeMutator.generic_visit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1411,20 +1419,23 @@ you must either transform the child nodes yourself or call the
 <dt id="eve.visitors.NodeTranslator">
 <em class="property">class </em><code class="sig-prename descclassname">eve.visitors.</code><code class="sig-name descname">NodeTranslator</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">memo</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/visitors.html#NodeTranslator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.visitors.NodeTranslator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#eve.visitors.NodeVisitor" title="eve.visitors.NodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.visitors.NodeVisitor</span></code></a></p>
-<p><cite>NodeVisitor</cite> subclass to modify nodes NOT in place.</p>
-<p>The <cite>NodeTranslator</cite> will walk the tree and use the return value of
-the visitor methods to replace or remove the old node in a new copy
-of the tree. If the return value of the visitor method is
-<cite>eve.NOTHING</cite>, the node will be removed from its location in the
-result tree, otherwise it is replaced with the return value. In the
-default case, a <cite>deepcopy</cite> of the original node is returned.</p>
+<p>Special <cite>NodeVisitor</cite> to translate nodes and trees.</p>
+<p>A NodeTranslator instance will walk the tree exactly as a regular
+<a class="reference internal" href="#eve.visitors.NodeVisitor" title="eve.visitors.NodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeVisitor</span></code></a> while building an output tree using the return
+values of the visitor methods. If the return value is <code class="xref py py-obj docutils literal notranslate"><span class="pre">eve.NOTHING</span></code>,
+the node will be removed from its location in the output tree,
+otherwise it will be replaced with this new value. The default visitor
+method (<a class="reference internal" href="#eve.visitors.NodeTranslator.generic_visit" title="eve.visitors.NodeTranslator.generic_visit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generic_visit()</span></code></a>) returns a <cite>deepcopy</cite> of the original
+node.</p>
 <p>Keep in mind that if the node you’re operating on has child nodes
 you must either transform the child nodes yourself or call the
 <a class="reference internal" href="#eve.visitors.NodeTranslator.generic_visit" title="eve.visitors.NodeTranslator.generic_visit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generic_visit()</span></code></a> method for the node first.</p>
-<p>Usually you use the transformer like this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">node</span> <span class="o">=</span> <span class="n">YourTranslator</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<p>Usually you use a NodeTranslator like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">output_node</span> <span class="o">=</span> <span class="n">YourTranslator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">input_node</span><span class="p">)</span>
 </pre></div>
 </div>
+<p class="rubric">Notes</p>
+<p>Check <a class="reference internal" href="#eve.visitors.NodeVisitor" title="eve.visitors.NodeVisitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeVisitor</span></code></a> documentation for more details.</p>
 <dl class="py method">
 <dt id="eve.visitors.NodeTranslator.generic_visit">
 <code class="sig-name descname">generic_visit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>AnyNode<span class="p">, </span>List<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Dict<span class="p">[</span>Any<span class="p">, </span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Set<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/eve/visitors.html#NodeTranslator.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.visitors.NodeTranslator.generic_visit" title="Permalink to this definition">¶</a></dt>
@@ -1437,21 +1448,69 @@ you must either transform the child nodes yourself or call the
 <em class="property">class </em><code class="sig-prename descclassname">eve.visitors.</code><code class="sig-name descname">NodeVisitor</code><a class="reference internal" href="../_modules/eve/visitors.html#NodeVisitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.visitors.NodeVisitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Simple node visitor class based on <code class="xref py py-class docutils literal notranslate"><span class="pre">ast.NodeVisitor</span></code>.</p>
-<p>The base class walks the tree and calls a visitor function for every
-node found. This function may return a value which is forwarded by
-the <cite>visit</cite> method. This class is meant to be subclassed, with the
-subclass adding visitor methods.</p>
-<p>Per default the visitor functions for the nodes are <code class="docutils literal notranslate"><span class="pre">'visit_'</span></code> +
-class name of the node. So a <cite>BinOpExpr</cite> node visit function would
-be <cite>visit_BinOpExpr</cite>. If no visitor function exists for a node,
-it tries to get a visitor function for each of its parent classes
-in the order define by the class’ <cite>__mro__</cite> attribute. Finally,
-if no visitor function exists for a node or its parents, the
-<cite>generic_visit</cite> visitor is used instead. This behavior can be changed
-by overriding the <cite>visit</cite> method.</p>
-<p>Don’t use the <cite>NodeVisitor</cite> if you want to apply changes to nodes during
-traversing. For this a special visitor exists (<cite>NodeTransformer</cite>) that
-allows modifications.</p>
+<p>A NodeVisitor instance walks a node tree and calls a visitor
+function for every item found. This class is meant to be subclassed,
+with the subclass adding visitor methods.</p>
+<p>Visitor functions for tree elements are named with a standard
+pattern: <code class="docutils literal notranslate"><span class="pre">visit_</span></code> + class name of the node. Thus, the visitor
+function for a <code class="docutils literal notranslate"><span class="pre">BinOpExpr</span></code> node class should be called <code class="docutils literal notranslate"><span class="pre">visit_BinOpExpr</span></code>.
+If no visitor function exists for a specific node, the dispatcher
+mechanism looks for the visitor of each one of its parent classes
+in the order define by the class’ <code class="docutils literal notranslate"><span class="pre">__mro__</span></code> attribute. Finally,
+if no visitor function has been found, the <code class="docutils literal notranslate"><span class="pre">generic_visit</span></code> visitor
+is used instead. A concise summary of the steps followed to find an
+appropriate visitor function is:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">self.visit_NODE_CLASS_NAME()</span></code> method where <cite>NODE_CLASS_NAME</cite>
+matches <code class="docutils literal notranslate"><span class="pre">type(node).__name__</span></code>.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">self.visit_NODE_BASE_CLASS_NAME()</span></code> method where
+<cite>NODE_BASE_CLASS_NAME</cite> matches <code class="docutils literal notranslate"><span class="pre">base.__name__</span></code>, and <cite>base</cite> is
+one of the node base classes (evaluated following the order
+given in <code class="docutils literal notranslate"><span class="pre">type(node).__mro__</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">self.generic_visit()</span></code>.</p></li>
+</ol>
+</div></blockquote>
+<p>This dispatching mechanism is implemented in the main <a class="reference internal" href="#eve.visitors.NodeVisitor.visit" title="eve.visitors.NodeVisitor.visit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">visit()</span></code></a>
+method and can be overriden in subclasses.</p>
+<p>Note that return values are not forwarded to the caller in the default
+<a class="reference internal" href="#eve.visitors.NodeVisitor.generic_visit" title="eve.visitors.NodeVisitor.generic_visit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generic_visit()</span></code></a> implementation. If you want to return a value from
+a nested node in the tree, make sure all the intermediate nodes explicitly
+return children values.</p>
+<p>The recommended idiom to use and define NodeVisitors can be summarized as:</p>
+<blockquote>
+<div><ul>
+<li><p>Inside visitor functions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>call <code class="docutils literal notranslate"><span class="pre">self.visit(child_node)</span></code> to visit children.</p></li>
+<li><p>call <code class="docutils literal notranslate"><span class="pre">self.generic_visit(node)</span></code> to continue the tree
+traversal in the usual way.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Define an <code class="docutils literal notranslate"><span class="pre">apply()</span></code> <cite>classmethod</cite> as a shortcut to create an
+instance and start the visit:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Visitor</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">init_var</span><span class="p">,</span> <span class="n">foo</span><span class="p">,</span> <span class="n">bar</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">init_var</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">foo</span><span class="o">=</span><span class="n">foo</span><span class="p">,</span> <span class="n">bar</span><span class="o">=</span><span class="n">bar</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="o">...</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">Visitor</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>If the visitor has internal state, make sure visitor instances
+are never reused or clean up the state at the end.</p></li>
+</ul>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<p>If you want to apply changes to nodes during the traversal,
+use the <a class="reference internal" href="#eve.visitors.NodeMutator" title="eve.visitors.NodeMutator"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeMutator</span></code></a> subclass, which handles correctly
+structural modifications of the visited tree.</p>
 <dl class="py method">
 <dt id="eve.visitors.NodeVisitor.generic_visit">
 <code class="sig-name descname">generic_visit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>AnyNode<span class="p">, </span>List<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Dict<span class="p">[</span>Any<span class="p">, </span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">, </span>Set<span class="p">[</span>Union<span class="p">[</span>AnyNode<span class="p">, </span>bool<span class="p">, </span>bytes<span class="p">, </span>int<span class="p">, </span>float<span class="p">, </span>str<span class="p">, </span><a class="reference internal" href="#eve.type_definitions.IntEnum" title="eve.type_definitions.IntEnum">eve.type_definitions.IntEnum</a><span class="p">, </span><a class="reference internal" href="#eve.type_definitions.StrEnum" title="eve.type_definitions.StrEnum">eve.type_definitions.StrEnum</a><span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/eve/visitors.html#NodeVisitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.visitors.NodeVisitor.generic_visit" title="Permalink to this definition">¶</a></dt>
