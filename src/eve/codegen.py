@@ -445,8 +445,7 @@ class TemplatedGenerator(NodeVisitor):
         steps 3 and 4 will be substituted by a call to the :meth:`self.generic_dump()`
         method.
 
-    When a template is used, the following keys will be passed to the template
-    instance:
+    The following keys are passed to template instances at rendering:
 
         * ``**node_fields``: all the node children and implementation fields by name.
         * ``_impl``: a ``dict`` instance with the results of visiting all
@@ -457,6 +456,14 @@ class TemplatedGenerator(NodeVisitor):
         * ``_this_generator``: the current generator instance.
         * ``_this_module``: the generator's module instance.
         * ``**kwargs``: the keyword arguments received by the visiting method.
+
+    Visitor methods can trigger regular template rendering for the same node class
+    by explicitly calling :meth:`generic_visit()` (typically at the end), which will
+    continue the search rendering algorithm at step 3. Thus, a common pattern to deal
+    with complicated nodes is to define both a visitor method and a template for
+    the same class, where the visitor method preprocess the node data and calls
+    :meth:`generic_visit()` at the end with additional keyword arguments which will
+    be forwarded to the node template.
 
     """
 

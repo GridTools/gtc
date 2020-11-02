@@ -30,10 +30,8 @@ class NodeVisitor:
     """Simple node visitor class based on :class:`ast.NodeVisitor`.
 
     A NodeVisitor instance walks a node tree and calls a visitor
-    function for every item found. Return values from specific visitor
-    methods (not :meth:`generic_visit`) are forwarded by the
-    :meth:`visit` method. This class is meant to be subclassed, with the
-    subclass adding visitor methods.
+    function for every item found. This class is meant to be subclassed,
+    with the subclass adding visitor methods.
 
     Visitor functions for tree elements are named with a standard
     pattern: ``visit_`` + class name of the node. Thus, the visitor
@@ -56,6 +54,11 @@ class NodeVisitor:
     This dispatching mechanism is implemented in the main :meth:`visit`
     method and can be overriden in subclasses.
 
+    Note that return values are not forwarded to the caller in the default
+    :meth:`generic_visit` implementation. If you want to return a value from
+    a nested node in the tree, make sure all the intermediate nodes explicitly
+    return children values.
+
     The recommended idiom to use and define NodeVisitors can be summarized as:
 
         * Inside visitor functions:
@@ -64,17 +67,8 @@ class NodeVisitor:
             + call ``self.generic_visit(node)`` to continue the tree
               traversal in the usual way.
 
-        * If the visitor has internal state, make sure visitor instances
-          are never reused or clean up the state at the end.
-        * Use the ``__call__`` operator to initialize the instance and start
-          the visit calling to ``visit``::
-
-                def __call__(self, tree, *, foo, bar=5, **kwargs):
-                    self._state = (foo, bar)
-                    self.visit(tree)
-
-        * Define ``apply()`` `classmethod` as a shortcut to create an instance
-          and start the visit::
+        * Define an ``apply()`` `classmethod` as a shortcut to create an
+          instance and start the visit::
 
                 class Visitor(NodeVisitor)
                     @classmethod
@@ -86,10 +80,14 @@ class NodeVisitor:
 
                 result = Visitor.apply(...)
 
+        * If the visitor has internal state, make sure visitor instances
+          are never reused or clean up the state at the end.
+
     Notes:
         If you want to apply changes to nodes during the traversal,
         use the :class:`NodeMutator` subclass, which handles correctly
         structural modifications of the visited tree.
+
     """
 
     def visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
@@ -133,6 +131,9 @@ class NodeTranslator(NodeVisitor):
     Usually you use a NodeTranslator like this::
 
        output_node = YourTranslator.apply(input_node)
+
+    Notes:
+        Check :class:`NodeVisitor` documentation for more details.
 
     """
 
@@ -196,6 +197,9 @@ class NodeMutator(NodeVisitor):
     Usually you use a NodeMutator like this::
 
        YourMutator.apply(node)
+
+    Notes:
+        Check :class:`NodeVisitor` documentation for more details.
 
     """
 
