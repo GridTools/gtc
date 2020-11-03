@@ -254,14 +254,14 @@ class NodeMutator(NodeVisitor):
                 del_op = operator.delitem
 
             elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)):
-                # Inmutable sequence or set: create a new container instance with the new values
+                # Immutable sequence or set: create a new container instance with the new values
                 tmp_items = [self.visit(value, **kwargs) for value in node]
                 result = node.__class__(  # type: ignore
                     [value for value in tmp_items if value is not concepts.NOTHING]
                 )
 
             elif isinstance(node, collections.abc.Mapping):
-                # Inmutable mapping: create a new mapping instance with the new values
+                # Immutable mapping: create a new mapping instance with the new values
                 tmp_items = {key: self.visit(value, **kwargs) for key, value in node.items()}
                 result = node.__class__(  # type: ignore
                     {

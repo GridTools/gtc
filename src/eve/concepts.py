@@ -21,8 +21,10 @@ from __future__ import annotations
 
 import collections.abc
 import functools
+import types
 
 import pydantic
+import pydantic.generics
 
 from . import type_definitions, utils
 from .type_definitions import NOTHING, IntEnum, Str, StrEnum
@@ -37,7 +39,6 @@ from .typingx import (
     Optional,
     Set,
     Tuple,
-    Type,
     TypedDict,
     TypeVar,
     Union,
@@ -46,13 +47,6 @@ from .typingx import (
 
 
 # -- Fields --
-class ImplFieldMetadataDict(TypedDict, total=False):
-    info: pydantic.fields.FieldInfo
-
-
-NodeImplFieldMetadataDict = Dict[str, ImplFieldMetadataDict]
-
-
 class FieldKind(StrEnum):
     INPUT = "input"
     OUTPUT = "output"
@@ -106,6 +100,8 @@ out_field = functools.partial(field, kind=FieldKind.OUTPUT)
 # -- Models --
 class BaseModelConfig:
     extra = "forbid"
+    underscore_attrs_are_private = True
+    # TODO(egparedes): class attributes with '_attrs_' substring seems to break sphinx-autodoc
 
 
 class FrozenModelConfig(BaseModelConfig):
@@ -124,7 +120,7 @@ class FrozenModel(pydantic.BaseModel):
 
 # -- Nodes --
 _EVE_NODE_INTERNAL_SUFFIX = "__"
-_EVE_NODE_IMPL_SUFFIX = "_"
+_EVE_NODE_ANNOTATION_SUFFIX = "_"
 
 AnyNode = TypeVar("AnyNode", bound="BaseNode")
 ValueNode = Union[bool, bytes, int, float, str, IntEnum, StrEnum]
@@ -146,18 +142,14 @@ class NodeMetaclass(pydantic.main.ModelMetaclass):
 
         # Postprocess created class:
         # Add metadata class members
-        impl_fields_metadata = {}
         children_metadata = {}
         for name, model_field in cls.__fields__.items():
-            if name.endswith(_EVE_NODE_IMPL_SUFFIX):
-                impl_fields_metadata[name] = {"definition": model_field}
-            elif not name.endswith(_EVE_NODE_INTERNAL_SUFFIX):
+            if not name.endswith(_EVE_NODE_INTERNAL_SUFFIX):
                 children_metadata[name] = {
                     "definition": model_field,
                     **model_field.field_info.extra.get(_EVE_METADATA_KEY, {}),
                 }
 
-        cls.__node_impl_fields__ = impl_fields_metadata
         cls.__node_children__ = children_metadata
 
         return cls
@@ -166,7 +158,7 @@ class NodeMetaclass(pydantic.main.ModelMetaclass):
 class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
     """Base class representing an IR node.
 
-    It is currently implemented as a pydantic Model with some extra features.
+    A node is currently implemented as a pydantic Model with some extra features.
 
     Field values should be either:
 
@@ -174,58 +166,87 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         * enum.Enum types
         * other :class:`Node` subclasses
         * other :class:`pydantic.BaseModel` subclasses
-        * supported collections (:class:`List`, :class:`Dict`, :class:`Set`)
-            of any of the previous items
+        * supported collections (:class:`Tuple`, :class:`List`, :class:`Dict`, :class:`Set`)
+          of any of the previous items
 
-    Field naming scheme:
+    Class members naming scheme:
 
-        * Field names starting with "_" are ignored by pydantic and Eve. They
-            will not be considered as `fields` and thus none of the pydantic
-            features will work (type coercion, validators, etc.).
-        * Field names ending with "__" are reserved for internal Eve use and
-            should NOT be defined by regular users. All pydantic features will
-            work on these fields anyway but they will be invisible for Eve users.
-        * Field names ending with "_" are considered implementation fields
-            not children nodes. They are intended to be defined by users when needed,
-            typically to cache derived, non-essential information on the node.
+        * Member names starting with ``_`` are transformed into `private attributes`
+          by pydantic and thus ignored by Eve. Since none of the pydantic features
+          will work on them (type coercion, validators, etc.), it is not recommended
+          to define new pydantic private attributes in the nodes.
+        * Member names ending with ``_`` are considered node data annotations, not children
+          nodes. They are intended to be used by the user, typically to cache derived,
+          non-essential information on the node, and they can be assigned directly
+          without a explicit definition in the class body (which will consequently
+          trigger an error).
+        * Member names ending with ``__`` are reserved for internal Eve use and
+          should NOT be defined by regular users. All pydantic features will
+          work on these fields anyway but they will be invisible in Eve nodes.
 
     """
 
-    __node_impl_fields__: ClassVar[NodeImplFieldMetadataDict]
     __node_children__: ClassVar[NodeChildrenMetadataDict]
 
-    # Node fields
-    #: Unique node-id (implementation field)
-    id_: Optional[Str] = None
+    # Node private attributes
+    #: Unique node-id
+    __node_id__: Optional[str] = pydantic.PrivateAttr(  # type: ignore  # mypy can't find PrivateAttr
+        default_factory=utils.UIDGenerator.sequential_id
+    )
 
-    @pydantic.validator("id_", pre=True, always=True)
-    def _id_validator(cls: Type[AnyNode], v: Optional[str]) -> str:  # type: ignore  # validators are classmethods
-        if v is None:
-            v = utils.UIDGenerator.sequential_id(prefix=cls.__qualname__)
-        if not isinstance(v, str):
-            raise TypeError(f"id_ is not an 'str' instance ({type(v)})")
-        return v
-
-    def iter_impl_fields(self) -> Generator[Tuple[str, Any], None, None]:
-        for name, _ in self.__fields__.items():
-            if name.endswith(_EVE_NODE_IMPL_SUFFIX) and not name.endswith(
-                _EVE_NODE_INTERNAL_SUFFIX
-            ):
-                yield name, getattr(self, name)
+    #: Node analysis annotations
+    __node_annotations__: Optional[Str] = pydantic.PrivateAttr(  # type: ignore  # mypy can't find PrivateAttr
+        default_factory=types.SimpleNamespace
+    )
 
     def iter_children(self) -> Generator[Tuple[str, Any], None, None]:
         for name, _ in self.__fields__.items():
-            if not (
-                name.endswith(_EVE_NODE_IMPL_SUFFIX) or name.endswith(_EVE_NODE_INTERNAL_SUFFIX)
-            ):
+            if not name.endswith(_EVE_NODE_INTERNAL_SUFFIX):
                 yield name, getattr(self, name)
+
+    def iter_children_names(self) -> Generator[str, None, None]:
+        for name, _ in self.iter_children():
+            yield name
 
     def iter_children_values(self) -> Generator[Any, None, None]:
         for _, node in self.iter_children():
             yield node
 
+    @property
+    def data_annotations(self) -> Dict[str, Any]:
+        return self.__node_annotations__.__dict__
+
+    @property
+    def private_attrs_names(self) -> Tuple[str, ...]:
+        return self.__slots__
+
+    def __getattr__(self, name: str) -> Any:
+        return type(self)._get_attr_owner(self, name).__getattribute__(name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        type(self)._get_attr_owner(self, name).__setattr__(name, value)
+
+    def __delattr__(self, name: str) -> None:
+        type(self)._get_attr_owner(self, name).__delattr__(name)
+
+    @staticmethod
+    def _get_attr_owner(instance: BaseNode, name: str) -> Any:
+        attr_caller = super(BaseNode, instance)
+        if name.endswith(_EVE_NODE_ANNOTATION_SUFFIX) and not name.endswith(
+            _EVE_NODE_INTERNAL_SUFFIX
+        ):
+            attr_caller = attr_caller.__getattribute__("__node_annotations__")
+
+        return attr_caller
+
     class Config(BaseModelConfig):
         pass
+
+
+class GenericNode(BaseNode, pydantic.generics.GenericModel):
+    """Base generic node class."""
+
+    pass
 
 
 class Node(BaseNode):
@@ -235,7 +256,7 @@ class Node(BaseNode):
 
 
 class FrozenNode(Node):
-    """Default public name for an inmutable base node class."""
+    """Default public name for an immutable base node class."""
 
     class Config(FrozenModelConfig):
         pass
