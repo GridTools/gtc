@@ -419,36 +419,51 @@ class MakoTemplate(Template):
 
 
 class TemplatedGenerator(NodeVisitor):
-    """A code generator visitor using :class:`TextTemplate` s.
+    """A code generator visitor using :class:`TextTemplate`.
 
-    The order followed to choose a `dump()` function for instances of
-    :class:`eve.Node` is the following:
+    The order followed to choose a `dump()` function for node values is the following:
 
-        1. A `self.visit_NODE_TYPE_NAME()` method where `NODE_TYPE_NAME`
-            matches `NODE_CLASS.__name__`, and `NODE_CLASS` is the
-            actual type of the node or any of its superclasses
-            following MRO order.
-        2. A `NODE_TYPE_NAME` class variable of type :class:`Template`,
-            where `NODE_TYPE_NAME` matches `NODE_CLASS.__name__`, and
-            `NODE_CLASS` is the actual type of the node or any of its
-            superclasses following MRO order.
+        1. A ``self.visit_NODE_CLASS_NAME()`` method where `NODE_CLASS_NAME`
+           matches ``type(node).__name__``.
+        2. A ``self.visit_NODE_BASE_CLASS_NAME()`` method where
+           `NODE_BASE_CLASS_NAME` matches ``base.__name__``, and `base` is
+           one of the node base classes (evaluated following the order
+           given in ``type(node).__mro__``).
 
-    When a template is used, the following keys will be passed to the template
-    instance:
+        If `node` is an instance of :class:`eve.Node` and a `visit_` method has
+        not been found, `TemplatedGenerator` will look for an appropriate
+        :class:`Template` definition:
 
-        * `**node_fields`: all the node children and implementation fields by name.
-        * `_impl`: a `dict` instance with the results of visiting all
-            the node implementation fields.
-        * `_children`: a `dict` instance with the results of visiting all
-            the node children.
-        * `_this_node`: the actual node instance (before visiting children).
-        * `_this_generator`: the current generator instance.
-        * `_this_module`: the generator's module instance .
-        * `**kwargs`: the keyword arguments received by the visiting method.
+        3. A ``NODE_CLASS_NAME`` class variable of type :class:`Template`,
+           where ``NODE_CLASS_NAME`` matches ``type(node).__name__``.
+        4. A ``NODE_BASE_CLASS_NAME`` class variable of type :class:`Template`,
+           where ``NODE_BASE_CLASS_NAME`` matches ``base.__name__``, and
+           `base` is one of the node base classes (evaluated following the
+           order given in ``type(node).__mro__``).
 
-    Class variable templates cannot be used for instances of other types
-    (not :class:`eve.Node` subclasses). Step 2 will be therefore substituted
-    by a call to the :meth:`self.generic_dump()` method.
+        In any other case (templates cannot be used for instances of arbitrary types),
+        steps 3 and 4 will be substituted by a call to the :meth:`self.generic_dump()`
+        method.
+
+    The following keys are passed to template instances at rendering:
+
+        * ``**node_fields``: all the node children and implementation fields by name.
+        * ``_impl``: a ``dict`` instance with the results of visiting all
+          the node implementation fields.
+        * ``_children``: a ``dict`` instance with the results of visiting all
+          the node children.
+        * ``_this_node``: the actual node instance (before visiting children).
+        * ``_this_generator``: the current generator instance.
+        * ``_this_module``: the generator's module instance.
+        * ``**kwargs``: the keyword arguments received by the visiting method.
+
+    Visitor methods can trigger regular template rendering for the same node class
+    by explicitly calling :meth:`generic_visit()` (typically at the end), which will
+    continue the search rendering algorithm at step 3. Thus, a common pattern to deal
+    with complicated nodes is to define both a visitor method and a template for
+    the same class, where the visitor method preprocess the node data and calls
+    :meth:`generic_visit()` at the end with additional keyword arguments which will
+    be forwarded to the node template.
 
     """
 

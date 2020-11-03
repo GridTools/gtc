@@ -23,29 +23,81 @@ import operator
 
 from . import concepts, type_definitions
 from .concepts import NOTHING
-from .typingx import Any, Callable, Collection, Iterable, MutableSequence, MutableSet, Tuple, Union
+from .typingx import (
+    Any,
+    Callable,
+    Collection,
+    Dict,
+    Iterable,
+    MutableSequence,
+    MutableSet,
+    Tuple,
+    Union,
+)
 
 
 class NodeVisitor:
     """Simple node visitor class based on :class:`ast.NodeVisitor`.
 
-    The base class walks the tree and calls a visitor function for every
-    node found. This function may return a value which is forwarded by
-    the `visit` method. This class is meant to be subclassed, with the
-    subclass adding visitor methods.
+    A NodeVisitor instance walks a node tree and calls a visitor
+    function for every item found. This class is meant to be subclassed,
+    with the subclass adding visitor methods.
 
-    Per default the visitor functions for the nodes are ``'visit_'`` +
-    class name of the node. So a `BinOpExpr` node visit function would
-    be `visit_BinOpExpr`. If no visitor function exists for a node,
-    it tries to get a visitor function for each of its parent classes
-    in the order define by the class' `__mro__` attribute. Finally,
-    if no visitor function exists for a node or its parents, the
-    `generic_visit` visitor is used instead. This behavior can be changed
-    by overriding the `visit` method.
+    Visitor functions for tree elements are named with a standard
+    pattern: ``visit_`` + class name of the node. Thus, the visitor
+    function for a ``BinOpExpr`` node class should be called ``visit_BinOpExpr``.
+    If no visitor function exists for a specific node, the dispatcher
+    mechanism looks for the visitor of each one of its parent classes
+    in the order define by the class' ``__mro__`` attribute. Finally,
+    if no visitor function has been found, the ``generic_visit`` visitor
+    is used instead. A concise summary of the steps followed to find an
+    appropriate visitor function is:
 
-    Don't use the `NodeVisitor` if you want to apply changes to nodes during
-    traversing. For this a special visitor exists (`NodeTransformer`) that
-    allows modifications.
+        1. A ``self.visit_NODE_CLASS_NAME()`` method where `NODE_CLASS_NAME`
+           matches ``type(node).__name__``.
+        2. A ``self.visit_NODE_BASE_CLASS_NAME()`` method where
+           `NODE_BASE_CLASS_NAME` matches ``base.__name__``, and `base` is
+           one of the node base classes (evaluated following the order
+           given in ``type(node).__mro__``).
+        3. ``self.generic_visit()``.
+
+    This dispatching mechanism is implemented in the main :meth:`visit`
+    method and can be overriden in subclasses.
+
+    Note that return values are not forwarded to the caller in the default
+    :meth:`generic_visit` implementation. If you want to return a value from
+    a nested node in the tree, make sure all the intermediate nodes explicitly
+    return children values.
+
+    The recommended idiom to use and define NodeVisitors can be summarized as:
+
+        * Inside visitor functions:
+
+            + call ``self.visit(child_node)`` to visit children.
+            + call ``self.generic_visit(node)`` to continue the tree
+              traversal in the usual way.
+
+        * Define an ``apply()`` `classmethod` as a shortcut to create an
+          instance and start the visit::
+
+                class Visitor(NodeVisitor)
+                    @classmethod
+                    def apply(cls, tree, init_var, foo, bar=5, **kwargs):
+                        instance = cls(init_var)
+                        return instance(tree, foo=foo, bar=bar, **kwargs)
+
+                    ...
+
+                result = Visitor.apply(...)
+
+        * If the visitor has internal state, make sure visitor instances
+          are never reused or clean up the state at the end.
+
+    Notes:
+        If you want to apply changes to nodes during the traversal,
+        use the :class:`NodeMutator` subclass, which handles correctly
+        structural modifications of the visited tree.
+
     """
 
     def visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
@@ -72,27 +124,30 @@ class NodeVisitor:
 
 
 class NodeTranslator(NodeVisitor):
-    """`NodeVisitor` subclass to modify nodes NOT in place.
+    """Special `NodeVisitor` to translate nodes and trees.
 
-    The `NodeTranslator` will walk the tree and use the return value of
-    the visitor methods to replace or remove the old node in a new copy
-    of the tree. If the return value of the visitor method is
-    `eve.NOTHING`, the node will be removed from its location in the
-    result tree, otherwise it is replaced with the return value. In the
-    default case, a `deepcopy` of the original node is returned.
+    A NodeTranslator instance will walk the tree exactly as a regular
+    :class:`NodeVisitor` while building an output tree using the return
+    values of the visitor methods. If the return value is :obj:`eve.NOTHING`,
+    the node will be removed from its location in the output tree,
+    otherwise it will be replaced with this new value. The default visitor
+    method (:meth:`generic_visit`) returns a `deepcopy` of the original
+    node.
 
     Keep in mind that if the node you're operating on has child nodes
     you must either transform the child nodes yourself or call the
     :meth:`generic_visit` method for the node first.
 
-    Usually you use the transformer like this::
+    Usually you use a NodeTranslator like this::
 
-       node = YourTranslator().visit(node)
+       output_node = YourTranslator.apply(input_node)
+
+    Notes:
+        Check :class:`NodeVisitor` documentation for more details.
+
     """
 
-    def __init__(self, *, memo: dict = None, **kwargs: Any) -> None:
-        assert memo is None or isinstance(memo, dict)
-        self.memo = memo or {}
+    _memo_dict_: Dict[int, Any]
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
         result: Any = None
@@ -124,28 +179,38 @@ class NodeTranslator(NodeVisitor):
                 )
 
         else:
-            result = copy.deepcopy(node, memo=self.memo)
+            if not hasattr(self, "_memo_dict_"):
+                self._memo_dict_ = {}
+            result = copy.deepcopy(node, memo=self._memo_dict_)
 
         return result
 
 
-class NodeModifier(NodeVisitor):
-    """Simple :class:`NodeVisitor` subclass based on :class:`ast.NodeTransformer` to modify nodes in place.
+class NodeMutator(NodeVisitor):
+    """Special `NodeVisitor` to modify nodes in place.
 
-    The `NodeTransformer` will walk the tree and use the return value of
-    the visitor methods to replace or remove the old node. If the
-    return value of the visitor method is :obj:`eve.NOTHING`,
-    the node will be removed from its location, otherwise it is replaced
-    with the return value. The return value may also be the original
-    node, in which case no replacement takes place.
+    A NodeMutator instance will walk the tree exactly as a regular
+    :class:`NodeVisitor` and use the return value of the visitor
+    methods to replace or remove the old node. If the return value
+    is :data:`eve.NOTHING`, the node will be removed from its location,
+    otherwise it is replaced with the return value. The return value
+    may also be the original node, in which case no replacement takes place.
 
     Keep in mind that if the node you're operating on has child nodes
     you must either transform the child nodes yourself or call the
-    :meth:`generic_visit` method for the node first.
+    :meth:`generic_visit` method for the node first. In case a child node
+    is a mutable collection of elements, and one of this element is meant
+    to be deleted, it will deleted in place. If the collection is immutable,
+    a new immutable collection instance will be created without the removed
+    element.
 
-    Usually you use the transformer like this::
+    Usually you use a NodeMutator like this::
 
-       node = YourTransformer().visit(node)
+       YourMutator.apply(node)
+
+    Notes:
+        Check :class:`NodeVisitor` documentation for more details.
+
     """
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:

@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.14.5)
 project(gtc_regression LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CUDA_FLAGS "-std=c++17")
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_EXTENSIONS OFF)
+set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++17")
 
 add_compile_options(-Wall)
 
