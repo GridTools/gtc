@@ -25,8 +25,8 @@ from gtc.unstructured import naive
 
 
 class SirToNaive(NodeTranslator):
-    def __init__(self, *, memo: dict = None, **kwargs):
-        super().__init__(memo=memo)
+    def __init__(self, **kwargs):
+        super().__init__()
         self.isControlFlow = None
         self.sir_stencil_params = (
             {}

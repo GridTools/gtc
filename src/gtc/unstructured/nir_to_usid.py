@@ -33,8 +33,8 @@ def location_type_from_dimensions(dimensions):
 
 
 class NirToUsid(eve.NodeTranslator):
-    def __init__(self, *, memo: dict = None, **kwargs):
-        super().__init__(memo=memo)
+    def __init__(self, **kwargs):
+        super().__init__()
         self.fields = dict()  # poor man symbol table
 
     def convert_dimensions(self, dims: nir.Dimensions):
