@@ -20,9 +20,15 @@ from pathlib import Path
 
 def test_day1():
     path = Path(__file__).parent / "solution/day1.ipynb"
-    subprocess.run(f"jupyter nbconvert --execute --to notebook --stdout {path}".split(), check=True)
+    subprocess.run(
+        f"jupyter nbconvert --execute --ClearMetadataPreprocessor.enabled=True --to notebook --inplace {path}".split(),
+        check=True,
+    )
 
 
 def test_day2():
     path = Path(__file__).parent / "solution/day2.ipynb"
-    subprocess.run(f"jupyter nbconvert --execute --to notebook --stdout {path}".split(), check=True)
+    subprocess.run(
+        f"jupyter nbconvert --execute --ClearMetadataPreprocessor.enabled=True --to notebook --inplace {path}".split(),
+        check=True,
+    )
