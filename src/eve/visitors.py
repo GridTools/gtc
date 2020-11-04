@@ -160,7 +160,6 @@ class NodeTranslator(NodeVisitor):
                     key: self.visit(value, **kwargs) for key, value in node.iter_children()
                 }
                 result = node.__class__(  # type: ignore
-                    **{key: value for key, value in node.iter_impl_fields()},
                     **{key: value for key, value in tmp_items.items() if value is not NOTHING},
                 )
 
