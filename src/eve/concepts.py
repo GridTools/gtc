@@ -189,10 +189,10 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     Naming semantics for Node members:
 
-        * Member names starting with ``_`` (e.g. ``_private_attr``) are transformed into
-          `private attributes` by pydantic and thus ignored by Eve. Since none of the
-          pydantic features will work on them (type coercion, validators, etc.), it is
-          not recommended to define new pydantic private attributes in the nodes.
+        * Member names starting with ``_`` (e.g. ``_private`` or ``__private__``) are
+          transformed into `private attributes` by pydantic and thus ignored by Eve. Since
+          none of the pydantic features will work on them (type coercion, validators, etc.),
+          it is not recommended to define new pydantic private attributes in the nodes.
         * Member names ending with ``_`` (and not starting with ``_``, e.g. ``my_data_``)
           are considered node data annotations, not children nodes. They are intended
           to be used by the user, typically to cache derived, non-essential information
