@@ -240,20 +240,31 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         return set(self.__slots__) - {"__doc__"}
 
     def __getattr__(self, name: str) -> Any:
-        return type(self)._get_attr_owner(self, name).__getattribute__(name)
+        if _is_data_annotation_name(name):
+            try:
+                return super().__getattribute__("__node_annotations__").__getattribute__(name)
+            except AttributeError as e:
+                raise AttributeError(f"Invalid data annotation name: '{name}'") from e
+        else:
+            return super().__getattribute__(name)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        type(self)._get_attr_owner(self, name).__setattr__(name, value)
+        if _is_data_annotation_name(name):
+            try:
+                super().__getattribute__("__node_annotations__").__setattr__(name, value)
+            except AttributeError as e:
+                raise AttributeError(f"Invalid data annotation name: '{name}'") from e
+        else:
+            super().__setattr__(name, value)
 
     def __delattr__(self, name: str) -> None:
-        type(self)._get_attr_owner(self, name).__delattr__(name)
-
-    @staticmethod
-    def _get_attr_owner(instance: BaseNode, name: str) -> Any:
         if _is_data_annotation_name(name):
-            return super(BaseNode, instance).__getattribute__("__node_annotations__")
+            try:
+                super().__getattribute__("__node_annotations__").__delattr__(name)
+            except AttributeError as e:
+                raise AttributeError(f"Invalid data annotation name: '{name}'") from e
         else:
-            return super(BaseNode, instance)
+            super().__delattr__(name)
 
     class Config(BaseModelConfig):
         pass
