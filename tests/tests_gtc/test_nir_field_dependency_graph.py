@@ -45,8 +45,8 @@ class TestNIRFieldDependencyGraph:
         result = generate_dependency_graph(loops)
 
         assert len(result.nodes()) == 2
-        assert result.has_edge(write0.id_, write1.id_)
-        assert result[write0.id_][write1.id_]["extent"] is False
+        assert result.has_edge(write0.__node_id__, write1.__node_id__)
+        assert result[write0.__node_id__][write1.__node_id__]["extent"] is False
 
     def test_dependent_assignment_with_extent(self):
         loop0, write0 = make_horizontal_loop_with_init("write0")
@@ -56,5 +56,5 @@ class TestNIRFieldDependencyGraph:
         result = generate_dependency_graph(loops)
 
         assert len(result.nodes()) == 2
-        assert result.has_edge(write0.id_, write1.id_)
-        assert result[write0.id_][write1.id_]["extent"] is True
+        assert result.has_edge(write0.__node_id__, write1.__node_id__)
+        assert result[write0.__node_id__][write1.__node_id__]["extent"] is True

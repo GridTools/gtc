@@ -456,7 +456,7 @@ class GTScriptToGTIR(eve.NodeTranslator):
     @staticmethod
     def _transform_field_type(name, field_type):
         assert issubclass(field_type, Field) or issubclass(field_type, TemporaryField)
-        (*location_types, vtype,) = field_type.args
+        *location_types, vtype = field_type.args
 
         assert isinstance(vtype, common.DataType)
 
