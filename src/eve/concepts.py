@@ -126,11 +126,11 @@ TreeNode = Union[AnyNode, Union[List[LeafNode], Dict[Any, LeafNode], Set[LeafNod
 
 
 def _is_data_annotation_name(name: str) -> bool:
-    return name.endswith("_") and not name.startswith("_")
+    return name.endswith("_") and not name.endswith("__") and not name.startswith("_")
 
 
 def _is_child_field_name(name: str) -> bool:
-    return not name.startswith("_") and not name.endswith("_")
+    return not name.endswith("_") and not name.startswith("_")
 
 
 def _is_internal_field_name(name: str) -> bool:
@@ -157,6 +157,11 @@ class NodeMetaclass(pydantic.main.ModelMetaclass):
         # Add metadata class members
         children_metadata = {}
         for name, model_field in cls.__fields__.items():
+            assert not _is_private_attr_name(name)
+            if _is_data_annotation_name(name):
+                raise TypeError(f"Invalid field name ('{name}') looks like a data annotation.")
+            if _is_internal_field_name(name):
+                raise TypeError(f"Invalid field name ('{name}') looks like an Eve internal field.")
             if _is_child_field_name(name):
                 children_metadata[name] = {
                     "definition": model_field,
@@ -182,20 +187,21 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         * supported collections (:class:`Tuple`, :class:`List`, :class:`Dict`, :class:`Set`)
           of any of the previous items
 
-    Class members naming scheme:
+    Naming semantics for Node members:
 
-        * Member names starting with ``_`` are transformed into `private attributes`
-          by pydantic and thus ignored by Eve. Since none of the pydantic features
-          will work on them (type coercion, validators, etc.), it is not recommended
-          to define new pydantic private attributes in the nodes.
-        * Member names ending with ``_`` are considered node data annotations, not children
-          nodes. They are intended to be used by the user, typically to cache derived,
-          non-essential information on the node, and they can be assigned directly
-          without a explicit definition in the class body (which will consequently
-          trigger an error).
-        * Member names ending with ``__`` are reserved for internal Eve use and
-          should NOT be defined by regular users. All pydantic features will
-          work on these fields anyway but they will be invisible in Eve nodes.
+        * Member names starting with ``_`` (e.g. ``_private_attr``) are transformed into
+          `private attributes` by pydantic and thus ignored by Eve. Since none of the
+          pydantic features will work on them (type coercion, validators, etc.), it is
+          not recommended to define new pydantic private attributes in the nodes.
+        * Member names ending with ``_`` (and not starting with ``_``, e.g. ``my_data_``)
+          are considered node data annotations, not children nodes. They are intended
+          to be used by the user, typically to cache derived, non-essential information
+          on the node, and they can be assigned directly without a explicit definition
+          in the class body (which will consequently trigger an error).
+        * Member names ending with ``__`` (and not starting with ``_``, e.g. ``internal__``)
+          are reserved for internal Eve use and should NOT be defined by regular users.
+          All pydantic features will work on these fields anyway but they will be
+          not visible visible in Eve nodes.
 
     """
 

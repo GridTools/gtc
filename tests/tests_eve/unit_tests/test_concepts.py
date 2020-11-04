@@ -57,6 +57,23 @@ class TestNode:
         with pytest.raises(TypeError):
             frozen_sample_node.int_value = 123456
 
+    def test_field_naming(self):
+        class NodeWithPrivateAttrs(eve.concepts.BaseNode):
+            _private_int: int = 0
+            int_value: int = 1
+
+        assert len(NodeWithPrivateAttrs().__fields__) == 1
+
+        with pytest.raises(TypeError, match="data annotation"):
+
+            class NodeWithDataAnnotationNamedFields(eve.concepts.BaseNode):
+                int_value_: int
+
+        with pytest.raises(TypeError, match="internal field"):
+
+            class NodeWithInternalNamedFields(eve.concepts.BaseNode):
+                int_value__: int
+
     def test_private_attrs(self, sample_node):
         assert all(
             eve.concepts._is_private_attr_name(name) for name in sample_node.private_attrs_names
