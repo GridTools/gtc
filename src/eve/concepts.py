@@ -101,7 +101,7 @@ out_field = functools.partial(field, kind=FieldKind.OUTPUT)
 class BaseModelConfig:
     extra = "forbid"
     underscore_attrs_are_private = True
-    # TODO(egparedes): class attributes with '_attrs_' substring seems to break sphinx-autodoc
+    # TODO(egparedes): setting 'underscore_attrs_are_private' to True breaks sphinx-autodoc
 
 
 class FrozenModelConfig(BaseModelConfig):
@@ -119,13 +119,26 @@ class FrozenModel(pydantic.BaseModel):
 
 
 # -- Nodes --
-_EVE_NODE_INTERNAL_SUFFIX = "__"
-_EVE_NODE_ANNOTATION_SUFFIX = "_"
-
 AnyNode = TypeVar("AnyNode", bound="BaseNode")
 ValueNode = Union[bool, bytes, int, float, str, IntEnum, StrEnum]
 LeafNode = Union[AnyNode, ValueNode]
 TreeNode = Union[AnyNode, Union[List[LeafNode], Dict[Any, LeafNode], Set[LeafNode]]]
+
+
+def _is_data_annotation_name(name: str) -> bool:
+    return name.endswith("_") and not name.startswith("_")
+
+
+def _is_child_field_name(name: str) -> bool:
+    return not name.startswith("_") and not name.endswith("_")
+
+
+def _is_internal_field_name(name: str) -> bool:
+    return name.endswith("__") and not name.startswith("_")
+
+
+def _is_private_attr_name(name: str) -> bool:
+    return name.startswith("_")
 
 
 class NodeMetaclass(pydantic.main.ModelMetaclass):
@@ -144,7 +157,7 @@ class NodeMetaclass(pydantic.main.ModelMetaclass):
         # Add metadata class members
         children_metadata = {}
         for name, model_field in cls.__fields__.items():
-            if not name.endswith(_EVE_NODE_INTERNAL_SUFFIX):
+            if _is_child_field_name(name):
                 children_metadata[name] = {
                     "definition": model_field,
                     **model_field.field_info.extra.get(_EVE_METADATA_KEY, {}),
@@ -201,7 +214,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     def iter_children(self) -> Generator[Tuple[str, Any], None, None]:
         for name, _ in self.__fields__.items():
-            if not name.endswith(_EVE_NODE_INTERNAL_SUFFIX):
+            if _is_child_field_name(name):
                 yield name, getattr(self, name)
 
     def iter_children_names(self) -> Generator[str, None, None]:
@@ -217,8 +230,8 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         return self.__node_annotations__.__dict__
 
     @property
-    def private_attrs_names(self) -> Tuple[str, ...]:
-        return self.__slots__
+    def private_attrs_names(self) -> Set[str]:
+        return set(self.__slots__) - {"__doc__"}
 
     def __getattr__(self, name: str) -> Any:
         return type(self)._get_attr_owner(self, name).__getattribute__(name)
@@ -231,13 +244,10 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     @staticmethod
     def _get_attr_owner(instance: BaseNode, name: str) -> Any:
-        attr_caller = super(BaseNode, instance)
-        if name.endswith(_EVE_NODE_ANNOTATION_SUFFIX) and not name.endswith(
-            _EVE_NODE_INTERNAL_SUFFIX
-        ):
-            attr_caller = attr_caller.__getattribute__("__node_annotations__")
-
-        return attr_caller
+        if _is_data_annotation_name(name):
+            return super(BaseNode, instance).__getattribute__("__node_annotations__")
+        else:
+            return super(BaseNode, instance)
 
     class Config(BaseModelConfig):
         pass
