@@ -41,7 +41,7 @@ class SymbolTblHelper(NodeTranslator):
     def visit_SidCompositeNeighborTableEntry(self, node: SidCompositeNeighborTableEntry, **kwargs):
         connectivity_deref = kwargs["symbol_tbl_conn"][node.connectivity]
         return SidCompositeNeighborTableEntry(
-            connectivity=node.connectivity, connectivity_deref_=connectivity_deref
+            connectivity=node.connectivity, connectivity_deref=connectivity_deref
         )
 
     def visit_Kernel(self, node: Kernel, **kwargs):
@@ -114,7 +114,7 @@ class UsidCodeGenerator(codegen.TemplatedGenerator):
     )
 
     SidCompositeNeighborTableEntry = as_fmt(
-        "gridtools::next::connectivity::neighbor_table({_this_node.connectivity_deref_.name})"
+        "gridtools::next::connectivity::neighbor_table({_this_node.connectivity_deref.name})"
     )
 
     SidCompositeEntry = as_fmt("{name}")

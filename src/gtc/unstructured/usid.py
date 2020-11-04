@@ -158,13 +158,11 @@ class SidCompositeEntry(Node):
 
 class SidCompositeNeighborTableEntry(Node):
     connectivity: Str
-    connectivity_deref_: Optional[
-        Connectivity
-    ]  # TODO temporary workaround for symbol tbl reference
+    connectivity_deref: Optional[Connectivity]  # TODO temporary workaround for symbol tbl reference
 
     @property
     def tag_name(self):
-        return self.connectivity_deref_.neighbor_tbl_tag
+        return self.connectivity_deref.neighbor_tbl_tag
 
     class Config(eve.concepts.FrozenModelConfig):
         pass

@@ -161,7 +161,7 @@ class Pass(Statement):
 
 class Argument(GTScriptASTNode):
     name: str
-    type_: Union[Symbol, Union[SubscriptMultiple, SubscriptSingle]]
+    arg_type: Union[Symbol, Union[SubscriptMultiple, SubscriptSingle]]
     # is_keyword: bool
 
 
