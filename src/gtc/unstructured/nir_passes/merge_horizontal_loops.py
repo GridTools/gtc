@@ -129,7 +129,7 @@ class MergeHorizontalLoops(NodeTranslator):
 def merge_horizontal_loops(
     root: nir.VerticalLoop, merge_candidates: List[List[nir.HorizontalLoop]]
 ):
-    return MergeHorizontalLoops().apply(root, merge_candidates)
+    return MergeHorizontalLoops.apply(root, merge_candidates)
 
 
 def find_and_merge_horizontal_loops(root: Node):
