@@ -99,23 +99,31 @@ out_field = functools.partial(field, kind=FieldKind.OUTPUT)
 
 # -- Models --
 class BaseModelConfig:
+    """Base Eve configuration for mutable pydantic classes."""
+
     extra = "forbid"
     underscore_attrs_are_private = True
     # TODO(egparedes): setting 'underscore_attrs_are_private' to True breaks sphinx-autodoc
 
 
 class FrozenModelConfig(BaseModelConfig):
+    """Base Eve configuration for immutable pydantic classes."""
+
     allow_mutation = False
 
 
 class Model(pydantic.BaseModel):
+    """Base public class for models that are not IR Nodes."""
+
     class Config(BaseModelConfig):
-        pass
+        ...
 
 
 class FrozenModel(pydantic.BaseModel):
+    """Base public class for immutable models that are not IR Nodes."""
+
     class Config(FrozenModelConfig):
-        pass
+        ...
 
 
 # -- Nodes --
@@ -144,7 +152,7 @@ def _is_private_attr_name(name: str) -> bool:
 class NodeMetaclass(pydantic.main.ModelMetaclass):
     """Custom metaclass for Node classes.
 
-    Customize the creation of Node classes adding Eve specific attributes.
+    Customize the creation of new Node classes adding Eve specific attributes.
 
     """
 
@@ -178,30 +186,66 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     A node is currently implemented as a pydantic Model with some extra features.
 
-    Field values should be either:
+    The public fields of a node encode the IR information and are considered
+    as `children` when iterating a tree. Besides children fields, a node class
+    can define private instance attributes, which are regular Python attributes,
+    without explicit validation or serialization, currently implemented by
+    pydantic using ``__slots__``.
 
-        * builtin types: `bool`, `bytes`, `int`, `float`, `str`
-        * enum.Enum types
-        * other :class:`Node` subclasses
-        * other :class:`pydantic.BaseModel` subclasses
-        * supported collections (:class:`Tuple`, :class:`List`, :class:`Dict`, :class:`Set`)
-          of any of the previous items
+    Accepted field values are:
 
-    Naming semantics for Node members:
+        * builtin types: `bool`, `bytes`, `int`, `float`, `str`.
+        * enum.Enum types.
+        * other :class:`Node` subclasses.
+        * other :class:`pydantic.BaseModel` subclasses.
+        * supported collections (:class:`Tuple`, :class:`List`, :class:`Dict`, :class:`Set`).
+          of any of the previous items.
 
-        * Member names starting with ``_`` (e.g. ``_private`` or ``__private__``) are
-          transformed into `private attributes` by pydantic and thus ignored by Eve. Since
-          none of the pydantic features will work on them (type coercion, validators, etc.),
-          it is not recommended to define new pydantic private attributes in the nodes.
-        * Member names ending with ``_`` (and not starting with ``_``, e.g. ``my_data_``)
-          are considered node data annotations, not children nodes. They are intended
-          to be used by the user, typically to cache derived, non-essential information
-          on the node, and they can be assigned directly without a explicit definition
-          in the class body (which will consequently trigger an error).
-        * Member names ending with ``__`` (and not starting with ``_``, e.g. ``internal__``)
-          are reserved for internal Eve use and should NOT be defined by regular users.
-          All pydantic features will work on these fields anyway but they will be
-          not visible visible in Eve nodes.
+    Node members follow a specific naming scheme to distinguish between the
+    different kinds of members:
+
+        * Member names ending with ``_`` and not starting with ``_``, (e.g. ``my_data_``)
+          are considered node data annotations, not children nodes. They are
+          intended to be used by the user, typically to cache derived,
+          non-essential information on the node, and they can be assigned directly
+          without a explicit definition in the class body (which will consequently
+          trigger an error). They are stored in the default ``__node_annotations__``
+          private instance attribute.
+        * Member names starting with ``_`` (e.g. ``_private`` or ``__private__``)
+          are transformed into `private instance attributes` by pydantic and thus
+          ignored by Eve. Since none of the pydantic features will work on them
+          (type coercion, validators, etc.), it is not recommended for users to
+          define new pydantic private attributes in the nodes and use node data
+          annotations instead.
+        * Member names ending with ``__`` and not starting with ``_`` (e.g. ``internal__``)
+          are reserved for internal Eve use and should NOT be defined by
+          regular users. All pydantic features will work on these fields
+          anyway but they will be not visible visible in Eve nodes.
+
+
+    A default set of private attributes is defined in :class:`BaseNode` and
+    therefore available on all node subclasses:
+
+    Attributes:
+        __node_id__: unique id of the node instance.
+        __node_annotations__: container for arbitrary data annotations.
+
+    Additionally, node classes comes with the following utilities provided
+    by pydantic for simple serialization purposes:
+
+        :meth:`dict()`
+            returns a dictionary of the model's fields and values; cf. exporting models
+        :meth:`json()`
+            returns a JSON string representation dict(); cf. exporting models
+        :meth:`copy()`
+            returns a copy (by default, shallow copy) of the model; cf. exporting models
+        :meth:`schema()`
+            returns a dictionary representing the model as JSON Schema; cf. Schema
+        :meth:`schema_json()`
+            returns a JSON string representation of schema(); cf. Schema
+
+    Pydantic provides even more helper methods, but they are too `pydantic-specific`
+    and thus it is recommended to avoid using them in stable Eve code.
 
     """
 
@@ -213,33 +257,39 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         default_factory=utils.UIDGenerator.sequential_id
     )
 
-    #: Node analysis annotations
+    #: Node data annotations
     __node_annotations__: Optional[Str] = pydantic.PrivateAttr(  # type: ignore  # mypy can't find PrivateAttr
         default_factory=types.SimpleNamespace
     )
 
     def iter_children(self) -> Generator[Tuple[str, Any], None, None]:
+        """Iterate through all public field (name, value) pairs."""
         for name, _ in self.__fields__.items():
             if _is_child_field_name(name):
                 yield name, getattr(self, name)
 
     def iter_children_names(self) -> Generator[str, None, None]:
+        """Iterate through all public field names."""
         for name, _ in self.iter_children():
             yield name
 
     def iter_children_values(self) -> Generator[Any, None, None]:
+        """Iterate through all public field values."""
         for _, node in self.iter_children():
             yield node
 
     @property
     def data_annotations(self) -> Dict[str, Any]:
+        """Node data annotations dict."""
         return self.__node_annotations__.__dict__
 
     @property
     def private_attrs_names(self) -> Set[str]:
+        """Names of all the private instance attributes."""
         return set(self.__slots__) - {"__doc__"}
 
     def __getattr__(self, name: str) -> Any:
+        """Access node data annotations or regular instance data."""
         if _is_data_annotation_name(name):
             try:
                 return super().__getattribute__("__node_annotations__").__getattribute__(name)
@@ -249,6 +299,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
             return super().__getattribute__(name)
 
     def __setattr__(self, name: str, value: Any) -> None:
+        """Set node data annotations or regular instance data."""
         if _is_data_annotation_name(name):
             try:
                 super().__getattribute__("__node_annotations__").__setattr__(name, value)
@@ -258,6 +309,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
             super().__setattr__(name, value)
 
     def __delattr__(self, name: str) -> None:
+        """Delete node data annotations or regular instance data."""
         if _is_data_annotation_name(name):
             try:
                 super().__getattribute__("__node_annotations__").__delattr__(name)
@@ -267,7 +319,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
             super().__delattr__(name)
 
     class Config(BaseModelConfig):
-        pass
+        ...
 
 
 class GenericNode(BaseNode, pydantic.generics.GenericModel):
@@ -286,7 +338,7 @@ class FrozenNode(Node):
     """Default public name for an immutable base node class."""
 
     class Config(FrozenModelConfig):
-        pass
+        ...
 
 
 KeyValue = Tuple[Union[int, str], Any]
