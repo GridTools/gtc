@@ -19,11 +19,14 @@ from __future__ import annotations
 
 import pytest
 
+import eve
+from eve.typingx import List
+
 from .. import common_definitions
 
 
 @pytest.fixture
-def symtable_node_with_expected_symbols(request):
+def symtable_node_and_expected_symbols():
     node = common_definitions.make_node_with_symbol_table()
     symbols = {
         node.node_with_name.name: node.node_with_name,
@@ -35,15 +38,31 @@ def symtable_node_with_expected_symbols(request):
     yield node, symbols
 
 
+class _NodeWithSymbolName(eve.Node):
+    name: eve.SymbolName = eve.SymbolName("symbol_name")
+
+
+class _NodeWithSymbolTable(eve.Node, eve.SymbolTableTrait):
+    symbols: List[_NodeWithSymbolName]
+
+
+@pytest.fixture
+def node_with_duplicated_names_maker():
+    def _maker():
+        return _NodeWithSymbolTable(symbols=[_NodeWithSymbolName(), _NodeWithSymbolName()])
+
+    yield _maker
+
+
 class TestSymbolTable:
-    def test_symbol_table_creation(self, symtable_node_with_expected_symbols):
-        node, expected_symbols = symtable_node_with_expected_symbols
+    def test_symbol_table_creation(self, symtable_node_and_expected_symbols):
+        node, expected_symbols = symtable_node_and_expected_symbols
         collected_symtable = node.__node_impl__.symtable
         assert isinstance(node.__node_impl__.symtable, dict)
         assert all(isinstance(key, str) for key in collected_symtable)
 
-    def test_symbol_table_collection(self, symtable_node_with_expected_symbols):
-        node, expected_symbols = symtable_node_with_expected_symbols
+    def test_symbol_table_collection(self, symtable_node_and_expected_symbols):
+        node, expected_symbols = symtable_node_and_expected_symbols
         collected_symtable = node.__node_impl__.symtable
         assert collected_symtable == expected_symbols
         assert all(
@@ -51,7 +70,8 @@ class TestSymbolTable:
             for symbol_name, symbol_node in expected_symbols.items()
         )
 
-        # import devtools
-        # devtools.debug(node)
-        # print(f"COLLECTED: {collected_symtable}")
-        # print(f"EXPECTED: {expected_symbols}")
+    def test_duplicated_symbols(self, node_with_duplicated_names_maker):
+        with pytest.raises(
+            eve.exceptions.DuplicatedSymbolError, match="Redefinition of symbol name"
+        ):
+            node_with_duplicated_names_maker()

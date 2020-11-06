@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-from . import concepts, iterators
+from . import concepts, exceptions, iterators
 from .type_definitions import SymbolName
 from .typingx import Any, Dict
 
@@ -44,15 +44,23 @@ class SymbolTableTrait(concepts.Model):
         self.collect_symbols()
 
     @staticmethod
-    def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, Any]:
-        collected = {}
+    def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, concepts.BaseNode]:
+        collected: Dict[str, concepts.BaseNode] = {}
         for node in iterators.traverse_tree(root_node):
             if isinstance(node, concepts.BaseNode):
                 for name, metadata in node.__node_children__.items():
                     if isinstance(metadata["definition"].type_, type) and issubclass(
                         metadata["definition"].type_, SymbolName
                     ):
-                        collected[getattr(node, name)] = node
+                        symbol_name = getattr(node, name)
+                        if symbol_name in collected:
+                            raise exceptions.DuplicatedSymbolError(
+                                f"""Redefinition of symbol name '{name}':
+    - previous: {collected[symbol_name]}
+    - new: {node}
+"""
+                            )
+                        collected[symbol_name] = node
 
         return collected
 
