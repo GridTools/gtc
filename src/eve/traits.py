@@ -19,15 +19,28 @@
 
 from __future__ import annotations
 
-import pydantic
-
 from . import concepts, iterators
 from .type_definitions import SymbolName
-from .typingx import Any, Dict, Type
+from .typingx import Any, Dict
 
 
 class SymbolTableTrait(concepts.Model):
-    symtable_: Dict[str, Any] = pydantic.Field(default_factory=dict)
+    """Trait implementing automatic symbol table creation for nodes.
+
+    Nodes inheriting this trait will collect all the
+    :class:`eve.type_definitions.SymbolRef` instances defined in the
+    children nodes and store them in a ``symtable_`` node data annotation.
+
+    Node data annotations:
+
+    symtable_: Dict[str, eve.concepts.BaseNode]:
+        Mapping from symbol name to symbol node.
+
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.collect_symbols()
 
     @staticmethod
     def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, Any]:
@@ -41,13 +54,6 @@ class SymbolTableTrait(concepts.Model):
                         collected[getattr(node, name)] = node
 
         return collected
-
-    @pydantic.root_validator(skip_on_failure=True)
-    def _collect_symbols_validator(  # type: ignore  # validators are classmethods
-        cls: Type[SymbolTableTrait], values: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        values["symtable_"] = cls._collect_symbols(values)
-        return values
 
     def collect_symbols(self) -> None:
         self.symtable_ = self._collect_symbols(self)

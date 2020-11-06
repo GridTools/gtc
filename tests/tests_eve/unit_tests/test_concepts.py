@@ -15,6 +15,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 
+import copy
+
 import pydantic
 import pytest
 
@@ -56,6 +58,42 @@ class TestNode:
     def test_inmutability(self, frozen_sample_node):
         with pytest.raises(TypeError):
             frozen_sample_node.int_value = 123456
+
+    def test_copy(self, sample_node):
+        foo = {"a": 1, "b": 2}
+        bla = [1, "bla", (1, 2)]
+        const_bla = tuple(bla)
+        sample_node.foo_ = foo
+        sample_node.bla_ = bla
+        sample_node.const_bla_ = const_bla
+
+        node_copy = sample_node.copy()
+        assert sample_node == node_copy
+        assert sample_node.__node_id__ == node_copy.__node_id__
+        assert sample_node.__node_annotations__ == node_copy.__node_annotations__
+        assert sample_node.__node_annotations__ is node_copy.__node_annotations__
+        assert node_copy.foo_ is foo
+        assert node_copy.bla_ is bla
+        assert node_copy.const_bla_ is const_bla
+
+        node_copy = copy.copy(sample_node)
+        assert sample_node == node_copy
+        assert sample_node.__node_id__ == node_copy.__node_id__
+        assert sample_node.__node_annotations__ == node_copy.__node_annotations__
+        assert sample_node.__node_annotations__ is node_copy.__node_annotations__
+        assert node_copy.foo_ is foo
+        assert node_copy.bla_ is bla
+        assert node_copy.const_bla_ is const_bla
+
+        node_copy = copy.deepcopy(sample_node)
+        assert sample_node == node_copy
+        assert sample_node.__node_id__ == node_copy.__node_id__
+        assert sample_node.__node_annotations__ == node_copy.__node_annotations__
+        assert sample_node.__node_annotations__ is not node_copy.__node_annotations__
+        assert node_copy.foo_ is node_copy.__node_annotations__.foo_
+        assert node_copy.foo_ is not foo
+        assert node_copy.bla_ is not bla
+        assert node_copy.const_bla_ is const_bla
 
     def test_field_naming(self):
         class NodeWithPrivateAttrs(eve.concepts.BaseNode):
