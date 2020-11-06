@@ -25,6 +25,9 @@ from gtc.unstructured import nir
 from gtc.unstructured.nir_passes.field_dependency_graph import generate_dependency_graph
 
 
+# This is an example of an analysis pass using data annotations.
+
+
 def _has_read_with_offset_after_write(graph: nx.DiGraph, **kwargs):
     return any(edge["extent"] for _, _, edge in graph.edges(data=True))
 
@@ -33,6 +36,7 @@ def _find_merge_candidates(root: Node):
     """Find horizontal loop merge candidates.
 
     Result is a List[List[int]], where the inner list contains a range of the horizontal loop indices.
+    The result is stored as a node data annotation `merge_candidates_` on the VerticalLoop.
     Currently the merge sets are ordered and disjunct, see question below.
 
     In the following examples A, B, C, ... are loops
@@ -114,7 +118,7 @@ class MergeHorizontalLoops(NodeTranslator):
         return nir.VerticalLoop(loop_order=node.loop_order, horizontal_loops=new_horizontal_loops)
 
 
-def merge_horizontal_loops(root):
+def merge_horizontal_loops(root: Node):
     return MergeHorizontalLoops.apply(root)
 
 
