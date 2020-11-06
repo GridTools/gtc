@@ -148,7 +148,7 @@ class PyToGTScript:
 
         Pass = ast.Pass()
 
-        Argument = ast.arg(arg=Capture("name"), annotation=Capture("type_"))
+        Argument = ast.arg(arg=Capture("name"), annotation=Capture("arg_type"))
 
         Computation = ast.FunctionDef(
             args=ast.arguments(args=Capture("arguments")),

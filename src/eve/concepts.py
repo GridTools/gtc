@@ -253,12 +253,12 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     # Node private attributes
     #: Unique node-id
-    __node_id__: Optional[str] = pydantic.PrivateAttr(  # type: ignore  # mypy can't find PrivateAttr
+    __node_id__: Optional[str] = pydantic.PrivateAttr(
         default_factory=utils.UIDGenerator.sequential_id
     )
 
     #: Node data annotations
-    __node_annotations__: Optional[Str] = pydantic.PrivateAttr(  # type: ignore  # mypy can't find PrivateAttr
+    __node_annotations__: Optional[Str] = pydantic.PrivateAttr(
         default_factory=types.SimpleNamespace
     )
 
