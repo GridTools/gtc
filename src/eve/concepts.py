@@ -257,7 +257,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         default_factory=utils.UIDGenerator.sequential_id
     )
 
-    #: Node analysis annotations
+    #: Node data annotations
     __node_annotations__: Optional[Str] = pydantic.PrivateAttr(
         default_factory=types.SimpleNamespace
     )
