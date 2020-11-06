@@ -172,7 +172,9 @@ class CaseStyleConverter:
         KEBAB = "kebab"
 
     @classmethod
-    def split(cls, name: str, case_style: CASE_STYLE) -> List[str]:
+    def split(cls, name: str, case_style: Union[CASE_STYLE, str]) -> List[str]:
+        if isinstance(case_style, str):
+            case_style = cls.CASE_STYLE(case_style)
         assert isinstance(case_style, cls.CASE_STYLE)
         if case_style == cls.CASE_STYLE.CONCATENATED:
             raise ValueError("Impossible to split a simply concatenated string")
@@ -181,7 +183,9 @@ class CaseStyleConverter:
         return splitter(name)
 
     @classmethod
-    def join(cls, words: AnyWordsIterable, case_style: CASE_STYLE) -> str:
+    def join(cls, words: AnyWordsIterable, case_style: Union[CASE_STYLE, str]) -> str:
+        if isinstance(case_style, str):
+            case_style = cls.CASE_STYLE(case_style)
         assert isinstance(case_style, cls.CASE_STYLE)
         if isinstance(words, str):
             words = [words]
@@ -192,7 +196,9 @@ class CaseStyleConverter:
         return joiner(words)
 
     @classmethod
-    def convert(cls, name: str, source_style: CASE_STYLE, target_style: CASE_STYLE) -> str:
+    def convert(
+        cls, name: str, source_style: Union[CASE_STYLE, str], target_style: Union[CASE_STYLE, str]
+    ) -> str:
         return cls.join(cls.split(name, source_style), target_style)
 
     # Following `join_...`` functions are based on:

@@ -28,13 +28,14 @@ class SymbolTableTrait(concepts.Model):
     """Trait implementing automatic symbol table creation for nodes.
 
     Nodes inheriting this trait will collect all the
-    :class:`eve.type_definitions.SymbolRef` instances defined in the
-    children nodes and store them in a ``symtable_`` node data annotation.
+    :class:`eve.type_definitions.SymbolName` instances defined in the
+    descendant nodes and store them in the ``__node_symtable__`` private
+    attribute.
 
-    Node data annotations:
-
-    symtable_: Dict[str, eve.concepts.BaseNode]:
-        Mapping from symbol name to symbol node.
+    Attributes:
+        __node_symtable__: Dict[str, concepts.BaseNode]
+        mapping from symbol name to the symbol node
+            where it was defined.
 
     """
 
@@ -56,4 +57,5 @@ class SymbolTableTrait(concepts.Model):
         return collected
 
     def collect_symbols(self) -> None:
-        self.symtable_ = self._collect_symbols(self)
+        assert isinstance(self, concepts.BaseNode)
+        self.__node_impl__.symtable = self._collect_symbols(self)

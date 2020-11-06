@@ -228,7 +228,8 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     Attributes:
         __node_id__: unique id of the node instance.
-        __node_annotations__: container for arbitrary data annotations.
+        __node_annotations__: container for arbitrary user data annotations.
+        __node_impl__: internal  container for arbitrary data annotations.
 
     Additionally, node classes comes with the following utilities provided
     by pydantic for simple serialization purposes:
@@ -258,7 +259,12 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
     )
 
     #: Node data annotations
-    __node_annotations__: Optional[Str] = pydantic.PrivateAttr(
+    __node_annotations__: Optional[types.SimpleNamespace] = pydantic.PrivateAttr(
+        default_factory=types.SimpleNamespace
+    )
+
+    #: Node data annotations
+    __node_impl__: Optional[types.SimpleNamespace] = pydantic.PrivateAttr(  # type: ignore  # mypy can't find PrivateAttr
         default_factory=types.SimpleNamespace
     )
 

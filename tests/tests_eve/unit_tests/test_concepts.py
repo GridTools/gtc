@@ -22,7 +22,7 @@ import pytest
 
 import eve
 
-from .. import common
+from .. import common_definitions
 
 
 @pytest.fixture(
@@ -166,7 +166,7 @@ class TestNode:
 
     def test_custom_id(self, source_location, sample_node_maker):
         custom_id = "my_custom_id"
-        my_node = common.LocationNode(loc=source_location)
+        my_node = common_definitions.LocationNode(loc=source_location)
         other_node = sample_node_maker()
         my_node.__node_id__ = custom_id
 
