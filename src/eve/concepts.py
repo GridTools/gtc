@@ -264,7 +264,7 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
     )
 
     #: Node data annotations
-    __node_impl__: Optional[types.SimpleNamespace] = pydantic.PrivateAttr(  # type: ignore  # mypy can't find PrivateAttr
+    __node_impl__: Optional[types.SimpleNamespace] = pydantic.PrivateAttr(
         default_factory=types.SimpleNamespace
     )
 
