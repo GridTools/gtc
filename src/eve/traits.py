@@ -19,35 +19,51 @@
 
 from __future__ import annotations
 
-import pydantic
-
-from . import concepts, iterators
+from . import concepts, exceptions, iterators
 from .type_definitions import SymbolName
-from .typingx import Any, Dict, Type
+from .typingx import Any, Dict
 
 
 class SymbolTableTrait(concepts.Model):
-    symtable_: Dict[str, Any] = pydantic.Field(default_factory=dict)
+    """Trait implementing automatic symbol table creation for nodes.
+
+    Nodes inheriting this trait will collect all the
+    :class:`eve.type_definitions.SymbolName` instances defined in the
+    descendant nodes and store them in the ``__node_symtable__`` private
+    attribute.
+
+    Attributes:
+        __node_symtable__: Dict[str, concepts.BaseNode]
+        mapping from symbol name to the symbol node
+            where it was defined.
+
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.collect_symbols()
 
     @staticmethod
-    def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, Any]:
-        collected = {}
+    def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, concepts.BaseNode]:
+        collected: Dict[str, concepts.BaseNode] = {}
         for node in iterators.traverse_tree(root_node):
             if isinstance(node, concepts.BaseNode):
                 for name, metadata in node.__node_children__.items():
                     if isinstance(metadata["definition"].type_, type) and issubclass(
                         metadata["definition"].type_, SymbolName
                     ):
-                        collected[getattr(node, name)] = node
+                        symbol_name = getattr(node, name)
+                        if symbol_name in collected:
+                            raise exceptions.DuplicatedSymbolError(
+                                f"""Redefinition of symbol name '{name}':
+    - previous: {collected[symbol_name]}
+    - new: {node}
+"""
+                            )
+                        collected[symbol_name] = node
 
         return collected
 
-    @pydantic.root_validator(skip_on_failure=True)
-    def _collect_symbols_validator(  # type: ignore  # validators are classmethods
-        cls: Type[SymbolTableTrait], values: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        values["symtable_"] = cls._collect_symbols(values)
-        return values
-
     def collect_symbols(self) -> None:
-        self.symtable_ = self._collect_symbols(self)
+        assert isinstance(self, concepts.BaseNode)
+        self.__node_impl__.symtable = self._collect_symbols(self)

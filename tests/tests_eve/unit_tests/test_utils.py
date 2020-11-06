@@ -209,6 +209,10 @@ def test_case_style_converter(name_with_cases):
 
     words = name_with_cases.pop("words")
     for case, cased_string in name_with_cases.items():
+        # Try also passing case as a string
+        if len(case.value) % 2:
+            case = case.value
+
         assert CaseStyleConverter.join(words, case) == cased_string
         if case == CaseStyleConverter.CASE_STYLE.CONCATENATED:
             with pytest.raises(ValueError, match="Impossible to split"):

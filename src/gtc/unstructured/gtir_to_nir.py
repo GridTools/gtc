@@ -123,7 +123,7 @@ class GtirToNir(eve.NodeTranslator):
         kwargs["location_comprehensions"] = loc_comprehension
 
         body_location = node.neighbors.chain.elements[-1]
-        reduce_var_name = "local" + str(node.id_)
+        reduce_var_name = "local" + str(node.__node_id__)
         last_block.declarations.append(
             nir.LocalVar(
                 name=reduce_var_name,

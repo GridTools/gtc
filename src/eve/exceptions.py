@@ -42,3 +42,8 @@ class EveValueError(EveError, ValueError):
 
 class EveRuntimeError(EveError, RuntimeError):
     message_template = "Runtime error (info: {info})"
+
+
+# -- Runtime errors --
+class DuplicatedSymbolError(EveRuntimeError):
+    pass

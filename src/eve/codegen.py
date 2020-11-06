@@ -447,12 +447,11 @@ class TemplatedGenerator(NodeVisitor):
 
     The following keys are passed to template instances at rendering:
 
-        * ``**node_fields``: all the node children and implementation fields by name.
-        * ``_impl``: a ``dict`` instance with the results of visiting all
-          the node implementation fields.
-        * ``_children``: a ``dict`` instance with the results of visiting all
-          the node children.
-        * ``_this_node``: the actual node instance (before visiting children).
+        * ``**node_fields``: the results of visiting all the node children directly
+           available by name.
+        * ``_children``: the results of visiting all the node children collected
+          in a single ``dict`` instance.
+        * ``_this_node``: the actual node instance.
         * ``_this_generator``: the current generator instance.
         * ``_this_module``: the generator's module instance.
         * ``**kwargs``: the keyword arguments received by the visiting method.
@@ -525,11 +524,7 @@ class TemplatedGenerator(NodeVisitor):
             template, _ = self.get_template(node)
             if template:
                 result = self.render_template(
-                    template,
-                    node,
-                    self.transform_children(node, **kwargs),
-                    self.transform_impl_fields(node, **kwargs),
-                    **kwargs,
+                    template, node, self.transform_children(node, **kwargs), **kwargs,
                 )
         elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
             node, type_definitions.ATOMIC_COLLECTION_TYPES
@@ -560,16 +555,13 @@ class TemplatedGenerator(NodeVisitor):
         template: Template,
         node: Node,
         transformed_children: Mapping[str, Any],
-        transformed_impl_fields: Mapping[str, Any],
         **kwargs: Any,
     ) -> str:
         """Render a template using node instance data (see class documentation)."""
 
         return template.render(
             **transformed_children,
-            **transformed_impl_fields,
             _children=transformed_children,
-            _impl=transformed_impl_fields,
             _this_node=node,
             _this_generator=self,
             _this_module=sys.modules[type(self).__module__],
@@ -578,6 +570,3 @@ class TemplatedGenerator(NodeVisitor):
 
     def transform_children(self, node: Node, **kwargs: Any) -> Dict[str, Any]:
         return {key: self.visit(value, **kwargs) for key, value in node.iter_children()}
-
-    def transform_impl_fields(self, node: Node, **kwargs: Any) -> Dict[str, Any]:
-        return {key: self.visit(value, **kwargs) for key, value in node.iter_impl_fields()}

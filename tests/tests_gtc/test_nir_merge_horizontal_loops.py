@@ -42,11 +42,12 @@ class TestNIRMergeHorizontalLoops_NoDependencies:
         second_loop = make_empty_horizontal_loop(common.LocationType.Vertex)
         stencil = make_vertical_loop([first_loop, second_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
 
+        result = stencil.merge_candidates_
         assert len(result) == 1
-        assert result[0][0] == first_loop
-        assert result[0][1] == second_loop
+        assert result[0][0] == 0
+        assert result[0][1] == 1
 
     def test_2_on_same_location_1_other(self):
         first_loop = make_empty_horizontal_loop(common.LocationType.Vertex)
@@ -54,12 +55,12 @@ class TestNIRMergeHorizontalLoops_NoDependencies:
         third_loop = make_empty_horizontal_loop(common.LocationType.Edge)
         stencil = make_vertical_loop([first_loop, second_loop, third_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
+        result = stencil.merge_candidates_
 
         assert len(result) == 1
-        assert len(result[0]) == 2
-        assert result[0][0] == first_loop
-        assert result[0][1] == second_loop
+        assert result[0][0] == 0
+        assert result[0][1] == 1
 
     def test_2_sets_of_location(self):
         first_loop = make_empty_horizontal_loop(common.LocationType.Vertex)
@@ -68,17 +69,16 @@ class TestNIRMergeHorizontalLoops_NoDependencies:
         fourth_loop = make_empty_horizontal_loop(common.LocationType.Edge)
         stencil = make_vertical_loop([first_loop, second_loop, third_loop, fourth_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
+        result = stencil.merge_candidates_
 
         assert len(result) == 2
 
-        assert len(result[0]) == 2
-        assert result[0][0] == first_loop
-        assert result[0][1] == second_loop
+        assert result[0][0] == 0
+        assert result[0][1] == 1
 
-        assert len(result[1]) == 2
-        assert result[1][0] == third_loop
-        assert result[1][1] == fourth_loop
+        assert result[1][0] == 2
+        assert result[1][1] == 3
 
     def test_vertex_edge_vertex(self):
         first_loop = make_empty_horizontal_loop(common.LocationType.Vertex)
@@ -86,7 +86,8 @@ class TestNIRMergeHorizontalLoops_NoDependencies:
         third_loop = make_empty_horizontal_loop(common.LocationType.Vertex)
         stencil = make_vertical_loop([first_loop, second_loop, third_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
+        result = stencil.merge_candidates_
 
         assert len(result) == 0
 
@@ -99,7 +100,8 @@ class TestNIRMergeHorizontalLoops_WithDependencies:
         second_loop, _, _ = make_horizontal_loop_with_copy("out", "field", True)
         stencil = make_vertical_loop([first_loop, second_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
+        result = stencil.merge_candidates_
 
         assert len(result) == 0
 
@@ -110,7 +112,8 @@ class TestNIRMergeHorizontalLoops_WithDependencies:
         second_loop, _, _ = make_horizontal_loop_with_copy("out", "field", False)
         stencil = make_vertical_loop([first_loop, second_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
+        result = stencil.merge_candidates_
 
         assert len(result) == 1
 
@@ -121,7 +124,8 @@ class TestNIRMergeHorizontalLoops_WithDependencies:
         second_loop, _, _ = make_horizontal_loop_with_copy("out", "field", False)
         stencil = make_vertical_loop([first_loop, second_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
+        result = stencil.merge_candidates_
 
         assert len(result) == 1
 
@@ -134,7 +138,8 @@ class TestNIRMergeHorizontalLoops_WithDependencies:
         third_loop, _, _ = make_horizontal_loop_with_copy("out", "field2", False)
         stencil = make_vertical_loop([first_loop, second_loop, third_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
+        result = stencil.merge_candidates_
 
         assert len(result) == 1
 
@@ -147,12 +152,12 @@ class TestNIRMergeHorizontalLoops_WithDependencies:
         third_loop, _, _ = make_horizontal_loop_with_copy("out", "field2", True)
         stencil = make_vertical_loop([first_loop, second_loop, third_loop])
 
-        result = _find_merge_candidates(stencil)
+        _find_merge_candidates(stencil)
+        result = stencil.merge_candidates_
 
         assert len(result) == 1
-        assert len(result[0]) == 2
-        assert result[0][0] == first_loop
-        assert result[0][1] == second_loop
+        assert result[0][0] == 0
+        assert result[0][1] == 1
 
 
 class TestNIRMergeHorizontalLoops:
@@ -161,9 +166,8 @@ class TestNIRMergeHorizontalLoops:
         second_loop = make_empty_horizontal_loop(default_location)
 
         stencil = make_vertical_loop([first_loop, second_loop])
-        merge_candidates = [[first_loop, second_loop]]
-
-        result = merge_horizontal_loops(stencil, merge_candidates)
+        stencil.merge_candidates_ = [[0, 1]]
+        result = merge_horizontal_loops(stencil)
 
         assert len(result.horizontal_loops) == 1
 
@@ -177,9 +181,9 @@ class TestNIRMergeHorizontalLoops:
         second_loop = make_horizontal_loop(make_block_stmt([assignment2], [var2]))
 
         stencil = make_vertical_loop([first_loop, second_loop])
-        merge_candidates = [[first_loop, second_loop]]
+        stencil.merge_candidates_ = [[0, 1]]
 
-        result = merge_horizontal_loops(stencil, merge_candidates)
+        result = merge_horizontal_loops(stencil)
 
         assert len(result.horizontal_loops) == 1
         assert len(result.horizontal_loops[0].stmt.statements) == 2
@@ -221,8 +225,14 @@ class TestNIRMergeHorizontalLoops:
 
         vloops = FindNodes().by_type(nir.VerticalLoop, result)
         assert len(vloops) == 2
+
         for vloop in vloops:
             # TODO more precise checks
             assert len(vloop.horizontal_loops) == 1
             assert len(vloop.horizontal_loops[0].stmt.statements) == 2
             assert len(vloop.horizontal_loops[0].stmt.declarations) == 2
+
+        # check we didn't touch the input tree
+        orig_vloops = FindNodes().by_type(nir.VerticalLoop, stencil)
+        for vloop in orig_vloops:
+            assert len(vloop.horizontal_loops) == 2

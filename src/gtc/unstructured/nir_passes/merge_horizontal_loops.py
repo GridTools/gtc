@@ -14,20 +14,29 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import copy
 from typing import List
 
 import networkx as nx
 
 import eve  # noqa: F401
-from eve import Node, NodeTranslator, NodeVisitor
+from eve import Node, NodeTranslator
 from gtc.unstructured import nir
 from gtc.unstructured.nir_passes.field_dependency_graph import generate_dependency_graph
 
 
-class _FindMergeCandidatesAnalysis(NodeVisitor):
+# This is an example of an analysis pass using data annotations.
+
+
+def _has_read_with_offset_after_write(graph: nx.DiGraph, **kwargs):
+    return any(edge["extent"] for _, _, edge in graph.edges(data=True))
+
+
+def _find_merge_candidates(root: Node):
     """Find horizontal loop merge candidates.
 
-    Result is a List[List[HorizontalLoop]], where the inner list contains mergable loops.
+    Result is a List[List[int]], where the inner list contains a range of the horizontal loop indices.
+    The result is stored as a node data annotation `merge_candidates_` on the VerticalLoop.
     Currently the merge sets are ordered and disjunct, see question below.
 
     In the following examples A, B, C, ... are loops
@@ -46,73 +55,57 @@ class _FindMergeCandidatesAnalysis(NodeVisitor):
         - if the read is without offset, we can fuse
         - if the read is with offset, we cannot fuse
     """
+    vertical_loops = eve.FindNodes().by_type(nir.VerticalLoop, root)
+    for vloop in vertical_loops:
+        candidates = []
+        candidate: List[nir.HorizontalLoop] = []
+        candidate_range: List[int] = [0, 0]
 
-    def __init__(self, **kwargs):
-        super().__init__()
-        self.candidates = []
-        self.candidate = []
+        for index, hloop in enumerate(vloop.horizontal_loops):
+            if len(candidate) == 0:
+                candidate.append(hloop)
+                candidate_range[0] = index
+                continue
+            elif (
+                candidate[-1].location_type == hloop.location_type
+            ):  # same location type as previous
+                dependencies = generate_dependency_graph(candidate + [hloop])
+                if not _has_read_with_offset_after_write(dependencies):
+                    candidate.append(hloop)
+                    candidate_range[1] = index
+                    continue
+            # cannot merge to previous loop:
+            if len(candidate) > 1:
+                candidates.append(candidate_range)  # add a new merge set
+            candidate = [hloop]
+            candidate_range = [index, 0]
 
-    @classmethod
-    def find(cls, root, **kwargs) -> List[List[nir.HorizontalLoop]]:
-        """Runs the visitor, returns merge candidates.
-        """
-        instance = cls()
-        instance.visit(root, **kwargs)
-        if len(instance.candidate) > 1:
-            instance.candidates.append(instance.candidate)
-        return instance.candidates
+        if len(candidate) > 1:
+            candidates.append(candidate_range)  # add a new merge set
 
-    def has_read_with_offset_after_write(self, graph: nx.DiGraph, **kwargs):
-        return any(edge["extent"] for _, _, edge in graph.edges(data=True))
-
-    def visit_HorizontalLoop(self, node: nir.HorizontalLoop, **kwargs):
-        if len(self.candidate) == 0:
-            self.candidate.append(node)
-            return
-        elif (
-            self.candidate[-1].location_type == node.location_type
-        ):  # same location type as previous
-            dependencies = generate_dependency_graph(self.candidate + [node])
-            if not self.has_read_with_offset_after_write(dependencies):
-                self.candidate.append(node)
-                return
-        # cannot merge to previous loop:
-        if len(self.candidate) > 1:
-            self.candidates.append(self.candidate)  # add a new merge set
-        self.candidate = [node]
-
-
-def _find_merge_candidates(root: nir.VerticalLoop):
-    return _FindMergeCandidatesAnalysis().find(root)
+        vloop.merge_candidates_ = candidates
 
 
 class MergeHorizontalLoops(NodeTranslator):
-    """
-    """
+    """"""
 
     @classmethod
-    def apply(cls, root: nir.VerticalLoop, merge_candidates, **kwargs) -> nir.VerticalLoop:
-        """
-        """
-        # merge_candidates = _find_merge_candidates(root)
-        return cls().visit(root, merge_candidates=merge_candidates)
+    def apply(cls, root: Node, **kwargs):
+        """"""
+        return cls().visit(root)
 
-    def visit_VerticalLoop(
-        self, node: nir.VerticalLoop, *, merge_candidates: List[List[nir.HorizontalLoop]], **kwargs
-    ):
-        for candidate in merge_candidates:
+    def visit_VerticalLoop(self, node: nir.VerticalLoop, **kwargs):
+        new_horizontal_loops = copy.deepcopy(node.horizontal_loops)
+        for merge_group in node.merge_candidates_:
             declarations = []
             statements = []
-            location_type = candidate[0].location_type
+            location_type = node.horizontal_loops[merge_group[0]].location_type
 
-            first_index = node.horizontal_loops.index(candidate[0])
-            last_index = node.horizontal_loops.index(candidate[-1])
-
-            for loop in candidate:
+            for loop in node.horizontal_loops[merge_group[0] : merge_group[1] + 1]:
                 declarations += loop.stmt.declarations
                 statements += loop.stmt.statements
 
-            node.horizontal_loops[first_index : last_index + 1] = [  # noqa: E203
+            new_horizontal_loops = [  # noqa: E203
                 nir.HorizontalLoop(
                     stmt=nir.BlockStmt(
                         declarations=declarations,
@@ -122,20 +115,13 @@ class MergeHorizontalLoops(NodeTranslator):
                     location_type=location_type,
                 )
             ]
+        return nir.VerticalLoop(loop_order=node.loop_order, horizontal_loops=new_horizontal_loops)
 
-        return node
 
-
-def merge_horizontal_loops(
-    root: nir.VerticalLoop, merge_candidates: List[List[nir.HorizontalLoop]]
-):
-    return MergeHorizontalLoops().apply(root, merge_candidates)
+def merge_horizontal_loops(root: Node):
+    return MergeHorizontalLoops.apply(root)
 
 
 def find_and_merge_horizontal_loops(root: Node):
-    copy = root.copy(deep=True)
-    vertical_loops = eve.FindNodes().by_type(nir.VerticalLoop, copy)
-    for loop in vertical_loops:
-        loop = merge_horizontal_loops(loop, _find_merge_candidates(loop))
-
-    return copy
+    _find_merge_candidates(root)
+    return merge_horizontal_loops(root)
