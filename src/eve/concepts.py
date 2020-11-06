@@ -167,9 +167,9 @@ class NodeMetaclass(pydantic.main.ModelMetaclass):
         for name, model_field in cls.__fields__.items():
             assert not _is_private_attr_name(name)
             if _is_data_annotation_name(name):
-                raise TypeError(f"Invalid field name ('{name}') looks like a data annotation.")
+                raise TypeError(f"Invalid field name '{name}' looks like a data annotation.")
             if _is_internal_field_name(name):
-                raise TypeError(f"Invalid field name ('{name}') looks like an Eve internal field.")
+                raise TypeError(f"Invalid field name '{name}' looks like an Eve internal field.")
             if _is_child_field_name(name):
                 children_metadata[name] = {
                     "definition": model_field,
@@ -234,18 +234,18 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
     by pydantic for simple serialization purposes:
 
         :meth:`dict()`
-            returns a dictionary of the model's fields and values; cf. exporting models
+            returns a dictionary of the model's fields and values.
         :meth:`json()`
-            returns a JSON string representation dict(); cf. exporting models
+            returns a JSON string representation dict().
         :meth:`copy()`
-            returns a copy (by default, shallow copy) of the model; cf. exporting models
+            returns a copy (by default, shallow copy) of the model.
         :meth:`schema()`
-            returns a dictionary representing the model as JSON Schema; cf. Schema
+            returns a dictionary representing the model as JSON Schema.
         :meth:`schema_json()`
-            returns a JSON string representation of schema(); cf. Schema
+            returns a JSON string representation of schema().
 
     Pydantic provides even more helper methods, but they are too `pydantic-specific`
-    and thus it is recommended to avoid using them in stable Eve code.
+    and therefore it is recommended to avoid them in stable Eve code.
 
     """
 
