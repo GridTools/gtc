@@ -116,14 +116,41 @@ class StrEnum(str, enum.Enum):
         return self.value
 
 
-class SymbolName(str):
+class NameValue:
+    """Custom (immutable) string name wrapper."""
+
+    name: str
+
+    def __init__(self, name: str) -> None:
+        super().__setattr__("name", name)
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    def __eq__(self, o: object) -> bool:
+        return self.name == o
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        raise TypeError(f"Trying to modify immutable {type(self).__name__} value.")
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}('{self.name}')"
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class SymbolName(NameValue):
     """Name of a symbol."""
 
+    #: Regular expression used to validate the name string
     NAME_REGEX = re.compile(r"[a-zA-Z_]\w*")
 
     @staticmethod
     @functools.lru_cache(maxsize=128)
     def constrained(regex: str) -> Type[SymbolName]:
+        """Create a new SymbolName subclass using the provided string as validation RE."""
+
         xxh64 = xxhash.xxh64()
         xxh64.update(regex.encode())
         subclass_name = f"SymbolName_{xxh64.hexdigest()[-8:]}"
@@ -154,7 +181,7 @@ class SymbolName(str):
 
     @classmethod
     def validate(cls, v: Any) -> SymbolName:
-        return cls(v)
+        return v if isinstance(v, cls) else cls(v)
 
     def __init__(self, name: str, *, symtable: Optional[Mapping[str, Any]] = None) -> None:
         if not isinstance(name, str):
@@ -163,13 +190,17 @@ class SymbolName(str):
             raise ValueError(
                 f"Invalid name value '{name}' does not match re({self.NAME_REGEX.pattern})."
             )
-        self._symtable = symtable
+        super().__init__(name)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({super().__repr__()})"
+        return (
+            f"SymbolName('{self.name}')"
+            if self.__class__.__name__ == "SymbolName"
+            else f"SymbolName.constrained('{self.NAME_REGEX.pattern}')('{self.name}')"
+        )
 
 
-class SymbolRef(str):
+class SymbolRef(NameValue):
     """Reference to a symbol."""
 
     @classmethod
@@ -178,21 +209,20 @@ class SymbolRef(str):
 
     @classmethod
     def validate(cls, v: Any) -> SymbolRef:
-        return cls(v)
+        return v if isinstance(v, cls) else cls(v)
 
     def __init__(self, name: str, *, context: Optional[Mapping[str, Any]] = None) -> None:
         if not isinstance(name, str):
             raise TypeError(f"Invalid string argument '{name}'.")
-        self._context = context
+        super().__init__(name)
+        object.__setattr__(self, "_context", context)
 
     def node(self, *, context: Optional[Mapping[str, Any]] = None) -> Any:
         if context:
             self._context = context
         assert self._context
-        return self._context[self]
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({super().__repr__()})"
+        return self._context[self.name]
 
 
 class SourceLocation(pydantic.BaseModel):

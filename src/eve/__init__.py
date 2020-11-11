@@ -64,5 +64,6 @@ from .type_definitions import (
     StrictInt,
     StrictStr,
     SymbolName,
+    SymbolRef,
 )
 from .visitors import NodeMutator, NodeTranslator, NodeVisitor
