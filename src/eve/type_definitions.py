@@ -19,6 +19,7 @@
 
 from __future__ import annotations
 
+import collections
 import enum
 import functools
 import re
@@ -116,31 +117,7 @@ class StrEnum(str, enum.Enum):
         return self.value
 
 
-class NameValue:
-    """Custom (immutable) string name wrapper."""
-
-    name: str
-
-    def __init__(self, name: str) -> None:
-        super().__setattr__("name", name)
-
-    def __hash__(self) -> int:
-        return hash(self.name)
-
-    def __eq__(self, o: object) -> bool:
-        return self.name == o
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        raise TypeError(f"Trying to modify immutable {type(self).__name__} value.")
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}('{self.name}')"
-
-    def __str__(self) -> str:
-        return self.name
-
-
-class SymbolName(NameValue):
+class SymbolName(collections.UserString):
     """Name of a symbol."""
 
     #: Regular expression used to validate the name string
@@ -183,24 +160,27 @@ class SymbolName(NameValue):
     def validate(cls, v: Any) -> SymbolName:
         return v if isinstance(v, cls) else cls(v)
 
-    def __init__(self, name: str, *, symtable: Optional[Mapping[str, Any]] = None) -> None:
+    def __init__(self, name: str) -> None:
         if not isinstance(name, str):
             raise TypeError(f"Invalid string argument '{name}'.")
         if not self.NAME_REGEX.fullmatch(name):
             raise ValueError(
                 f"Invalid name value '{name}' does not match re({self.NAME_REGEX.pattern})."
             )
-        super().__init__(name)
+        object.__setattr__(self, "data", name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        raise NotImplementedError(f"Trying to modify immutable {type(self).__name__} value.")
 
     def __repr__(self) -> str:
         return (
-            f"SymbolName('{self.name}')"
+            f"SymbolName('{self.data}')"
             if self.__class__.__name__ == "SymbolName"
-            else f"SymbolName.constrained('{self.NAME_REGEX.pattern}')('{self.name}')"
+            else f"SymbolName.constrained('{self.NAME_REGEX.pattern}')('{self.data}')"
         )
 
 
-class SymbolRef(NameValue):
+class SymbolRef(collections.UserString):
     """Reference to a symbol."""
 
     @classmethod
@@ -214,7 +194,7 @@ class SymbolRef(NameValue):
     def __init__(self, name: str, *, context: Optional[Mapping[str, Any]] = None) -> None:
         if not isinstance(name, str):
             raise TypeError(f"Invalid string argument '{name}'.")
-        super().__init__(name)
+        object.__setattr__(self, "data", name)
         object.__setattr__(self, "_context", context)
 
     def node(self, *, context: Optional[Mapping[str, Any]] = None) -> Any:
@@ -222,7 +202,13 @@ class SymbolRef(NameValue):
             self._context = context
         assert self._context
 
-        return self._context[self.name]
+        return self._context[self.data]
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        raise NotImplementedError(f"Trying to modify immutable {type(self).__name__} value.")
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}('{self.data}')"
 
 
 class SourceLocation(pydantic.BaseModel):
