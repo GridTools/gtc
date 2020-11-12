@@ -52,7 +52,7 @@ DELETE = boltons.typeutils.make_sentinel(name="DELETE", var_name="DELETE")
 
 
 #: Collection types considered as single elements
-ATOMIC_COLLECTION_TYPES = (str, bytes, bytearray)
+ATOMIC_COLLECTION_TYPES = (str, bytes, bytearray, collections.UserString)
 
 
 #: Typing definitions for `__get_validators__()` methods (defined but not exported in `pydantic.typing`)
