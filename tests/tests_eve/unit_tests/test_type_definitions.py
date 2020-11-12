@@ -40,18 +40,18 @@ def test_symbol_types():
 
     assert SymbolName("valid_name_01A") == "valid_name_01A"
     assert SymbolName.from_string("valid_name_01A") == "valid_name_01A"
-    with pytest.raises(ValueError, match="Invalid name value"):
+    with pytest.raises(ValueError, match="string does not match regex"):
         SymbolName.from_string("$name_01A")
-    with pytest.raises(ValueError, match="Invalid name value"):
+    with pytest.raises(ValueError, match="string does not match regex"):
         SymbolName.from_string("0name_01A")
-    with pytest.raises(ValueError, match="Invalid name value"):
+    with pytest.raises(ValueError, match="string does not match regex"):
         SymbolName.from_string("name_01A ")
 
-    LettersOnlySymbol = SymbolName.constrained(r"[a-zA-Z]+")
+    LettersOnlySymbol = SymbolName.constrained(r"[a-zA-Z]+$")
     assert LettersOnlySymbol.from_string("validNAME") == "validNAME"
-    with pytest.raises(ValueError, match="Invalid name value"):
+    with pytest.raises(ValueError, match="string does not match regex"):
         LettersOnlySymbol.from_string("name_a")
-    with pytest.raises(ValueError, match="Invalid name value"):
+    with pytest.raises(ValueError, match="string does not match regex"):
         LettersOnlySymbol.from_string("name01")
 
 
