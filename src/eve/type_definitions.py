@@ -121,6 +121,11 @@ class SymbolName(str):
 
     NAME_REGEX = re.compile(r"[a-zA-Z_]\w*")
 
+    @classmethod
+    def from_string(cls, name: str) -> SymbolName:
+        cls._validate(name)
+        return cls(name)
+
     @staticmethod
     @functools.lru_cache(maxsize=128)
     def constrained(regex: str) -> Type[SymbolName]:
@@ -146,23 +151,25 @@ class SymbolName(str):
 
     @classmethod
     def __get_validators__(cls) -> PydanticCallableGenerator:
-        yield cls.validate
+        yield cls._validate
 
     @classmethod
     def __modify_schema__(cls, field_schema: Dict[str, Any]) -> None:
         field_schema.update(pattern=cls.NAME_REGEX.pattern)
 
     @classmethod
-    def validate(cls, v: Any) -> SymbolName:
-        return cls(v)
+    def _validate(cls, v: str) -> str:
+        assert isinstance(v, str)
+        if not cls.NAME_REGEX.fullmatch(v):
+            raise ValueError(
+                f"Invalid name value '{v}' does not match re({cls.NAME_REGEX.pattern})."
+            )
+        return v
 
-    def __init__(self, name: str, *, symtable: Optional[Mapping[str, Any]] = None) -> None:
+    def __init__(self, name: str, *, symtable: Optional[Mapping[str, Any]] = None,) -> None:
         if not isinstance(name, str):
             raise TypeError(f"Invalid string argument '{name}'.")
-        if not self.NAME_REGEX.fullmatch(name):
-            raise ValueError(
-                f"Invalid name value '{name}' does not match re({self.NAME_REGEX.pattern})."
-            )
+
         self._symtable = symtable
 
     def __repr__(self) -> str:
