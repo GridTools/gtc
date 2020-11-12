@@ -19,6 +19,7 @@
 
 from __future__ import annotations
 
+import abc
 import collections
 import enum
 import functools
@@ -26,9 +27,11 @@ import re
 
 import boltons.typeutils
 import pydantic
+import pydantic.typing
 import xxhash
 from boltons.typeutils import classproperty  # noqa: F401
 from pydantic import (  # noqa: F401
+    ConstrainedStr,
     NegativeFloat,
     NegativeInt,
     PositiveFloat,
@@ -55,6 +58,16 @@ DELETE = boltons.typeutils.make_sentinel(name="DELETE", var_name="DELETE")
 ATOMIC_COLLECTION_TYPES = (str, bytes, bytearray, collections.UserString)
 
 
+class AtomicCollection(abc.ABC):
+    """Abstract base class for atomic collection types."""
+
+    ...
+
+
+for t in ATOMIC_COLLECTION_TYPES:
+    AtomicCollection.register(t)  # type: ignore  # mypy gets it wrong
+
+
 #: Typing definitions for `__get_validators__()` methods (defined but not exported in `pydantic.typing`)
 PydanticCallableGenerator = Generator[Callable[..., Any], None, None]
 
@@ -67,8 +80,25 @@ Bytes = bytes  # noqa: F401
 Float = StrictFloat  # noqa: F401
 #: :class:`int` subclass for strict field definition
 Int = StrictInt  # noqa: F401
-#: :class:`str` subclass for strict field definition
-Str = StrictStr  # noqa: F401
+
+
+class Str(abc.ABC):
+    """Abstract base class for string types with strict validation."""
+
+    @classmethod
+    def __get_validators__(cls) -> pydantic.typing.CallableGenerator:
+        yield cls._type_validation
+
+    @classmethod
+    def _type_validation(cls, value: Str) -> Str:
+        if not isinstance(value, cls):
+            raise TypeError(f"Invalid Str value: '{value}'")
+
+        return value
+
+
+Str.register(str)
+Str.register(collections.UserString)
 
 
 class Enum(enum.Enum):
