@@ -966,6 +966,13 @@ Defaults to <cite>False</cite>.</p></li>
 <dd><p>Collection types considered as single elements</p>
 </dd></dl>
 
+<dl class="py class">
+<dt id="eve.type_definitions.AtomicCollection">
+<em class="property">class </em><code class="sig-prename descclassname">eve.type_definitions.</code><code class="sig-name descname">AtomicCollection</code><a class="reference internal" href="../_modules/eve/type_definitions.html#AtomicCollection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.AtomicCollection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract base class for atomic collection types.</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt id="eve.type_definitions.Bool">
 <code class="sig-prename descclassname">eve.type_definitions.</code><code class="sig-name descname">Bool</code><a class="headerlink" href="#eve.type_definitions.Bool" title="Permalink to this definition">¶</a></dt>
@@ -1077,39 +1084,47 @@ Defaults to <cite>False</cite>.</p></li>
 
 <dl class="py class">
 <dt id="eve.type_definitions.SymbolName">
-<em class="property">class </em><code class="sig-prename descclassname">eve.type_definitions.</code><code class="sig-name descname">SymbolName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">symtable</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolName" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">eve.type_definitions.</code><code class="sig-name descname">SymbolName</code><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydantic.types.ConstrainedStr</span></code></p>
 <p>Name of a symbol.</p>
-<dl class="py attribute">
-<dt id="eve.type_definitions.SymbolName.NAME_REGEX">
-<code class="sig-name descname">NAME_REGEX</code><em class="property"> = re.compile('[a-zA-Z_]\\w*')</em><a class="headerlink" href="#eve.type_definitions.SymbolName.NAME_REGEX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<p>The name itself is only validated automatically within a Pydantic
+model validation context. Use <a class="reference internal" href="#eve.type_definitions.SymbolName.from_string" title="eve.type_definitions.SymbolName.from_string"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_string()</span></code></a> to create a properly
+validated isolated instance.</p>
 <dl class="py method">
 <dt id="eve.type_definitions.SymbolName.constrained">
-<em class="property">static </em><code class="sig-name descname">constrained</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">regex</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; Type<span class="p">[</span><a class="reference internal" href="#eve.type_definitions.SymbolName" title="eve.type_definitions.SymbolName">eve.type_definitions.SymbolName</a><span class="p">]</span><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolName.constrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolName.constrained" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">static </em><code class="sig-name descname">constrained</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pattern</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; Type<span class="p">[</span><a class="reference internal" href="#eve.type_definitions.SymbolName" title="eve.type_definitions.SymbolName">eve.type_definitions.SymbolName</a><span class="p">]</span><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolName.constrained"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolName.constrained" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new SymbolName subclass using the provided string as validation RE.</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="eve.type_definitions.SymbolName.validate">
-<em class="property">classmethod </em><code class="sig-name descname">validate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#eve.type_definitions.SymbolName" title="eve.type_definitions.SymbolName">eve.type_definitions.SymbolName</a><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolName.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolName.validate" title="Permalink to this definition">¶</a></dt>
+<dt id="eve.type_definitions.SymbolName.from_string">
+<em class="property">classmethod </em><code class="sig-name descname">from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#eve.type_definitions.SymbolName" title="eve.type_definitions.SymbolName">eve.type_definitions.SymbolName</a><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolName.from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolName.from_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Self-validated instance creation.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="eve.type_definitions.SymbolName.regex">
+<code class="sig-name descname">regex</code><em class="property"> = re.compile('^[a-zA-Z_]\\w*$')</em><a class="headerlink" href="#eve.type_definitions.SymbolName.regex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Regular expression used to validate the name string</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="eve.type_definitions.SymbolName.strict">
+<code class="sig-name descname">strict</code><em class="property"> = True</em><a class="headerlink" href="#eve.type_definitions.SymbolName.strict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt id="eve.type_definitions.SymbolRef">
-<em class="property">class </em><code class="sig-prename descclassname">eve.type_definitions.</code><code class="sig-name descname">SymbolRef</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolRef" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
-<p>Reference to a symbol.</p>
+<em class="property">class </em><code class="sig-prename descclassname">eve.type_definitions.</code><code class="sig-name descname">SymbolRef</code><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolRef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydantic.types.ConstrainedStr</span></code></p>
+<p>Reference to a symbol name.</p>
+<p>Instance validation only happens automatically within a Pydantic
+model validation context.</p>
 <dl class="py method">
-<dt id="eve.type_definitions.SymbolRef.node">
-<code class="sig-name descname">node</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">context</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolRef.node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolRef.node" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="eve.type_definitions.SymbolRef.validate">
-<em class="property">classmethod </em><code class="sig-name descname">validate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#eve.type_definitions.SymbolRef" title="eve.type_definitions.SymbolRef">eve.type_definitions.SymbolRef</a><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolRef.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolRef.validate" title="Permalink to this definition">¶</a></dt>
+<dt id="eve.type_definitions.SymbolRef.from_string">
+<em class="property">classmethod </em><code class="sig-name descname">from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#eve.type_definitions.SymbolRef" title="eve.type_definitions.SymbolRef">eve.type_definitions.SymbolRef</a><a class="reference internal" href="../_modules/eve/type_definitions.html#SymbolRef.from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.type_definitions.SymbolRef.from_string" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
