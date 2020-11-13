@@ -39,19 +39,20 @@ def test_symbol_types():
     from eve.type_definitions import SymbolName
 
     assert SymbolName("valid_name_01A") == "valid_name_01A"
-    with pytest.raises(ValueError, match="Invalid name value"):
-        SymbolName("$name_01A")
-    with pytest.raises(ValueError, match="Invalid name value"):
-        SymbolName("0name_01A")
-    with pytest.raises(ValueError, match="Invalid name value"):
-        SymbolName("name_01A ")
+    assert SymbolName.from_string("valid_name_01A") == "valid_name_01A"
+    with pytest.raises(ValueError, match="string does not match regex"):
+        SymbolName.from_string("$name_01A")
+    with pytest.raises(ValueError, match="string does not match regex"):
+        SymbolName.from_string("0name_01A")
+    with pytest.raises(ValueError, match="string does not match regex"):
+        SymbolName.from_string("name_01A ")
 
-    LettersOnlySymbol = SymbolName.constrained(r"[a-zA-Z]+")
-    assert LettersOnlySymbol("validNAME") == "validNAME"
-    with pytest.raises(ValueError, match="Invalid name value"):
-        LettersOnlySymbol("name_a")
-    with pytest.raises(ValueError, match="Invalid name value"):
-        LettersOnlySymbol("name01")
+    LettersOnlySymbol = SymbolName.constrained(r"[a-zA-Z]+$")
+    assert LettersOnlySymbol.from_string("validNAME") == "validNAME"
+    with pytest.raises(ValueError, match="string does not match regex"):
+        LettersOnlySymbol.from_string("name_a")
+    with pytest.raises(ValueError, match="string does not match regex"):
+        LettersOnlySymbol.from_string("name01")
 
 
 class TestSourceLocation:

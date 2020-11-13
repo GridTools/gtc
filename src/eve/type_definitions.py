@@ -19,6 +19,7 @@
 
 from __future__ import annotations
 
+import abc
 import enum
 import functools
 import re
@@ -38,8 +39,9 @@ from pydantic import (  # noqa: F401
     StrictStr,
     validator,
 )
+from pydantic.types import ConstrainedStr
 
-from .typingx import Any, Callable, Dict, Generator, Mapping, Optional, Type
+from .typingx import Any, Callable, Generator, Type
 
 
 #: Marker value used to avoid confusion with `None`
@@ -53,6 +55,15 @@ DELETE = boltons.typeutils.make_sentinel(name="DELETE", var_name="DELETE")
 #: Collection types considered as single elements
 ATOMIC_COLLECTION_TYPES = (str, bytes, bytearray)
 
+
+class AtomicCollection(abc.ABC):
+    """Abstract base class for atomic collection types."""
+
+    ...
+
+
+for t in ATOMIC_COLLECTION_TYPES:
+    AtomicCollection.register(t)  # type: ignore  # mypy gets it wrong
 
 #: Typing definitions for `__get_validators__()` methods (defined but not exported in `pydantic.typing`)
 PydanticCallableGenerator = Generator[Callable[..., Any], None, None]
@@ -116,83 +127,66 @@ class StrEnum(str, enum.Enum):
         return self.value
 
 
-class SymbolName(str):
-    """Name of a symbol."""
+class SymbolName(ConstrainedStr):
+    """Name of a symbol.
 
-    NAME_REGEX = re.compile(r"[a-zA-Z_]\w*")
+    The name itself is only validated automatically within a Pydantic
+    model validation context. Use :meth:`from_string` to create a properly
+    validated isolated instance.
+
+    """
+
+    #: Regular expression used to validate the name string
+    regex = re.compile(r"^[a-zA-Z_]\w*$")
+    strict = True
+
+    @classmethod
+    def from_string(cls, name: str) -> SymbolName:
+        """Self-validated instance creation."""
+        name = cls.validate(name)
+        return cls(name)
 
     @staticmethod
-    @functools.lru_cache(maxsize=128)
-    def constrained(regex: str) -> Type[SymbolName]:
+    @functools.lru_cache(maxsize=None)
+    def constrained(pattern: str) -> Type[SymbolName]:
+        """Create a new SymbolName subclass using the provided string as validation RE."""
+
         xxh64 = xxhash.xxh64()
-        xxh64.update(regex.encode())
+        xxh64.update(pattern.encode())
         subclass_name = f"SymbolName_{xxh64.hexdigest()[-8:]}"
-        namespace = dict(NAME_REGEX=regex)
+
+        if isinstance(pattern, str):
+            try:
+                regex = re.compile(pattern)
+            except re.error as e:
+                raise TypeError(f"Invalid regular expression definition:  '{pattern}'.") from e
+        namespace = dict(regex=regex)
 
         return type(subclass_name, (SymbolName,), namespace)
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        super().__init_subclass__(**kwargs)  # type: ignore  # mypy issues 4335, 4660
-        if not hasattr(cls, "NAME_REGEX") or not isinstance(cls.NAME_REGEX, (str, re.Pattern)):
-            raise TypeError(f"Missing or invalid 'NAME_REGEX' member in '{cls.__name__}' class.")
-        elif isinstance(cls.NAME_REGEX, str):
-            try:
-                cls.NAME_REGEX = re.compile(cls.NAME_REGEX)
-            except re.error as e:
-                raise TypeError(
-                    f"Invalid regular expression definition in '{cls.__name__}'."
-                ) from e
+    def __repr__(self) -> str:
+        return (
+            f"SymbolName('{super().__repr__()}')"
+            if type(self).__name__ == "SymbolName"
+            else f"SymbolName.constrained('{self.regex.pattern}')('{super().__repr__()}')"
+        )
+
+
+class SymbolRef(ConstrainedStr):
+    """Reference to a symbol name.
+
+    Instance validation only happens automatically within a Pydantic
+    model validation context.
+
+    """
 
     @classmethod
-    def __get_validators__(cls) -> PydanticCallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def __modify_schema__(cls, field_schema: Dict[str, Any]) -> None:
-        field_schema.update(pattern=cls.NAME_REGEX.pattern)
-
-    @classmethod
-    def validate(cls, v: Any) -> SymbolName:
-        return cls(v)
-
-    def __init__(self, name: str, *, symtable: Optional[Mapping[str, Any]] = None) -> None:
-        if not isinstance(name, str):
-            raise TypeError(f"Invalid string argument '{name}'.")
-        if not self.NAME_REGEX.fullmatch(name):
-            raise ValueError(
-                f"Invalid name value '{name}' does not match re({self.NAME_REGEX.pattern})."
-            )
-        self._symtable = symtable
+    def from_string(cls, name: str) -> SymbolRef:
+        name = cls.validate(name)
+        return cls(name)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({super().__repr__()})"
-
-
-class SymbolRef(str):
-    """Reference to a symbol."""
-
-    @classmethod
-    def __get_validators__(cls) -> PydanticCallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v: Any) -> SymbolRef:
-        return cls(v)
-
-    def __init__(self, name: str, *, context: Optional[Mapping[str, Any]] = None) -> None:
-        if not isinstance(name, str):
-            raise TypeError(f"Invalid string argument '{name}'.")
-        self._context = context
-
-    def node(self, *, context: Optional[Mapping[str, Any]] = None) -> Any:
-        if context:
-            self._context = context
-        assert self._context
-        return self._context[self]
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({super().__repr__()})"
+        return f"{type(self).__name__}({super().__repr__()})"
 
 
 class SourceLocation(pydantic.BaseModel):
