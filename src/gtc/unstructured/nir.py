@@ -124,11 +124,12 @@ class VarAccess(Access):
     pass
 
 
-AssignStmt = common.AssignStmt[Access, Expr]
-Stmt.register(AssignStmt)
+class AssignStmt(common.AssignStmt[Access, Expr], Stmt):
+    pass
 
-BinaryOp = common.BinaryOp[Expr]
-Expr.register(BinaryOp)
+
+class BinaryOp(common.BinaryOp[Expr], Expr):
+    pass
 
 
 class VerticalDimension(Node):

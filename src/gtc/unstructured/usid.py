@@ -79,11 +79,12 @@ class VarAccess(Expr):
     ]  # to distinguish from FieldAccess, see https://github.com/eth-cscs/eve_toolchain/issues/34
 
 
-AssignStmt = common.AssignStmt[Union[FieldAccess, VarAccess], Expr]
-Stmt.register(AssignStmt)
+class AssignStmt(common.AssignStmt[Union[FieldAccess, VarAccess], Expr], Stmt):
+    pass
 
-BinaryOp = common.BinaryOp[Expr]
-Expr.register(BinaryOp)
+
+class BinaryOp(common.BinaryOp[Expr], Expr):
+    pass
 
 
 class Connectivity(Node):

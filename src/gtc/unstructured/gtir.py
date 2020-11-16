@@ -34,8 +34,8 @@ class Stmt(Node):
     pass
 
 
-Literal = common.Literal
-Expr.register(common.Literal)
+class Literal(common.Literal, Expr):
+    pass
 
 
 class NeighborChain(Node):
@@ -89,11 +89,12 @@ class FieldAccess(Expr):
     subscript: List[LocationRef]  # maybe remove the separate LocationRef
 
 
-AssignStmt = common.AssignStmt[FieldAccess, Expr]
-Stmt.register(AssignStmt)
+class AssignStmt(common.AssignStmt[FieldAccess, Expr], Stmt):
+    pass
 
-BinaryOp = common.BinaryOp[Expr]
-Expr.register(BinaryOp)
+
+class BinaryOp(common.BinaryOp[Expr], Expr):
+    pass
 
 
 class VerticalDimension(Node):
