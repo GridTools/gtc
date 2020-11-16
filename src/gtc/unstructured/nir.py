@@ -124,39 +124,12 @@ class VarAccess(Access):
     pass
 
 
-class AssignStmt(Stmt):
-    left: Access  # there are no local variables in gtir, only fields
-    right: Expr
-
-    @root_validator(pre=True)
-    def check_location_type(cls, values):
-        if values["left"].location_type != values["right"].location_type:
-            raise ValueError("Location type mismatch")
-
-        if "location_type" not in values:
-            values["location_type"] = values["left"].location_type
-        elif values["left"].location_type != values["location_type"]:
-            raise ValueError("Location type mismatch")
-
-        return values
+class AssignStmt(common.AssignStmt[Access, Expr], Stmt):
+    pass
 
 
-class BinaryOp(Expr):
-    op: common.BinaryOperator
-    left: Expr
-    right: Expr
-
-    @root_validator(pre=True)
-    def check_location_type(cls, values):
-        if values["left"].location_type != values["right"].location_type:
-            raise ValueError("Location type mismatch")
-
-        if "location_type" not in values:
-            values["location_type"] = values["left"].location_type
-        elif values["left"].location_type != values["location_type"]:
-            raise ValueError("Location type mismatch")
-
-        return values
+class BinaryOp(common.BinaryOp[Expr], Expr):
+    pass
 
 
 class VerticalDimension(Node):

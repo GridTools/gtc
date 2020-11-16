@@ -23,6 +23,7 @@ import collections.abc
 import functools
 
 import pydantic
+import pydantic.generics
 
 from . import type_definitions, utils
 from .type_definitions import NOTHING, IntEnum, Str, StrEnum
@@ -226,6 +227,10 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
 
     class Config(BaseModelConfig):
         pass
+
+
+class GenericNode(BaseNode, pydantic.generics.GenericModel):
+    pass
 
 
 class Node(BaseNode):

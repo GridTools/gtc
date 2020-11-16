@@ -18,7 +18,7 @@
 from typing import List, Optional, Tuple, Union
 
 from devtools import debug  # noqa: F401
-from pydantic import root_validator, validator
+from pydantic import validator
 
 import eve
 from eve import Node, Str
@@ -79,44 +79,12 @@ class VarAccess(Expr):
     ]  # to distinguish from FieldAccess, see https://github.com/eth-cscs/eve_toolchain/issues/34
 
 
-class AssignStmt(Stmt):
-    left: Union[FieldAccess, VarAccess]
-    right: Expr
-
-    @root_validator(pre=True)
-    def check_location_type(cls, values):
-        if values["left"].location_type != values["right"].location_type:
-            raise ValueError("Location type mismatch")
-
-        if "location_type" not in values:
-            values["location_type"] = values["left"].location_type
-        elif values["left"].location_type != values["location_type"]:
-            raise ValueError("Location type mismatch")
-        if values["left"].location_type == values["right"].location_type:
-            values["location_type"] = values["left"].location_type
-
-        return values
+class AssignStmt(common.AssignStmt[Union[FieldAccess, VarAccess], Expr], Stmt):
+    pass
 
 
-class BinaryOp(Expr):
-    op: common.BinaryOperator
-    left: Expr
-    right: Expr
-
-    @root_validator(pre=True)
-    def check_location_type(cls, values):
-        if values["left"].location_type != values["right"].location_type:
-            raise ValueError("Location type mismatch")
-
-        if "location_type" not in values:
-            values["location_type"] = values["left"].location_type
-        elif values["left"].location_type != values["location_type"]:
-            raise ValueError("Location type mismatch")
-
-        if values["left"].location_type == values["right"].location_type:
-            values["location_type"] = values["left"].location_type
-
-        return values
+class BinaryOp(common.BinaryOp[Expr], Expr):
+    pass
 
 
 class Connectivity(Node):
