@@ -188,9 +188,8 @@
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="Literal"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Literal">[docs]</a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
-    <span class="n">value</span><span class="p">:</span> <span class="n">Str</span>
-    <span class="n">vtype</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">DataType</span></div>
+<div class="viewcode-block" id="Literal"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.Literal">[docs]</a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">Literal</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="NeighborChain"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.NeighborChain">[docs]</a><span class="k">class</span> <span class="nc">NeighborChain</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
@@ -244,39 +243,12 @@
     <span class="n">subscript</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LocationRef</span><span class="p">]</span>  <span class="c1"># maybe remove the separate LocationRef</span></div>
 
 
-<div class="viewcode-block" id="AssignStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.AssignStmt">[docs]</a><span class="k">class</span> <span class="nc">AssignStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">):</span>
-    <span class="n">left</span><span class="p">:</span> <span class="n">FieldAccess</span>  <span class="c1"># there are no local variables in gtir, only fields</span>
-    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span>
-
-<div class="viewcode-block" id="AssignStmt.check_location_type"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.AssignStmt.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;location_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
-            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
-        <span class="k">elif</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">values</span></div></div>
+<div class="viewcode-block" id="AssignStmt"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.AssignStmt">[docs]</a><span class="k">class</span> <span class="nc">AssignStmt</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">AssignStmt</span><span class="p">[</span><span class="n">FieldAccess</span><span class="p">,</span> <span class="n">Expr</span><span class="p">],</span> <span class="n">Stmt</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="BinaryOp"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.BinaryOp">[docs]</a><span class="k">class</span> <span class="nc">BinaryOp</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
-    <span class="n">op</span><span class="p">:</span> <span class="n">common</span><span class="o">.</span><span class="n">BinaryOperator</span>
-    <span class="n">left</span><span class="p">:</span> <span class="n">Expr</span>
-    <span class="n">right</span><span class="p">:</span> <span class="n">Expr</span>
-
-<div class="viewcode-block" id="BinaryOp.check_location_type"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.BinaryOp.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;location_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
-            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
-        <span class="k">elif</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">values</span></div></div>
+<div class="viewcode-block" id="BinaryOp"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.BinaryOp">[docs]</a><span class="k">class</span> <span class="nc">BinaryOp</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">BinaryOp</span><span class="p">[</span><span class="n">Expr</span><span class="p">],</span> <span class="n">Expr</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="VerticalDimension"><a class="viewcode-back" href="../../../_source/gtc.unstructured.html#gtc.unstructured.gtir.VerticalDimension">[docs]</a><span class="k">class</span> <span class="nc">VerticalDimension</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>

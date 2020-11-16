@@ -169,8 +169,11 @@
 <span class="c1"># SPDX-License-Identifier: GPL-3.0-or-later</span>
 
 <span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span>
 
-<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">StrEnum</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">root_validator</span>
+
+<span class="kn">from</span> <span class="nn">eve</span> <span class="kn">import</span> <span class="n">GenericNode</span><span class="p">,</span> <span class="n">IntEnum</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Str</span><span class="p">,</span> <span class="n">StrEnum</span>
 
 
 <div class="viewcode-block" id="AssignmentKind"><a class="viewcode-back" href="../../_source/gtc.html#gtc.common.AssignmentKind">[docs]</a><span class="k">class</span> <span class="nc">AssignmentKind</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
@@ -239,6 +242,60 @@
     <span class="n">MIN_VALUE</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">ZERO</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">ONE</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+<span class="n">ExprT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;ExprT&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Expr"><a class="viewcode-back" href="../../_source/gtc.html#gtc.common.Expr">[docs]</a><span class="k">class</span> <span class="nc">Expr</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">location_type</span><span class="p">:</span> <span class="n">LocationType</span></div>
+
+
+<div class="viewcode-block" id="Stmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.common.Stmt">[docs]</a><span class="k">class</span> <span class="nc">Stmt</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="n">location_type</span><span class="p">:</span> <span class="n">LocationType</span></div>
+
+
+<div class="viewcode-block" id="BinaryOp"><a class="viewcode-back" href="../../_source/gtc.html#gtc.common.BinaryOp">[docs]</a><span class="k">class</span> <span class="nc">BinaryOp</span><span class="p">(</span><span class="n">Expr</span><span class="p">,</span> <span class="n">GenericNode</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">ExprT</span><span class="p">]):</span>
+    <span class="n">op</span><span class="p">:</span> <span class="n">BinaryOperator</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">ExprT</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">ExprT</span>
+
+<div class="viewcode-block" id="BinaryOp.check_location_type"><a class="viewcode-back" href="../../_source/gtc.html#gtc.common.BinaryOp.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;location_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+        <span class="k">elif</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">values</span></div></div>
+
+
+<div class="viewcode-block" id="Literal"><a class="viewcode-back" href="../../_source/gtc.html#gtc.common.Literal">[docs]</a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Str</span>
+    <span class="n">vtype</span><span class="p">:</span> <span class="n">DataType</span></div>
+
+
+<span class="n">LeftT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;LeftT&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AssignStmt"><a class="viewcode-back" href="../../_source/gtc.html#gtc.common.AssignStmt">[docs]</a><span class="k">class</span> <span class="nc">AssignStmt</span><span class="p">(</span><span class="n">Stmt</span><span class="p">,</span> <span class="n">GenericNode</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">LeftT</span><span class="p">,</span> <span class="n">ExprT</span><span class="p">]):</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">LeftT</span>  <span class="c1"># there are no local variables in gtir, only fields</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">ExprT</span>
+
+<div class="viewcode-block" id="AssignStmt.check_location_type"><a class="viewcode-back" href="../../_source/gtc.html#gtc.common.AssignStmt.check_location_type">[docs]</a>    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_location_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;location_type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span>
+        <span class="k">elif</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_type</span> <span class="o">!=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;location_type&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location type mismatch&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">values</span></div></div>
 </pre></div>
 
            </div>
