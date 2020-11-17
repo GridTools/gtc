@@ -18,7 +18,7 @@
 import pydantic
 import pytest
 
-from .. import factories
+from .. import definitions
 
 
 class TestNode:
@@ -42,14 +42,14 @@ class TestNode:
 
     def test_custom_id(self, source_location, sample_node_maker):
         custom_id = "my_custom_id"
-        my_node = factories.LocationNode(id_=custom_id, loc=source_location)
+        my_node = definitions.LocationNode(id_=custom_id, loc=source_location)
         other_node = sample_node_maker()
 
         assert my_node.id_ == custom_id
         assert my_node.id_ != other_node.id_
 
         with pytest.raises(pydantic.ValidationError, match="id_"):
-            factories.LocationNode(id_=32, loc=source_location)
+            definitions.LocationNode(id_=32, loc=source_location)
 
     def test_impl_fields(self, sample_node):
         impl_names = set(name for name, _ in sample_node.iter_impl_fields())

@@ -20,7 +20,7 @@
 
 import pytest
 
-from . import factories
+from . import definitions
 
 
 NODE_MAKERS = []
@@ -28,15 +28,15 @@ FROZEN_NODE_MAKERS = []
 INVALID_NODE_MAKERS = []
 
 
-# Automatic creation of pytest fixtures from maker functions in .factories
-for key, value in factories.__dict__.items():
+# Automatic creation of pytest fixtures from maker functions in .definitions
+for key, value in definitions.__dict__.items():
     if key.startswith("make_"):
         name = key[5:]
         exec(
             f"""
 @pytest.fixture
 def {name}_maker():
-    yield factories.make_{name}
+    yield definitions.make_{name}
 
 @pytest.fixture
 def {name}({name}_maker):
