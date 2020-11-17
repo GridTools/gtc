@@ -22,12 +22,12 @@ import pytest
 import eve
 from eve.typingx import List
 
-from .. import common_definitions
+from .. import factories
 
 
 @pytest.fixture
 def symtable_node_and_expected_symbols():
-    node = common_definitions.make_node_with_symbol_table()
+    node = factories.make_node_with_symbol_table()
     symbols = {
         node.node_with_name.name: node.node_with_name,
         node.node_with_default_name.name: node.node_with_default_name,
