@@ -20,8 +20,6 @@ import random
 import string
 from typing import Collection, Dict, List, Mapping, Optional, Sequence, Set, Type, TypeVar
 
-from pydantic import Field, validator  # noqa: F401
-
 from eve.concepts import FrozenNode, Node, VType
 from eve.traits import SymbolTableTrait
 from eve.type_definitions import (
@@ -512,7 +510,7 @@ def make_invalid_at_bytes_simple_node(*, fixed: bool = False) -> SimpleNode:
     int_value = make_int_value(fixed=fixed)
     bool_value = make_bool_value(fixed=fixed)
     float_value = make_float_value(fixed=fixed)
-    str_value = make_float_value(fixed=fixed)
+    str_value = make_str_value(fixed=fixed)
     bytes_value = [1, "2", (3, 4)]
     int_kind = IntKind.PLUS if fixed else make_member_value([*IntKind])
     str_kind = StrKind.BLA if fixed else make_member_value([*StrKind])
@@ -532,9 +530,9 @@ def make_invalid_at_enum_simple_node(*, fixed: bool = False) -> SimpleNode:
     int_value = make_int_value(fixed=fixed)
     bool_value = make_bool_value(fixed=fixed)
     float_value = make_float_value(fixed=fixed)
-    str_value = make_float_value(fixed=fixed)
+    str_value = make_str_value(fixed=fixed)
     bytes_value = make_str_value(fixed=fixed).encode()
-    int_kind = IntKind.PLUS if fixed else make_member_value([*IntKind])
+    int_kind = "asdf"
     str_kind = StrKind.BLA if fixed else make_member_value([*StrKind])
 
     return SimpleNode(
