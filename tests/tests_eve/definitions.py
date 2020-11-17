@@ -65,6 +65,29 @@ class StrKind(StrEnum):
 SimpleVType = VType("simple")
 
 
+class GenericNodeBuilder:
+    def _make_builder_setter(self, value_name):
+        builder = self
+
+        class _Impl:
+            def __call__(self, value):
+                builder.children[value_name] = value
+                return builder
+
+        return _Impl()
+
+    def __init__(self, node_type, **kwargs):
+        self.node_type = node_type
+        self.children = dict()
+        for child in node_type.__node_children__:
+            childname = str(child)
+            self.children[childname] = kwargs[childname] if childname in kwargs else None
+            self.__dict__[childname] = self._make_builder_setter(childname)
+
+    def build(self) -> Node:
+        return self.node_type(**self.children)
+
+
 class EmptyNode(Node):
     pass
 
@@ -81,6 +104,20 @@ class SimpleNode(Node):
     bytes_value: Bytes
     int_kind: IntKind
     str_kind: StrKind
+
+
+class SimpleNodeBuilder(GenericNodeBuilder):
+    def __init__(self, *, fixed: bool):
+        super().__init__(
+            SimpleNode,
+            int_value=make_int_value(fixed=fixed),
+            bool_value=make_bool_value(fixed=fixed),
+            float_value=make_float_value(fixed=fixed),
+            bytes_value=make_str_value(fixed=fixed).encode(),
+            str_value=make_str_value(fixed=fixed),
+            int_kind=IntKind.PLUS if fixed else make_member_value([*IntKind], fixed=fixed),
+            str_kind=StrKind.BLA if fixed else make_member_value([*StrKind], fixed=fixed),
+        )
 
 
 class SimpleNodeWithOptionals(Node):
@@ -305,23 +342,7 @@ def make_location_node(*, fixed: bool = False) -> LocationNode:
 
 
 def make_simple_node(*, fixed: bool = False) -> SimpleNode:
-    int_value = make_int_value(fixed=fixed)
-    bool_value = make_bool_value(fixed=fixed)
-    float_value = make_float_value(fixed=fixed)
-    str_value = make_str_value(fixed=fixed)
-    bytes_value = make_str_value(fixed=fixed).encode()
-    int_kind = IntKind.PLUS if fixed else make_member_value([*IntKind], fixed=fixed)
-    str_kind = StrKind.BLA if fixed else make_member_value([*StrKind], fixed=fixed)
-
-    return SimpleNode(
-        int_value=int_value,
-        bool_value=bool_value,
-        float_value=float_value,
-        str_value=str_value,
-        bytes_value=bytes_value,
-        int_kind=int_kind,
-        str_kind=str_kind,
-    )
+    return SimpleNodeBuilder(fixed=fixed).build()
 
 
 def make_simple_node_with_optionals(*, fixed: bool = False) -> SimpleNodeWithOptionals:
@@ -449,100 +470,20 @@ def make_invalid_location_node(*, fixed: bool = False) -> LocationNode:
 
 
 def make_invalid_at_int_simple_node(*, fixed: bool = False) -> SimpleNode:
-    int_value = make_float_value(fixed=fixed)
-    bool_value = make_bool_value(fixed=fixed)
-    float_value = make_float_value(fixed=fixed)
-    bytes_value = make_str_value(fixed=fixed).encode()
-    str_value = make_str_value(fixed=fixed)
-    int_kind = IntKind.PLUS if fixed else make_member_value([*IntKind], fixed=fixed)
-    str_kind = StrKind.BLA if fixed else make_member_value([*StrKind], fixed=fixed)
-
-    return SimpleNode(
-        int_value=int_value,
-        bool_value=bool_value,
-        float_value=float_value,
-        str_value=str_value,
-        bytes_value=bytes_value,
-        int_kind=int_kind,
-        str_kind=str_kind,
-    )
+    return SimpleNodeBuilder(fixed=fixed).int_value(make_float_value(fixed=fixed)).build()
 
 
 def make_invalid_at_float_simple_node(*, fixed: bool = False) -> SimpleNode:
-    int_value = make_int_value(fixed=fixed)
-    bool_value = make_bool_value(fixed=fixed)
-    float_value = make_int_value(fixed=fixed)
-    str_value = make_str_value(fixed=fixed)
-    bytes_value = make_str_value(fixed=fixed).encode()
-    int_kind = IntKind.PLUS if fixed else make_member_value([*IntKind], fixed=fixed)
-    str_kind = StrKind.BLA if fixed else make_member_value([*StrKind], fixed=fixed)
-
-    return SimpleNode(
-        int_value=int_value,
-        bool_value=bool_value,
-        float_value=float_value,
-        str_value=str_value,
-        bytes_value=bytes_value,
-        int_kind=int_kind,
-        str_kind=str_kind,
-    )
+    return SimpleNodeBuilder(fixed=fixed).float_value(make_int_value(fixed=fixed)).build()
 
 
 def make_invalid_at_str_simple_node(*, fixed: bool = False) -> SimpleNode:
-    int_value = make_int_value(fixed=fixed)
-    bool_value = make_bool_value(fixed=fixed)
-    float_value = make_float_value(fixed=fixed)
-    str_value = make_float_value(fixed=fixed)
-    bytes_value = make_str_value(fixed=fixed).encode()
-    int_kind = IntKind.PLUS if fixed else make_member_value([*IntKind])
-    str_kind = StrKind.BLA if fixed else make_member_value([*StrKind])
-
-    return SimpleNode(
-        int_value=int_value,
-        bool_value=bool_value,
-        float_value=float_value,
-        str_value=str_value,
-        bytes_value=bytes_value,
-        int_kind=int_kind,
-        str_kind=str_kind,
-    )
+    return SimpleNodeBuilder(fixed=fixed).str_value(make_float_value(fixed=fixed)).build()
 
 
 def make_invalid_at_bytes_simple_node(*, fixed: bool = False) -> SimpleNode:
-    int_value = make_int_value(fixed=fixed)
-    bool_value = make_bool_value(fixed=fixed)
-    float_value = make_float_value(fixed=fixed)
-    str_value = make_float_value(fixed=fixed)
-    bytes_value = [1, "2", (3, 4)]
-    int_kind = IntKind.PLUS if fixed else make_member_value([*IntKind])
-    str_kind = StrKind.BLA if fixed else make_member_value([*StrKind])
-
-    return SimpleNode(
-        int_value=int_value,
-        bool_value=bool_value,
-        float_value=float_value,
-        str_value=str_value,
-        bytes_value=bytes_value,
-        int_kind=int_kind,
-        str_kind=str_kind,
-    )
+    return SimpleNodeBuilder(fixed=fixed).bytes_value([1, "2", (3, 4)]).build()
 
 
 def make_invalid_at_enum_simple_node(*, fixed: bool = False) -> SimpleNode:
-    int_value = make_int_value(fixed=fixed)
-    bool_value = make_bool_value(fixed=fixed)
-    float_value = make_float_value(fixed=fixed)
-    str_value = make_float_value(fixed=fixed)
-    bytes_value = make_str_value(fixed=fixed).encode()
-    int_kind = IntKind.PLUS if fixed else make_member_value([*IntKind])
-    str_kind = StrKind.BLA if fixed else make_member_value([*StrKind])
-
-    return SimpleNode(
-        int_value=int_value,
-        bool_value=bool_value,
-        float_value=float_value,
-        str_value=str_value,
-        bytes_value=bytes_value,
-        int_kind=int_kind,
-        str_kind=str_kind,
-    )
+    return SimpleNodeBuilder(fixed=fixed).int_kind(make_float_value(fixed=fixed)).build()
