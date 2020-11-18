@@ -75,14 +75,26 @@ SOURCE_FORMATTERS: Dict[str, SourceFormatter] = {}
 
 
 class FormatterNameError(exceptions.EveRuntimeError):
+    """Run-time error registering a new source code formatter."""
+
     ...
 
 
 class FormattingError(exceptions.EveRuntimeError):
+    """Run-time error applying a source code formatter."""
+
+    ...
+
+
+class TemplateDefinitionError(exceptions.EveTypeError):
+    """Template definition error."""
+
     ...
 
 
 class TemplateRenderingError(exceptions.EveRuntimeError):
+    """Run-time error rendering a template."""
+
     ...
 
 
@@ -374,42 +386,74 @@ class Template(Protocol):
         pass
 
 
-class FormatTemplate(Template):
+class BaseTemplate(Template):
+
+    definition: Any
+    definition_loc: Optional[Tuple[str, int]]
+
+    def _collect_definition_loc(self) -> None:
+        self.definition_loc = None
+        frame = inspect.currentframe()
+        try:
+            if frame is not None:
+                (filename, lineno, _, _, _) = inspect.getframeinfo(frame.f_back.f_back)
+                self.definition_loc = (filename, lineno)
+        except Exception:
+            self.definition_loc = None
+        finally:
+            del frame
+
+    def __str__(self) -> str:
+        result = f"<{type(self).__qualname__}: '{self.definition}'>"
+        if self.definition_loc:
+            result += f" at {self.definition_loc[0]}:{self.definition_loc[1]}"
+        return result
+
+
+class FormatTemplate(BaseTemplate):
     """Template adapter to render regular strings as fully-featured f-strings."""
 
     definition: str
 
     def __init__(self, definition: str, **kwargs: Any) -> None:
-        self.definition = f'(f"""{definition}""")'
+        try:
+            self.definition = f'(f"""{definition}""")'
+        except Exception as e:
+            raise TemplateDefinitionError(
+                f"Invalid FormatTemplate definition: {definition}", definition=definition
+            ) from e
+
+        self._collect_definition_loc()
 
     def render_template(self, **kwargs: Any) -> str:
         result = eval(self.definition, {}, kwargs or {})
         assert isinstance(result, str)
         return result
 
-    def __str__(self) -> str:
-        return f"<{type(self).__qualname__}: '{self.definition}'>"
 
-
-class StringTemplate(Template):
+class StringTemplate(BaseTemplate):
     """Template adapter for `string.Template`."""
 
     definition: string.Template
 
     def __init__(self, definition: Union[str, string.Template], **kwargs: Any) -> None:
-        if isinstance(definition, str):
-            definition = string.Template(definition)
-        assert isinstance(definition, string.Template)
-        self.definition = definition
+        try:
+            if isinstance(definition, str):
+                definition = string.Template(definition)
+            assert isinstance(definition, string.Template)
+            self.definition = definition
+        except Exception as e:
+            raise TemplateDefinitionError(
+                f"Invalid StringTemplate definition: {definition}", definition=definition
+            ) from e
+
+        self._collect_definition_loc()
 
     def render_template(self, **kwargs: Any) -> str:
         return self.definition.substitute(**kwargs)
 
-    def __str__(self) -> str:
-        return f"<{type(self).__qualname__}: '{self.definition}'>"
 
-
-class JinjaTemplate(Template):
+class JinjaTemplate(BaseTemplate):
     """Template adapter for `jinja2.Template`."""
 
     definition: jinja2.Template
@@ -417,36 +461,44 @@ class JinjaTemplate(Template):
     __jinja_env__ = jinja2.Environment(undefined=jinja2.StrictUndefined)
 
     def __init__(self, definition: Union[str, jinja2.Template], **kwargs: Any) -> None:
-        if isinstance(definition, str):
-            definition = self.__jinja_env__.from_string(definition)
-        assert isinstance(definition, jinja2.Template)
-        self.definition = definition
+        try:
+            if isinstance(definition, str):
+                definition = self.__jinja_env__.from_string(definition)
+            assert isinstance(definition, jinja2.Template)
+            self.definition = definition
+        except Exception as e:
+            raise TemplateDefinitionError(
+                f"Invalid JinjaTemplate definition: {definition}", definition=definition
+            ) from e
+
+        self._collect_definition_loc()
 
     def render_template(self, **kwargs: Any) -> str:
         return self.definition.render(**kwargs)
 
-    def __str__(self) -> str:
-        return f"<{type(self).__qualname__}: '{self.definition}'>"
 
-
-class MakoTemplate(Template):
+class MakoTemplate(BaseTemplate):
     """Template adapter for `mako.template.Template`."""
 
     definition: mako_tpl.Template
 
     def __init__(self, definition: mako_tpl.Template, **kwargs: Any) -> None:
-        if isinstance(definition, str):
-            definition = mako_tpl.Template(definition)
-        assert isinstance(definition, mako_tpl.Template)
-        self.definition = definition
+        try:
+            if isinstance(definition, str):
+                definition = mako_tpl.Template(definition)
+            assert isinstance(definition, mako_tpl.Template)
+            self.definition = definition
+        except Exception as e:
+            raise TemplateDefinitionError(
+                f"Invalid MakoTemplate definition: {definition}", definition=definition
+            ) from e
+
+        self._collect_definition_loc()
 
     def render_template(self, **kwargs: Any) -> str:
         result = self.definition.render(**kwargs)
         assert isinstance(result, str)
         return result
-
-    def __str__(self) -> str:
-        return f"<{type(self).__qualname__}: {self.definition}>"
 
 
 class TemplatedGenerator(NodeVisitor):
@@ -563,6 +615,8 @@ class TemplatedGenerator(NodeVisitor):
                         self.transform_impl_fields(node, **kwargs),
                         **kwargs,
                     )
+                except TemplateRenderingError:
+                    raise
                 except Exception as e:
                     raise TemplateRenderingError(
                         f"Error in '{key}' template ({template}) when rendering node '{node}'.",
