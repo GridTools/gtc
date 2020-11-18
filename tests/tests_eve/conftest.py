@@ -20,22 +20,23 @@
 
 import pytest
 
-from . import common
+from . import definitions
 
 
 NODE_MAKERS = []
 FROZEN_NODE_MAKERS = []
 INVALID_NODE_MAKERS = []
 
-# Automatic creation of pytest fixtures from maker functions in .common
-for key, value in common.__dict__.items():
+
+# Automatic creation of pytest fixtures from maker functions in .definitions
+for key, value in definitions.__dict__.items():
     if key.startswith("make_"):
         name = key[5:]
         exec(
             f"""
 @pytest.fixture
 def {name}_maker():
-    yield common.make_{name}
+    yield definitions.make_{name}
 
 @pytest.fixture
 def {name}({name}_maker):
@@ -47,10 +48,10 @@ def fixed_{name}({name}_maker):
 """
         )
 
-        if "node" in key:
-            if "invalid" in key:
+        if "_node" in key:
+            if "_invalid" in key:
                 INVALID_NODE_MAKERS.append(value)
-            elif "frozen" in key:
+            elif "_frozen" in key:
                 FROZEN_NODE_MAKERS.append(value)
             else:
                 NODE_MAKERS.append(value)
