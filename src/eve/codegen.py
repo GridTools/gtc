@@ -22,18 +22,20 @@ from __future__ import annotations
 import abc
 import collections.abc
 import contextlib
+import inspect
 import os
 import string
 import sys
 import textwrap
 import types
+import typing
 from subprocess import PIPE, Popen
 
 import black
 import jinja2
 from mako import template as mako_tpl
 
-from . import type_definitions, utils
+from . import exceptions, type_definitions, utils
 from .concepts import Node, TreeNode
 from .typingx import (
     Any,
@@ -45,6 +47,7 @@ from .typingx import (
     List,
     Mapping,
     Optional,
+    Protocol,
     Sequence,
     Set,
     Tuple,
@@ -71,12 +74,24 @@ SourceFormatter = Callable[[str], str]
 SOURCE_FORMATTERS: Dict[str, SourceFormatter] = {}
 
 
+class FormatterNameError(exceptions.EveRuntimeError):
+    ...
+
+
+class FormattingError(exceptions.EveRuntimeError):
+    ...
+
+
+class TemplateRenderingError(exceptions.EveRuntimeError):
+    ...
+
+
 def register_formatter(language: str) -> Callable[[SourceFormatter], SourceFormatter]:
     """Decorator to register source code formatters for specific languages."""
 
     def _decorator(formatter: SourceFormatter) -> SourceFormatter:
         if language in SOURCE_FORMATTERS:
-            raise ValueError(f"Another formatter for language '{language}' already exists")
+            raise FormatterNameError(f"Another formatter for language '{language}' already exists")
 
         assert callable(formatter)
         SOURCE_FORMATTERS[language] = formatter
@@ -147,12 +162,12 @@ def format_source(language: str, source: str, *, skip_errors: bool = True, **kwa
         if formatter:
             return formatter(source, **kwargs)  # type: ignore # Callable does not support **kwargs
         else:
-            raise RuntimeError(f"Missing formatter for '{language}' language")
+            raise FormattingError(f"Missing formatter for '{language}' language")
     except Exception as e:
         if skip_errors:
             return source
         else:
-            raise RuntimeError(
+            raise FormattingError(
                 f"Something went wrong when trying to format '{language}' source code"
             ) from e
 
@@ -315,17 +330,19 @@ class TextBlock:
 TemplateT = TypeVar("TemplateT", bound="Template")
 
 
-class Template(abc.ABC):
-    """Abstract class defining the Template interface.
+@typing.runtime_checkable
+class Template(Protocol):
+    """Protocol (abstract base class) defining the Template interface.
 
-    Subclassess adapting this interface to different template engines will
-    only need to implement the abstract methods.
+    Direct subclassess of this base class only need to implement the
+    abstract methods to adapt different template engines to this
+    interface.
     """
 
     @classmethod
     def from_file(cls: Type[TemplateT], file_path: Union[str, os.PathLike]) -> Template:
-        if cls is Template:
-            raise RuntimeError("This method can only be called in concrete Template subclasses")
+        if inspect.isabstract(cls):
+            raise TypeError("This method can only be called in concrete Template subclasses")
 
         with open(file_path, "r") as f:
             definition = f.read()
@@ -358,17 +375,20 @@ class Template(abc.ABC):
 
 
 class FormatTemplate(Template):
-    """Template adapter for :class:`StringFormatter`."""
+    """Template adapter to render regular strings as fully-featured f-strings."""
 
     definition: str
 
-    _formatter_: ClassVar[string.Formatter] = utils.XStringFormatter()
-
     def __init__(self, definition: str, **kwargs: Any) -> None:
-        self.definition = definition
+        self.definition = f'(f"""{definition}""")'
 
     def render_template(self, **kwargs: Any) -> str:
-        return self._formatter_.format(self.definition, **kwargs)
+        result = eval(self.definition, {}, kwargs or {})
+        assert isinstance(result, str)
+        return result
+
+    def __str__(self) -> str:
+        return f"<{type(self).__qualname__}: '{self.definition}'>"
 
 
 class StringTemplate(Template):
@@ -385,20 +405,28 @@ class StringTemplate(Template):
     def render_template(self, **kwargs: Any) -> str:
         return self.definition.substitute(**kwargs)
 
+    def __str__(self) -> str:
+        return f"<{type(self).__qualname__}: '{self.definition}'>"
+
 
 class JinjaTemplate(Template):
     """Template adapter for `jinja2.Template`."""
 
     definition: jinja2.Template
 
+    __jinja_env__ = jinja2.Environment(undefined=jinja2.StrictUndefined)
+
     def __init__(self, definition: Union[str, jinja2.Template], **kwargs: Any) -> None:
         if isinstance(definition, str):
-            definition = jinja2.Template(definition)
+            definition = self.__jinja_env__.from_string(definition)
         assert isinstance(definition, jinja2.Template)
         self.definition = definition
 
     def render_template(self, **kwargs: Any) -> str:
         return self.definition.render(**kwargs)
+
+    def __str__(self) -> str:
+        return f"<{type(self).__qualname__}: '{self.definition}'>"
 
 
 class MakoTemplate(Template):
@@ -416,6 +444,9 @@ class MakoTemplate(Template):
         result = self.definition.render(**kwargs)
         assert isinstance(result, str)
         return result
+
+    def __str__(self) -> str:
+        return f"<{type(self).__qualname__}: {self.definition}>"
 
 
 class TemplatedGenerator(NodeVisitor):
@@ -467,13 +498,13 @@ class TemplatedGenerator(NodeVisitor):
 
     """
 
-    _templates_: ClassVar[Mapping[str, Template]]
+    __templates__: ClassVar[Mapping[str, Template]]
 
     @classmethod
     def __init_subclass__(cls, *, inherit_templates: bool = True, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)  # type: ignore  # mypy issues 4335, 4660
-        if "_templates_" in cls.__dict__:
-            raise TypeError(f"Invalid '_templates_' member in class {cls}")
+        if "__templates__" in cls.__dict__:
+            raise TypeError(f"Invalid '__templates__' member in class {cls}")
 
         templates: Dict[str, Template] = {}
         if inherit_templates:
@@ -482,7 +513,7 @@ class TemplatedGenerator(NodeVisitor):
                     issubclass(templated_gen_class, TemplatedGenerator)
                     and templated_gen_class is not TemplatedGenerator
                 ):
-                    templates.update(templated_gen_class._templates_)
+                    templates.update(templated_gen_class.__templates__)
 
         templates.update(
             {
@@ -492,7 +523,7 @@ class TemplatedGenerator(NodeVisitor):
             }
         )
 
-        cls._templates_ = types.MappingProxyType(templates)
+        cls.__templates__ = types.MappingProxyType(templates)
 
     @classmethod
     def apply(cls, root: TreeNode, **kwargs: Any) -> Union[str, Collection[str]]:
@@ -522,15 +553,23 @@ class TemplatedGenerator(NodeVisitor):
     def generic_visit(self, node: TreeNode, **kwargs: Any) -> Union[str, Collection[str]]:
         result: Union[str, Collection[str]] = ""
         if isinstance(node, Node):
-            template, _ = self.get_template(node)
+            template, key = self.get_template(node)
             if template:
-                result = self.render_template(
-                    template,
-                    node,
-                    self.transform_children(node, **kwargs),
-                    self.transform_impl_fields(node, **kwargs),
-                    **kwargs,
-                )
+                try:
+                    result = self.render_template(
+                        template,
+                        node,
+                        self.transform_children(node, **kwargs),
+                        self.transform_impl_fields(node, **kwargs),
+                        **kwargs,
+                    )
+                except Exception as e:
+                    raise TemplateRenderingError(
+                        f"Error in '{key}' template ({template}) when rendering node '{node}'.",
+                        template=template,
+                        node=node,
+                    ) from e
+
         elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
             node, type_definitions.ATOMIC_COLLECTION_TYPES
         ):
@@ -549,7 +588,7 @@ class TemplatedGenerator(NodeVisitor):
         if isinstance(node, Node):
             for node_class in node.__class__.__mro__:
                 template_key = node_class.__name__
-                template = self._templates_.get(template_key, None)
+                template = self.__templates__.get(template_key, None)
                 if template is not None or node_class is Node:
                     break
 

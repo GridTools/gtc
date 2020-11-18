@@ -39,7 +39,7 @@ def test_name(name_with_cases):  # noqa: F811  # pytest fixture not detected
 
 # -- Template tests --
 def fmt_tpl_maker(skeleton, keys):
-    transformed_keys = {k: "{{{}}}".format(k) for k in keys}
+    transformed_keys = {k: "{{{key}}}".format(key=k) for k in keys}
     return eve.codegen.FormatTemplate(skeleton.format(**transformed_keys))
 
 
