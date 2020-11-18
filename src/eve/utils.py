@@ -23,7 +23,6 @@ import hashlib
 import itertools
 import pickle
 import re
-import string
 import uuid
 import warnings
 
@@ -41,20 +40,7 @@ from boltons.strutils import (  # noqa: F401
 from boltons.typeutils import classproperty  # noqa: F401
 
 from .type_definitions import DELETE, NOTHING
-from .typingx import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from .typingx import Any, Callable, Iterable, Iterator, List, Optional, Type, Union
 
 
 def filter_map(
@@ -295,134 +281,3 @@ class UIDGenerator:
         if start < next(cls.__counter):
             warnings.warn("Unsafe reset of global UIDGenerator", RuntimeWarning)
         cls.__counter = itertools.count(start)
-
-
-class XStringFormatter(string.Formatter):
-    """Custom :class:`string.Formatter` implementation with f-string-like functionality.
-
-    Implementation follows as close as possible the implementation style
-    of :class:`string.Formatter` in the standard library.
-
-    Examples:
-        >>> fmt = XStringFormatter()
-        >>> data = [1.1, 2.22, 3.333, 4.444]
-
-        >>> fmt.format("{';'.join(str((i, d)) for i, d in enumerate(data))}", data=data)
-        '(0, 1.1);(1, 2.22);(2, 3.333);(3, 4.444)'
-
-    Note:
-        The current implementation is not 100% f-string compatible due to
-        limitations in the `format` specification parser (:meth:`string.Formatter.parser`).
-        Most flagrant limitation is that ``{`` and ``}`` characters are strictly forbidden
-        inside expressions.
-
-        See `PEP 498 <https://www.python.org/dev/peps/pep-0498/>`_ for more details.
-
-    """
-
-    class __DictLogger(dict):
-        """Dumb :class:`dict` subclass logging the accessed args."""
-
-        def __getitem__(self, key: Any) -> Any:
-            self.used_args = getattr(self, "used_args", set())
-            if key in self:
-                self.used_args.add(key)
-            return super().__getitem__(key)
-
-    def vformat(self, format_string: str, args: Sequence, kwargs: Mapping) -> str:
-        used_args: Set[Union[int, str]] = set()
-        result, _ = self._vformat(format_string, args, kwargs, used_args, 2)
-        self.check_unused_args(used_args, args, kwargs)  # type: ignore  # likely wrong 'used_args' type in stdlib
-        return result
-
-    def _vformat(
-        self,
-        format_string: str,
-        args: Sequence,
-        kwargs: Mapping,
-        used_args: Set,
-        recursion_depth: int,
-        auto_arg_index: int = 0,
-    ) -> Tuple[str, int]:
-        if recursion_depth < 0:
-            raise ValueError("Max string recursion exceeded")
-
-        result = []
-        _kwargs = self.__DictLogger({**kwargs, "__formatter_args__": args})
-        _kwargs.used_args = used_args
-        for literal_text, field_name, format_spec, conversion in self.parse(format_string):
-            # output the literal text
-            if literal_text:
-                result.append(literal_text)
-
-            # if there's a field, output it
-            if field_name is not None:
-                # this is some markup, find the object and do
-                #  the formatting
-
-                # handle arg indexing when empty field_names are given.
-                if field_name == "":
-                    if auto_arg_index is False:
-                        raise ValueError(
-                            "cannot switch from manual field "
-                            "specification to automatic field "
-                            "numbering"
-                        )
-                    field_name = str(auto_arg_index)
-                    auto_arg_index += 1
-                elif field_name.isdigit():
-                    if auto_arg_index:
-                        raise ValueError(
-                            "cannot switch from manual field "
-                            "specification to automatic field "
-                            "numbering"
-                        )
-                    # disable auto arg incrementing, if it gets
-                    # used later on, then an exception will be raised
-                    auto_arg_index = False
-
-                # given the field_name or expression, get the actual formatted value
-                # if a valid arg_used is returned, add it to the used_args set (only for subclasses)
-                obj, arg_used = self.get_field(field_name, args, _kwargs)
-                if arg_used is not None:
-                    used_args.add(arg_used)
-
-                # do any conversion on the resulting object
-                obj = self.convert_field(obj, conversion)  # type: ignore  # wrong 'conversion' type in stdlib
-
-                # expand the format spec, if needed
-                format_spec, auto_arg_index = self._vformat(
-                    format_spec,  # type: ignore  # wrong 'format_spec' type in stdlib
-                    args,
-                    kwargs,
-                    used_args,
-                    recursion_depth - 1,
-                    auto_arg_index=auto_arg_index,
-                )
-
-                # format the object and append to the result
-                result.append(self.format_field(obj, format_spec))
-
-        used_args -= {"__formatter_args__"}
-
-        return "".join(result), auto_arg_index
-
-    def get_value(self, key: Union[int, str], args: Sequence, kwargs: Mapping) -> Any:
-        assert isinstance(key, str)
-        result = eval(key, {}, kwargs)
-        return result
-
-    def format_field(self, value: Any, format_spec: str) -> str:
-        return format(value, format_spec)
-
-    # given a field_name, find the object it references.
-    #  field_name:   the field being looked up or a python expression
-    #  args, kwargs: as passed in to vformat
-    def get_field(self, field_name: str, args: Sequence, kwargs: Mapping) -> Any:
-        used_arg = None
-        if field_name.isdigit():
-            used_arg = int(field_name)
-            field_name = f"__formatter_args__[{field_name}]"
-
-        obj = self.get_value(field_name, args, kwargs)
-        return obj, used_arg
