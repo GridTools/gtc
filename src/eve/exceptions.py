@@ -16,20 +16,26 @@
 
 """Definitions of specific Eve exceptions."""
 
-from .typingx import Any
+from .typingx import Any, Dict
 
 
 class EveError:
+    """Base class for Eve-specific exceptions.
+
+    Notes:
+        This base class has to be always inherited together with a standard
+    exception.
+
+    """
+
     message_template = "Generic Eve error (info: {info}) "
+    info: Dict[str, Any]
 
     def __init__(self, message: str = None, **kwargs: Any) -> None:
-        super().__init__()
-        self.message = message
+        super().__init__(  # type: ignore  # when inherited together with another exception the super() call works
+            message or type(self).message_template.format(**self.info, info=self.info)
+        )
         self.info = kwargs
-
-    def __str__(self) -> str:
-        message = self.message or self.__class__.message_template
-        return message.format(**self.info, info=self.info)
 
 
 class EveTypeError(EveError, TypeError):
