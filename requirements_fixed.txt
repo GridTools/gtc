@@ -73,7 +73,7 @@ nbformat==5.0.7           # via ipywidgets, nbclient, nbconvert, notebook
 nest-asyncio==1.4.1       # via nbclient
 networkx==2.5             # via -r /home/enriqueg/Projects/gtc/.requirements_min.tmp
 nodeenv==1.5.0            # via pre-commit
-notebook==6.1.4           # via jupyter, jupyterlab, jupyterlab-server, widgetsnbextension
+notebook==6.1.5           # via jupyter, jupyterlab, jupyterlab-server, widgetsnbextension
 numpy==1.19.2             # via -r /home/enriqueg/Projects/gtc/.requirements_min.tmp
 packaging==20.4           # via -r /home/enriqueg/Projects/gtc/.requirements_min.tmp, bleach, pytest, sphinx, tox
 pandocfilters==1.4.2      # via nbconvert
