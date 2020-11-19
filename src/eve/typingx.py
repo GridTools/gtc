@@ -17,19 +17,31 @@
 """Python version independent typings."""
 
 # flake8: noqa
-from typing import *  # isort:skip
 
-import sys  # isort:skip
+from typing import *
 
-if sys.version_info < (3, 8):
-    from typing_extensions import Final, Literal, Protocol, TypedDict, runtime_checkable
-
-del sys
 
 T = TypeVar("T")
 FrozenList = Tuple[T, ...]
 
-
 AnyCallable = Callable[..., Any]
 AnyNoneCallable = Callable[..., None]
 AnyNoArgCallable = Callable[[], Any]
+
+
+def __getattr__(name: str) -> Any:
+    if name == "__path__":
+        # __path__ can only be defined for packages
+        raise AttributeError(f"module '{name}' has no attribute '__path__'")
+
+    try:
+        import typing
+
+        return getattr(typing, name)
+    except AttributeError:
+        try:
+            import typing_extensions
+
+            return getattr(typing_extensions, name)
+        except AttributeError:
+            raise ImportError(f"cannot import name '{name}' from 'typing' or 'typing_extensions'")
