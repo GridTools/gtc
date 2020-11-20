@@ -23,6 +23,7 @@ import abc
 import collections.abc
 import contextlib
 import inspect
+import re
 import string
 import sys
 import textwrap
@@ -347,6 +348,10 @@ class Template(Protocol):
     Direct subclassess of this base class only need to implement the
     abstract methods to adapt different template engines to this
     interface.
+
+    Raises:
+        TemplateDefinitionError: If the template definition contains errors.
+
     """
 
     def render(self, mapping: Optional[Mapping[str, str]] = None, **kwargs: Any) -> str:
@@ -354,9 +359,14 @@ class Template(Protocol):
 
         Args:
             mapping: A mapping whose keys match the template placeholders.
-            **kwargs: placeholder values might be also provided as
-                keyword arguments, and they will take precedence over ``mapping``
-                values for duplicated keys.
+            **kwargs: Placeholder values provided as keyword arguments (they will
+                take precedence over ``mapping`` values for duplicated keys.
+
+        Returns:
+            The rendered string.
+
+        Raises:
+            TemplateRenderingError: If the template rendering fails.
 
         """
         if not mapping:
@@ -364,17 +374,26 @@ class Template(Protocol):
         if kwargs:
             mapping = {**mapping, **kwargs}
 
-        return self.render_template(**mapping)
-
-    def extract_error_loc(self, exception: Exception) -> Optional[Tuple[int, Optional[int]]]:
-        return None
+        return self.render_values(**mapping)
 
     @abc.abstractmethod
     def __init__(self, definition: Any, **kwargs: Any) -> None:
         pass
 
     @abc.abstractmethod
-    def render_template(self, **kwargs: Any) -> str:
+    def render_values(self, **kwargs: Any) -> str:
+        """Render the template.
+
+        Args:
+            **kwargs: Placeholder values provided as keyword arguments.
+
+        Returns:
+            The rendered string.
+
+        Raises:
+            TemplateRenderingError: If the template rendering fails.
+
+        """
         pass
 
 
@@ -410,22 +429,20 @@ class FormatTemplate(BaseTemplate):
 
     def __init__(self, definition: str, **kwargs: Any) -> None:
         super().__init__()
+        self.definition = f'(f"""{definition}""")'
+
+    def render_values(self, **kwargs: Any) -> str:
         try:
-            self.definition = f'(f"""{definition}""")'
+            result = eval(self.definition, {}, kwargs or {})
+            assert isinstance(result, str)
+            return result
         except Exception as e:
-            message = "Error in FormatTemplate"
-            try:
-                if self.definition_loc:
-                    message += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
-            except Exception:
-                message = f"{message}:\n---\n{definition}\n---\n"
+            message = f"<{type(self).__name__}: '{self.definition}'>"
+            if self.definition_loc:
+                message += f" (defined at {self.definition_loc[0]}:{self.definition_loc[1]})"
+            message += " rendering error."
 
-            raise TemplateDefinitionError(message, definition=definition) from e
-
-    def render_template(self, **kwargs: Any) -> str:
-        result = eval(self.definition, {}, kwargs or {})
-        assert isinstance(result, str)
-        return result
+            raise TemplateRenderingError(message, template=self) from e
 
 
 class StringTemplate(BaseTemplate):
@@ -435,23 +452,25 @@ class StringTemplate(BaseTemplate):
 
     def __init__(self, definition: Union[str, string.Template], **kwargs: Any) -> None:
         super().__init__()
+        if isinstance(definition, str):
+            definition = string.Template(definition)
+        assert isinstance(definition, string.Template)
+        self.definition = definition
+
+    def render_values(self, **kwargs: Any) -> str:
         try:
-            if isinstance(definition, str):
-                definition = string.Template(definition)
-            assert isinstance(definition, string.Template)
-            self.definition = definition
+            return self.definition.substitute(**kwargs)
         except Exception as e:
-            message = "Error in StringTemplate"
+            message = f"<{type(self).__name__}>"
+            if self.definition_loc:
+                message += f" (defined at {self.definition_loc[0]}:{self.definition_loc[1]})"
             try:
-                if self.definition_loc:
-                    message += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
+                loc_info = re.search(r"line (\d+), col (\d+)", str(e))
+                message += f" rendering error around line: {loc_info[1]}, column {loc_info[2]}."  # type: ignore
             except Exception:
-                message = f"{message}:\n---\n{definition}\n---\n"
+                message += " rendering error."
 
-            raise TemplateDefinitionError(message, definition=definition) from e
-
-    def render_template(self, **kwargs: Any) -> str:
-        return self.definition.substitute(**kwargs)
+            raise TemplateRenderingError(message, template=self) from e
 
 
 class JinjaTemplate(BaseTemplate):
@@ -470,24 +489,29 @@ class JinjaTemplate(BaseTemplate):
             self.definition = definition
         except Exception as e:
             message = "Error in JinjaTemplate"
-            try:
-                if self.definition_loc:
-                    message += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
+            if self.definition_loc:
+                message += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
+                try:
                     if hasattr(e, "lineno"):
-                        message += f" (error likely at line {e.lineno})"  # type: ignore  # assume Jinja exception
-            except Exception:
-                message = f"{message}:\n---\n{definition}\n---\n"
+                        message += f" (error likely around line: {e.lineno})"  # type: ignore  # assume Jinja exception
+                except Exception:
+                    message = f"{message}:\n---\n{definition}\n---\n"
 
             raise TemplateDefinitionError(message, definition=definition) from e
 
-    def render_template(self, **kwargs: Any) -> str:
-        return self.definition.render(**kwargs)
-
-    def extract_error_loc(self, exception: Exception) -> Optional[Tuple[int, Optional[int]]]:
+    def render_values(self, **kwargs: Any) -> str:
         try:
-            return (exception.lineno, None)  # type: ignore  # assume Jinja exception
-        except Exception:
-            return None
+            return self.definition.render(**kwargs)
+        except Exception as e:
+            message = f"<{type(self).__name__}>"
+            if self.definition_loc:
+                message += f" (defined at {self.definition_loc[0]}:{self.definition_loc[1]})"
+            try:
+                message += f" rendering error around line: {e.lineno}."  # type: ignore  # assume Jinja exception
+            except Exception:
+                message += " rendering error."
+
+            raise TemplateRenderingError(message, template=self) from e
 
 
 class MakoTemplate(BaseTemplate):
@@ -502,29 +526,32 @@ class MakoTemplate(BaseTemplate):
                 definition = mako_tpl.Template(definition)
             assert isinstance(definition, mako_tpl.Template)
             self.definition = definition
-
         except Exception as e:
             message = "Error in MakoTemplate"
-            try:
-                if self.definition_loc:
-                    message += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
-                    if hasattr(e, "lineno"):
-                        message += f" (error likely at line {e.lineno}, column: {getattr(e, 'pos', '?')})"  # type: ignore  # assume Jinja exception
-            except Exception:
-                message = f"{message}:\n---\n{definition}\n---\n"
+            if self.definition_loc:
+                message += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
+                try:
+                    message += f" (error likely around line {e.lineno}, column: {getattr(e, 'pos', '?')})"  # type: ignore  # assume Mako exception
+                except Exception:
+                    message = f"{message}:\n---\n{definition}\n---\n"
 
             raise TemplateDefinitionError(message, definition=definition) from e
 
-    def render_template(self, **kwargs: Any) -> str:
-        result = self.definition.render(**kwargs)
-        assert isinstance(result, str)
-        return result
-
-    def extract_error_loc(self, exception: Exception) -> Optional[Tuple[int, Optional[int]]]:
+    def render_values(self, **kwargs: Any) -> str:
         try:
-            return (exception.lineno, getattr(exception, "pos", None))  # type: ignore  # assume Jinja exception
-        except Exception:
-            return None
+            result = self.definition.render(**kwargs)
+            assert isinstance(result, str)
+            return result
+        except Exception as e:
+            message = f"<{type(self).__name__}>"
+            if self.definition_loc:
+                message += f" (defined at {self.definition_loc[0]}:{self.definition_loc[1]})"
+            try:
+                message += f" rendering error around line: {e.lineno}, column: {getattr(e, 'pos', '?')}"  # type: ignore  # assume Mako exception
+            except Exception:
+                message += " rendering error."
+
+            raise TemplateRenderingError(message, template=self) from e
 
 
 class TemplatedGenerator(NodeVisitor):
@@ -641,19 +668,14 @@ class TemplatedGenerator(NodeVisitor):
                         self.transform_impl_fields(node, **kwargs),
                         **kwargs,
                     )
-                except TemplateRenderingError:
-                    raise
-                except Exception as e:
-                    loc_info = template.extract_error_loc(e)
-                    if loc_info:
-                        loc = f"position {loc_info[0]}, {loc_info[1] or '*'}"
-                        message = f"Error in '{key}' template ({template}) around {loc} when rendering node '{node}'."
-                    else:
-                        message = (
-                            f"Error in '{key}' template ({template}) when rendering node '{node}'."
-                        )
+                except TemplateRenderingError as e:
+                    # Add extra information to the raised exception
+                    message = (
+                        f"Error in '{key}' template when rendering node '{node}'.\n"
+                        + getattr(e, "message", str(e))
+                    )
 
-                    raise TemplateRenderingError(message, template=template, node=node,) from e
+                    raise TemplateRenderingError(message, **e.info, node=node) from e
 
         elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
             node, type_definitions.ATOMIC_COLLECTION_TYPES
