@@ -26,33 +26,36 @@ class EveError:
         This base class has to be always inherited together with a standard
     exception, and thus it should not be used as direct superclass
     for custom exceptions. Inherit directly from :class:`EveTypeError`,
-    :class:`EveTypeError`... instead.
+    :class:`EveTypeError`, etc. instead.
 
     """
 
-    message_template = "Generic Eve error (info: {info}) "
+    message_template = "Generic Eve error [{info}]"
     info: Dict[str, Any]
 
     def __init__(self, message: str = None, **kwargs: Any) -> None:
-        super().__init__(  # type: ignore  # when inherited together with another exception the super() call works
-            message or type(self).message_template.format(**self.info, info=self.info)
-        )
         self.info = kwargs
+        super().__init__(  # type: ignore  # super() call works as expected when using multiple inheritance
+            message
+            or type(self).message_template.format(
+                **self.info, info=", ".join(f"{key}={value}" for key, value in self.info.items())
+            )
+        )
 
 
 class EveTypeError(EveError, TypeError):
     """Base class for Eve-specific type errors."""
 
-    message_template = "Invalid or unexpected type (info: {info})"
+    message_template = "Invalid or unexpected type [{info}]"
 
 
 class EveValueError(EveError, ValueError):
     """Base class for Eve-specific value errors."""
 
-    message_template = "Invalid value (info: {info})"
+    message_template = "Invalid value [{info}]"
 
 
 class EveRuntimeError(EveError, RuntimeError):
     """Base class for Eve-specific run-time errors."""
 
-    message_template = "Runtime error (info: {info})"
+    message_template = "Runtime error [{info}]"
