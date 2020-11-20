@@ -24,7 +24,9 @@ class EveError:
 
     Notes:
         This base class has to be always inherited together with a standard
-    exception.
+    exception, and thus it should not be used as direct superclass
+    for custom exceptions. Inherit directly from :class:`EveTypeError`,
+    :class:`EveTypeError`... instead.
 
     """
 
@@ -39,12 +41,18 @@ class EveError:
 
 
 class EveTypeError(EveError, TypeError):
+    """Base class for Eve-specific type errors."""
+
     message_template = "Invalid or unexpected type (info: {info})"
 
 
 class EveValueError(EveError, ValueError):
+    """Base class for Eve-specific value errors."""
+
     message_template = "Invalid value (info: {info})"
 
 
 class EveRuntimeError(EveError, RuntimeError):
+    """Base class for Eve-specific run-time errors."""
+
     message_template = "Runtime error (info: {info})"
