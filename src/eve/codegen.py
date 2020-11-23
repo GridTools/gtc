@@ -418,7 +418,7 @@ class BaseTemplate(Template):
     def __str__(self) -> str:
         result = f"<{type(self).__qualname__}: '{self.definition}'>"
         if self.definition_loc:
-            result += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
+            result += f" created at {self.definition_loc[0]}:{self.definition_loc[1]}"
         return result
 
 
@@ -439,7 +439,7 @@ class FormatTemplate(BaseTemplate):
         except Exception as e:
             message = f"<{type(self).__name__}: '{self.definition}'>"
             if self.definition_loc:
-                message += f" (defined at {self.definition_loc[0]}:{self.definition_loc[1]})"
+                message += f" (created at {self.definition_loc[0]}:{self.definition_loc[1]})"
             message += " rendering error."
 
             raise TemplateRenderingError(message, template=self) from e
@@ -463,10 +463,10 @@ class StringTemplate(BaseTemplate):
         except Exception as e:
             message = f"<{type(self).__name__}>"
             if self.definition_loc:
-                message += f" (defined at {self.definition_loc[0]}:{self.definition_loc[1]})"
+                message += f" (created at {self.definition_loc[0]}:{self.definition_loc[1]})"
             try:
                 loc_info = re.search(r"line (\d+), col (\d+)", str(e))
-                message += f" rendering error around line: {loc_info[1]}, column {loc_info[2]}."  # type: ignore
+                message += f" rendering error at template line: {loc_info[1]}, column {loc_info[2]}."  # type: ignore
             except Exception:
                 message += " rendering error."
 
@@ -490,7 +490,7 @@ class JinjaTemplate(BaseTemplate):
         except Exception as e:
             message = "Error in JinjaTemplate"
             if self.definition_loc:
-                message += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
+                message += f" created at {self.definition_loc[0]}:{self.definition_loc[1]}"
                 try:
                     if hasattr(e, "lineno"):
                         message += f" (error likely around line: {e.lineno})"  # type: ignore  # assume Jinja exception
@@ -505,9 +505,9 @@ class JinjaTemplate(BaseTemplate):
         except Exception as e:
             message = f"<{type(self).__name__}>"
             if self.definition_loc:
-                message += f" (defined at {self.definition_loc[0]}:{self.definition_loc[1]})"
+                message += f" (created at {self.definition_loc[0]}:{self.definition_loc[1]})"
             try:
-                message += f" rendering error around line: {e.lineno}."  # type: ignore  # assume Jinja exception
+                message += f" rendering error at template line: {e.lineno}."  # type: ignore  # assume Jinja exception
             except Exception:
                 message += " rendering error."
 
@@ -529,7 +529,7 @@ class MakoTemplate(BaseTemplate):
         except Exception as e:
             message = "Error in MakoTemplate"
             if self.definition_loc:
-                message += f" defined at {self.definition_loc[0]}:{self.definition_loc[1]}"
+                message += f" created at {self.definition_loc[0]}:{self.definition_loc[1]}"
                 try:
                     message += f" (error likely around line {e.lineno}, column: {getattr(e, 'pos', '?')})"  # type: ignore  # assume Mako exception
                 except Exception:
@@ -545,9 +545,9 @@ class MakoTemplate(BaseTemplate):
         except Exception as e:
             message = f"<{type(self).__name__}>"
             if self.definition_loc:
-                message += f" (defined at {self.definition_loc[0]}:{self.definition_loc[1]})"
+                message += f" (created at {self.definition_loc[0]}:{self.definition_loc[1]})"
             try:
-                message += f" rendering error around line: {e.lineno}, column: {getattr(e, 'pos', '?')}"  # type: ignore  # assume Mako exception
+                message += f" rendering error at template line: {e.lineno}, column: {getattr(e, 'pos', '?')}"  # type: ignore  # assume Mako exception
             except Exception:
                 message += " rendering error."
 
