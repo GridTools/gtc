@@ -69,7 +69,7 @@ except ImportError:
 
 SourceFormatter = Callable[[str], str]
 
-#: Global dict storing registered formatters
+#: Global dict storing registered formatters.
 SOURCE_FORMATTERS: Dict[str, SourceFormatter] = {}
 
 
@@ -669,13 +669,13 @@ class TemplatedGenerator(NodeVisitor):
                         **kwargs,
                     )
                 except TemplateRenderingError as e:
-                    # Add extra information to the raised exception
-                    message = (
+                    # Raise a new exception with extra information keeping the original cause
+                    raise TemplateRenderingError(
                         f"Error in '{key}' template when rendering node '{node}'.\n"
-                        + getattr(e, "message", str(e))
-                    )
-
-                    raise TemplateRenderingError(message, **e.info, node=node) from e
+                        + getattr(e, "message", str(e)),
+                        **e.info,
+                        node=node,
+                    ) from e.__cause__
 
         elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
             node, type_definitions.ATOMIC_COLLECTION_TYPES
