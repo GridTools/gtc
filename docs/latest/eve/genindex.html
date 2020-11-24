@@ -176,7 +176,6 @@
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
- | <a href="#X"><strong>X</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -211,6 +210,8 @@
       <li><a href="_source/eve.html#eve.concepts.BaseNode">BaseNode (class in eve.concepts)</a>
 </li>
       <li><a href="_source/eve.html#eve.concepts.BaseNode.Config">BaseNode.Config (class in eve.concepts)</a>
+</li>
+      <li><a href="_source/eve.html#eve.codegen.BaseTemplate">BaseTemplate (class in eve.codegen)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -258,9 +259,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_source/eve.html#eve.codegen.TextBlock.dedent">dedent() (eve.codegen.TextBlock method)</a>
 </li>
-      <li><a href="_source/eve.html#eve.codegen.FormatTemplate.definition">definition (eve.codegen.FormatTemplate attribute)</a>
+      <li><a href="_source/eve.html#eve.codegen.BaseTemplate.definition">definition (eve.codegen.BaseTemplate attribute)</a>
 
       <ul>
+        <li><a href="_source/eve.html#eve.codegen.FormatTemplate.definition">(eve.codegen.FormatTemplate attribute)</a>
+</li>
         <li><a href="_source/eve.html#eve.codegen.JinjaTemplate.definition">(eve.codegen.JinjaTemplate attribute)</a>
 </li>
         <li><a href="_source/eve.html#eve.codegen.MakoTemplate.definition">(eve.codegen.MakoTemplate attribute)</a>
@@ -272,6 +275,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_source/eve.html#eve.codegen.BaseTemplate.definition_loc">definition_loc (eve.codegen.BaseTemplate attribute)</a>
+</li>
       <li><a href="_source/eve.html#eve.type_definitions.DELETE">DELETE (in module eve.type_definitions)</a>
 </li>
   </ul></td>
@@ -406,17 +411,17 @@
 </li>
       <li><a href="_source/eve.html#eve.type_definitions.Float">Float (in module eve.type_definitions)</a>
 </li>
-      <li><a href="_source/eve.html#eve.utils.XStringFormatter.format_field">format_field() (eve.utils.XStringFormatter method)</a>
-</li>
       <li><a href="_source/eve.html#eve.codegen.format_python_source">format_python_source() (in module eve.codegen)</a>
 </li>
       <li><a href="_source/eve.html#eve.codegen.format_source">format_source() (in module eve.codegen)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_source/eve.html#eve.codegen.FormatTemplate">FormatTemplate (class in eve.codegen)</a>
 </li>
-      <li><a href="_source/eve.html#eve.codegen.Template.from_file">from_file() (eve.codegen.Template class method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_source/eve.html#eve.codegen.FormatterNameError">FormatterNameError</a>
+</li>
+      <li><a href="_source/eve.html#eve.codegen.FormattingError">FormattingError</a>
 </li>
       <li><a href="_source/eve.html#eve.codegen.Name.from_string">from_string() (eve.codegen.Name class method)</a>
 
@@ -460,13 +465,9 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_source/eve.html#eve.concepts.GenericNode">GenericNode (class in eve.concepts)</a>
 </li>
-      <li><a href="_source/eve.html#eve.utils.XStringFormatter.get_field">get_field() (eve.utils.XStringFormatter method)</a>
-</li>
       <li><a href="_source/eve.html#eve.utils.get_item">get_item() (in module eve.utils)</a>
 </li>
       <li><a href="_source/eve.html#eve.codegen.TemplatedGenerator.get_template">get_template() (eve.codegen.TemplatedGenerator method)</a>
-</li>
-      <li><a href="_source/eve.html#eve.utils.XStringFormatter.get_value">get_value() (eve.utils.XStringFormatter method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -492,12 +493,30 @@
 </li>
       <li><a href="_source/eve.html#eve.codegen.TextBlock.indent_str">indent_str() (eve.codegen.TextBlock property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_source/eve.html#eve.codegen.TextBlock.indented">indented() (eve.codegen.TextBlock method)</a>
 </li>
-      <li><a href="_source/eve.html#eve.concepts.ImplFieldMetadataDict.info">info (eve.concepts.ImplFieldMetadataDict attribute)</a>
+      <li><a href="_source/eve.html#eve.codegen.FormatterNameError.info">info (eve.codegen.FormatterNameError attribute)</a>
+
+      <ul>
+        <li><a href="_source/eve.html#eve.codegen.FormattingError.info">(eve.codegen.FormattingError attribute)</a>
 </li>
+        <li><a href="_source/eve.html#eve.codegen.TemplateDefinitionError.info">(eve.codegen.TemplateDefinitionError attribute)</a>
+</li>
+        <li><a href="_source/eve.html#eve.codegen.TemplateRenderingError.info">(eve.codegen.TemplateRenderingError attribute)</a>
+</li>
+        <li><a href="_source/eve.html#eve.concepts.ImplFieldMetadataDict.info">(eve.concepts.ImplFieldMetadataDict attribute)</a>
+</li>
+        <li><a href="_source/eve.html#eve.exceptions.EveError.info">(eve.exceptions.EveError attribute)</a>
+</li>
+        <li><a href="_source/eve.html#eve.exceptions.EveRuntimeError.info">(eve.exceptions.EveRuntimeError attribute)</a>
+</li>
+        <li><a href="_source/eve.html#eve.exceptions.EveTypeError.info">(eve.exceptions.EveTypeError attribute)</a>
+</li>
+        <li><a href="_source/eve.html#eve.exceptions.EveValueError.info">(eve.exceptions.EveValueError attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_source/eve.html#eve.concepts.FieldKind.INPUT">INPUT (eve.concepts.FieldKind attribute)</a>
 </li>
       <li><a href="_source/eve.html#eve.type_definitions.Int">Int (in module eve.type_definitions)</a>
@@ -677,22 +696,22 @@
 </li>
       <li><a href="_source/eve.html#eve.codegen.Template.render">render() (eve.codegen.Template method)</a>
 </li>
-      <li><a href="_source/eve.html#eve.codegen.FormatTemplate.render_template">render_template() (eve.codegen.FormatTemplate method)</a>
-
-      <ul>
-        <li><a href="_source/eve.html#eve.codegen.JinjaTemplate.render_template">(eve.codegen.JinjaTemplate method)</a>
+      <li><a href="_source/eve.html#eve.codegen.TemplatedGenerator.render_template">render_template() (eve.codegen.TemplatedGenerator method)</a>
 </li>
-        <li><a href="_source/eve.html#eve.codegen.MakoTemplate.render_template">(eve.codegen.MakoTemplate method)</a>
-</li>
-        <li><a href="_source/eve.html#eve.codegen.StringTemplate.render_template">(eve.codegen.StringTemplate method)</a>
-</li>
-        <li><a href="_source/eve.html#eve.codegen.Template.render_template">(eve.codegen.Template method)</a>
-</li>
-        <li><a href="_source/eve.html#eve.codegen.TemplatedGenerator.render_template">(eve.codegen.TemplatedGenerator method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_source/eve.html#eve.codegen.FormatTemplate.render_values">render_values() (eve.codegen.FormatTemplate method)</a>
+
+      <ul>
+        <li><a href="_source/eve.html#eve.codegen.JinjaTemplate.render_values">(eve.codegen.JinjaTemplate method)</a>
+</li>
+        <li><a href="_source/eve.html#eve.codegen.MakoTemplate.render_values">(eve.codegen.MakoTemplate method)</a>
+</li>
+        <li><a href="_source/eve.html#eve.codegen.StringTemplate.render_values">(eve.codegen.StringTemplate method)</a>
+</li>
+        <li><a href="_source/eve.html#eve.codegen.Template.render_values">(eve.codegen.Template method)</a>
+</li>
+      </ul></li>
       <li><a href="_source/eve.html#eve.utils.UIDGenerator.reset_sequence">reset_sequence() (eve.utils.UIDGenerator class method)</a>
 </li>
   </ul></td>
@@ -753,16 +772,20 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_source/eve.html#eve.codegen.Template">Template (class in eve.codegen)</a>
 </li>
+      <li><a href="_source/eve.html#eve.codegen.TemplateDefinitionError">TemplateDefinitionError</a>
+</li>
       <li><a href="_source/eve.html#eve.codegen.TemplatedGenerator">TemplatedGenerator (class in eve.codegen)</a>
+</li>
+      <li><a href="_source/eve.html#eve.codegen.TemplateRenderingError">TemplateRenderingError</a>
 </li>
       <li><a href="_source/eve.html#eve.codegen.TextBlock.text">text() (eve.codegen.TextBlock property)</a>
 </li>
       <li><a href="_source/eve.html#eve.codegen.TextBlock">TextBlock (class in eve.codegen)</a>
 </li>
-      <li><a href="_source/eve.html#eve.codegen.TemplatedGenerator.transform_children">transform_children() (eve.codegen.TemplatedGenerator method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_source/eve.html#eve.codegen.TemplatedGenerator.transform_children">transform_children() (eve.codegen.TemplatedGenerator method)</a>
+</li>
       <li><a href="_source/eve.html#eve.codegen.TemplatedGenerator.transform_impl_fields">transform_impl_fields() (eve.codegen.TemplatedGenerator method)</a>
 </li>
       <li><a href="_source/eve.html#eve.iterators.TraversalOrder">TraversalOrder (class in eve.iterators)</a>
@@ -789,8 +812,6 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_source/eve.html#eve.utils.XStringFormatter.vformat">vformat() (eve.utils.XStringFormatter method)</a>
-</li>
       <li><a href="_source/eve.html#eve.tree_utils.FindNodes.visit">visit() (eve.tree_utils.FindNodes method)</a>
 
       <ul>
@@ -810,14 +831,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_source/eve.html#eve.codegen.Name.words">words (eve.codegen.Name attribute)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="X">X</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_source/eve.html#eve.utils.XStringFormatter">XStringFormatter (class in eve.utils)</a>
 </li>
   </ul></td>
 </tr></table>

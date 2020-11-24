@@ -177,7 +177,6 @@
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">string</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
@@ -195,20 +194,7 @@
 <span class="kn">from</span> <span class="nn">boltons.typeutils</span> <span class="kn">import</span> <span class="n">classproperty</span>  <span class="c1"># noqa: F401</span>
 
 <span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">DELETE</span><span class="p">,</span> <span class="n">NOTHING</span>
-<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Any</span><span class="p">,</span>
-    <span class="n">Callable</span><span class="p">,</span>
-    <span class="n">Iterable</span><span class="p">,</span>
-    <span class="n">Iterator</span><span class="p">,</span>
-    <span class="n">List</span><span class="p">,</span>
-    <span class="n">Mapping</span><span class="p">,</span>
-    <span class="n">Optional</span><span class="p">,</span>
-    <span class="n">Sequence</span><span class="p">,</span>
-    <span class="n">Set</span><span class="p">,</span>
-    <span class="n">Tuple</span><span class="p">,</span>
-    <span class="n">Type</span><span class="p">,</span>
-    <span class="n">Union</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 
 
 <div class="viewcode-block" id="filter_map"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.filter_map">[docs]</a><span class="k">def</span> <span class="nf">filter_map</span><span class="p">(</span>
@@ -449,137 +435,6 @@
         <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="nb">next</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">__counter</span><span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Unsafe reset of global UIDGenerator&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">__counter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">start</span><span class="p">)</span></div></div>
-
-
-<div class="viewcode-block" id="XStringFormatter"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XStringFormatter">[docs]</a><span class="k">class</span> <span class="nc">XStringFormatter</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Custom :class:`string.Formatter` implementation with f-string-like functionality.</span>
-
-<span class="sd">    Implementation follows as close as possible the implementation style</span>
-<span class="sd">    of :class:`string.Formatter` in the standard library.</span>
-
-<span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; fmt = XStringFormatter()</span>
-<span class="sd">        &gt;&gt;&gt; data = [1.1, 2.22, 3.333, 4.444]</span>
-
-<span class="sd">        &gt;&gt;&gt; fmt.format(&quot;{&#39;;&#39;.join(str((i, d)) for i, d in enumerate(data))}&quot;, data=data)</span>
-<span class="sd">        &#39;(0, 1.1);(1, 2.22);(2, 3.333);(3, 4.444)&#39;</span>
-
-<span class="sd">    Note:</span>
-<span class="sd">        The current implementation is not 100% f-string compatible due to</span>
-<span class="sd">        limitations in the `format` specification parser (:meth:`string.Formatter.parser`).</span>
-<span class="sd">        Most flagrant limitation is that ``{`` and ``}`` characters are strictly forbidden</span>
-<span class="sd">        inside expressions.</span>
-
-<span class="sd">        See `PEP 498 &lt;https://www.python.org/dev/peps/pep-0498/&gt;`_ for more details.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">class</span> <span class="nc">__DictLogger</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Dumb :class:`dict` subclass logging the accessed args.&quot;&quot;&quot;</span>
-
-        <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">used_args</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;used_args&quot;</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">used_args</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-
-<div class="viewcode-block" id="XStringFormatter.vformat"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XStringFormatter.vformat">[docs]</a>    <span class="k">def</span> <span class="nf">vformat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">used_args</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">result</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vformat</span><span class="p">(</span><span class="n">format_string</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">used_args</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">check_unused_args</span><span class="p">(</span><span class="n">used_args</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># type: ignore  # likely wrong &#39;used_args&#39; type in stdlib</span>
-        <span class="k">return</span> <span class="n">result</span></div>
-
-    <span class="k">def</span> <span class="nf">_vformat</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">format_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span>
-        <span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
-        <span class="n">used_args</span><span class="p">:</span> <span class="n">Set</span><span class="p">,</span>
-        <span class="n">recursion_depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">auto_arg_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="n">recursion_depth</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Max string recursion exceeded&quot;</span><span class="p">)</span>
-
-        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">_kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__DictLogger</span><span class="p">({</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="s2">&quot;__formatter_args__&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">})</span>
-        <span class="n">_kwargs</span><span class="o">.</span><span class="n">used_args</span> <span class="o">=</span> <span class="n">used_args</span>
-        <span class="k">for</span> <span class="n">literal_text</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">format_spec</span><span class="p">,</span> <span class="n">conversion</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">format_string</span><span class="p">):</span>
-            <span class="c1"># output the literal text</span>
-            <span class="k">if</span> <span class="n">literal_text</span><span class="p">:</span>
-                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">literal_text</span><span class="p">)</span>
-
-            <span class="c1"># if there&#39;s a field, output it</span>
-            <span class="k">if</span> <span class="n">field_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># this is some markup, find the object and do</span>
-                <span class="c1">#  the formatting</span>
-
-                <span class="c1"># handle arg indexing when empty field_names are given.</span>
-                <span class="k">if</span> <span class="n">field_name</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">auto_arg_index</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                            <span class="s2">&quot;cannot switch from manual field &quot;</span>
-                            <span class="s2">&quot;specification to automatic field &quot;</span>
-                            <span class="s2">&quot;numbering&quot;</span>
-                        <span class="p">)</span>
-                    <span class="n">field_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">auto_arg_index</span><span class="p">)</span>
-                    <span class="n">auto_arg_index</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="k">elif</span> <span class="n">field_name</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">auto_arg_index</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                            <span class="s2">&quot;cannot switch from manual field &quot;</span>
-                            <span class="s2">&quot;specification to automatic field &quot;</span>
-                            <span class="s2">&quot;numbering&quot;</span>
-                        <span class="p">)</span>
-                    <span class="c1"># disable auto arg incrementing, if it gets</span>
-                    <span class="c1"># used later on, then an exception will be raised</span>
-                    <span class="n">auto_arg_index</span> <span class="o">=</span> <span class="kc">False</span>
-
-                <span class="c1"># given the field_name or expression, get the actual formatted value</span>
-                <span class="c1"># if a valid arg_used is returned, add it to the used_args set (only for subclasses)</span>
-                <span class="n">obj</span><span class="p">,</span> <span class="n">arg_used</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_field</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">_kwargs</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">arg_used</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">used_args</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">arg_used</span><span class="p">)</span>
-
-                <span class="c1"># do any conversion on the resulting object</span>
-                <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_field</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">conversion</span><span class="p">)</span>  <span class="c1"># type: ignore  # wrong &#39;conversion&#39; type in stdlib</span>
-
-                <span class="c1"># expand the format spec, if needed</span>
-                <span class="n">format_spec</span><span class="p">,</span> <span class="n">auto_arg_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vformat</span><span class="p">(</span>
-                    <span class="n">format_spec</span><span class="p">,</span>  <span class="c1"># type: ignore  # wrong &#39;format_spec&#39; type in stdlib</span>
-                    <span class="n">args</span><span class="p">,</span>
-                    <span class="n">kwargs</span><span class="p">,</span>
-                    <span class="n">used_args</span><span class="p">,</span>
-                    <span class="n">recursion_depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-                    <span class="n">auto_arg_index</span><span class="o">=</span><span class="n">auto_arg_index</span><span class="p">,</span>
-                <span class="p">)</span>
-
-                <span class="c1"># format the object and append to the result</span>
-                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format_field</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">format_spec</span><span class="p">))</span>
-
-        <span class="n">used_args</span> <span class="o">-=</span> <span class="p">{</span><span class="s2">&quot;__formatter_args__&quot;</span><span class="p">}</span>
-
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">auto_arg_index</span>
-
-<div class="viewcode-block" id="XStringFormatter.get_value"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XStringFormatter.get_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">{},</span> <span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span></div>
-
-<div class="viewcode-block" id="XStringFormatter.format_field"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XStringFormatter.format_field">[docs]</a>    <span class="k">def</span> <span class="nf">format_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">format_spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">format</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">format_spec</span><span class="p">)</span></div>
-
-    <span class="c1"># given a field_name, find the object it references.</span>
-    <span class="c1">#  field_name:   the field being looked up or a python expression</span>
-    <span class="c1">#  args, kwargs: as passed in to vformat</span>
-<div class="viewcode-block" id="XStringFormatter.get_field"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XStringFormatter.get_field">[docs]</a>    <span class="k">def</span> <span class="nf">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="n">used_arg</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">field_name</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
-            <span class="n">used_arg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
-            <span class="n">field_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;__formatter_args__[</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">]&quot;</span>
-
-        <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">obj</span><span class="p">,</span> <span class="n">used_arg</span></div></div>
 </pre></div>
 
            </div>

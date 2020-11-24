@@ -170,32 +170,49 @@
 
 <span class="sd">&quot;&quot;&quot;Definitions of specific Eve exceptions.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
 
 
 <div class="viewcode-block" id="EveError"><a class="viewcode-back" href="../../_source/eve.html#eve.exceptions.EveError">[docs]</a><span class="k">class</span> <span class="nc">EveError</span><span class="p">:</span>
-    <span class="n">message_template</span> <span class="o">=</span> <span class="s2">&quot;Generic Eve error (info: </span><span class="si">{info}</span><span class="s2">) &quot;</span>
+    <span class="sd">&quot;&quot;&quot;Base class for Eve-specific exceptions.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        This base class has to be always inherited together with a standard</span>
+<span class="sd">    exception, and thus it should not be used as direct superclass</span>
+<span class="sd">    for custom exceptions. Inherit directly from :class:`EveTypeError`,</span>
+<span class="sd">    :class:`EveTypeError`, etc. instead.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">message_template</span> <span class="o">=</span> <span class="s2">&quot;Generic Eve error [</span><span class="si">{info}</span><span class="s2">]&quot;</span>
+    <span class="n">info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># type: ignore  # mypy issue 4335</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">kwargs</span>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">message_template</span>
-        <span class="k">return</span> <span class="n">message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># type: ignore  # super() call works as expected when using multiple inheritance</span>
+            <span class="n">message</span>
+            <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">message_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EveTypeError"><a class="viewcode-back" href="../../_source/eve.html#eve.exceptions.EveTypeError">[docs]</a><span class="k">class</span> <span class="nc">EveTypeError</span><span class="p">(</span><span class="n">EveError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-    <span class="n">message_template</span> <span class="o">=</span> <span class="s2">&quot;Invalid or unexpected type (info: </span><span class="si">{info}</span><span class="s2">)&quot;</span></div>
+    <span class="sd">&quot;&quot;&quot;Base class for Eve-specific type errors.&quot;&quot;&quot;</span>
+
+    <span class="n">message_template</span> <span class="o">=</span> <span class="s2">&quot;Invalid or unexpected type [</span><span class="si">{info}</span><span class="s2">]&quot;</span></div>
 
 
 <div class="viewcode-block" id="EveValueError"><a class="viewcode-back" href="../../_source/eve.html#eve.exceptions.EveValueError">[docs]</a><span class="k">class</span> <span class="nc">EveValueError</span><span class="p">(</span><span class="n">EveError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-    <span class="n">message_template</span> <span class="o">=</span> <span class="s2">&quot;Invalid value (info: </span><span class="si">{info}</span><span class="s2">)&quot;</span></div>
+    <span class="sd">&quot;&quot;&quot;Base class for Eve-specific value errors.&quot;&quot;&quot;</span>
+
+    <span class="n">message_template</span> <span class="o">=</span> <span class="s2">&quot;Invalid value [</span><span class="si">{info}</span><span class="s2">]&quot;</span></div>
 
 
 <div class="viewcode-block" id="EveRuntimeError"><a class="viewcode-back" href="../../_source/eve.html#eve.exceptions.EveRuntimeError">[docs]</a><span class="k">class</span> <span class="nc">EveRuntimeError</span><span class="p">(</span><span class="n">EveError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
-    <span class="n">message_template</span> <span class="o">=</span> <span class="s2">&quot;Runtime error (info: </span><span class="si">{info}</span><span class="s2">)&quot;</span></div>
+    <span class="sd">&quot;&quot;&quot;Base class for Eve-specific run-time errors.&quot;&quot;&quot;</span>
+
+    <span class="n">message_template</span> <span class="o">=</span> <span class="s2">&quot;Runtime error [</span><span class="si">{info}</span><span class="s2">]&quot;</span></div>
 </pre></div>
 
            </div>

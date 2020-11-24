@@ -189,18 +189,71 @@
 <span id="eve-codegen-module"></span><h2>eve.codegen module<a class="headerlink" href="#module-eve.codegen" title="Permalink to this headline">¶</a></h2>
 <p>Tools for source code generation.</p>
 <dl class="py class">
+<dt id="eve.codegen.BaseTemplate">
+<em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">BaseTemplate</code><a class="reference internal" href="../_modules/eve/codegen.html#BaseTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.BaseTemplate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.Template</span></code></a></p>
+<p>Helper class to add source location info of template definitions.</p>
+<dl class="py attribute">
+<dt id="eve.codegen.BaseTemplate.definition">
+<code class="sig-name descname">definition</code><em class="property">: Any</em><a class="headerlink" href="#eve.codegen.BaseTemplate.definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="eve.codegen.BaseTemplate.definition_loc">
+<code class="sig-name descname">definition_loc</code><em class="property">: Optional<span class="p">[</span>Tuple<span class="p">[</span>str<span class="p">, </span>int<span class="p">]</span><span class="p">]</span></em><a class="headerlink" href="#eve.codegen.BaseTemplate.definition_loc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="eve.codegen.FormatTemplate">
 <em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">FormatTemplate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">definition</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#FormatTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.FormatTemplate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.Template</span></code></a></p>
-<p>Template adapter for <code class="xref py py-class docutils literal notranslate"><span class="pre">StringFormatter</span></code>.</p>
+<dd><p>Bases: <a class="reference internal" href="#eve.codegen.BaseTemplate" title="eve.codegen.BaseTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.BaseTemplate</span></code></a></p>
+<p>Template adapter to render regular strings as fully-featured f-strings.</p>
 <dl class="py attribute">
 <dt id="eve.codegen.FormatTemplate.definition">
 <code class="sig-name descname">definition</code><em class="property">: str</em><a class="headerlink" href="#eve.codegen.FormatTemplate.definition" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="eve.codegen.FormatTemplate.render_template">
-<code class="sig-name descname">render_template</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#FormatTemplate.render_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.FormatTemplate.render_template" title="Permalink to this definition">¶</a></dt>
+<dt id="eve.codegen.FormatTemplate.render_values">
+<code class="sig-name descname">render_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#FormatTemplate.render_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.FormatTemplate.render_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Placeholder values provided as keyword arguments.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The rendered string.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eve.codegen.TemplateRenderingError" title="eve.codegen.TemplateRenderingError"><strong>TemplateRenderingError</strong></a> – If the template rendering fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt id="eve.codegen.FormatterNameError">
+<em class="property">exception </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">FormatterNameError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#FormatterNameError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.FormatterNameError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eve.exceptions.EveRuntimeError" title="eve.exceptions.EveRuntimeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.exceptions.EveRuntimeError</span></code></a></p>
+<p>Run-time error registering a new source code formatter.</p>
+<dl class="py attribute">
+<dt id="eve.codegen.FormatterNameError.info">
+<code class="sig-name descname">info</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></em><a class="headerlink" href="#eve.codegen.FormatterNameError.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt id="eve.codegen.FormattingError">
+<em class="property">exception </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">FormattingError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#FormattingError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.FormattingError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eve.exceptions.EveRuntimeError" title="eve.exceptions.EveRuntimeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.exceptions.EveRuntimeError</span></code></a></p>
+<p>Run-time error applying a source code formatter.</p>
+<dl class="py attribute">
+<dt id="eve.codegen.FormattingError.info">
+<code class="sig-name descname">info</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></em><a class="headerlink" href="#eve.codegen.FormattingError.info" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -208,7 +261,7 @@
 <dl class="py class">
 <dt id="eve.codegen.JinjaTemplate">
 <em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">JinjaTemplate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">definition</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>jinja2.environment.Template<span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#JinjaTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.JinjaTemplate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.Template</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#eve.codegen.BaseTemplate" title="eve.codegen.BaseTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.BaseTemplate</span></code></a></p>
 <p>Template adapter for <cite>jinja2.Template</cite>.</p>
 <dl class="py attribute">
 <dt id="eve.codegen.JinjaTemplate.definition">
@@ -216,16 +269,28 @@
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="eve.codegen.JinjaTemplate.render_template">
-<code class="sig-name descname">render_template</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#JinjaTemplate.render_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.JinjaTemplate.render_template" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="eve.codegen.JinjaTemplate.render_values">
+<code class="sig-name descname">render_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#JinjaTemplate.render_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.JinjaTemplate.render_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Placeholder values provided as keyword arguments.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The rendered string.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eve.codegen.TemplateRenderingError" title="eve.codegen.TemplateRenderingError"><strong>TemplateRenderingError</strong></a> – If the template rendering fails.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt id="eve.codegen.MakoTemplate">
 <em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">MakoTemplate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">definition</span><span class="p">:</span> <span class="n">mako.template.Template</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#MakoTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.MakoTemplate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.Template</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#eve.codegen.BaseTemplate" title="eve.codegen.BaseTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.BaseTemplate</span></code></a></p>
 <p>Template adapter for <cite>mako.template.Template</cite>.</p>
 <dl class="py attribute">
 <dt id="eve.codegen.MakoTemplate.definition">
@@ -233,9 +298,21 @@
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="eve.codegen.MakoTemplate.render_template">
-<code class="sig-name descname">render_template</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#MakoTemplate.render_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.MakoTemplate.render_template" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="eve.codegen.MakoTemplate.render_values">
+<code class="sig-name descname">render_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#MakoTemplate.render_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.MakoTemplate.render_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Placeholder values provided as keyword arguments.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The rendered string.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eve.codegen.TemplateRenderingError" title="eve.codegen.TemplateRenderingError"><strong>TemplateRenderingError</strong></a> – If the template rendering fails.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -264,13 +341,13 @@
 <dl class="py data">
 <dt id="eve.codegen.SOURCE_FORMATTERS">
 <code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">SOURCE_FORMATTERS</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Callable<span class="p">[</span><span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">]</span><span class="p">]</span></em><em class="property"> = {'python': &lt;function format_python_source&gt;}</em><a class="headerlink" href="#eve.codegen.SOURCE_FORMATTERS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Global dict storing registered formatters</p>
+<dd><p>Global dict storing registered formatters.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt id="eve.codegen.StringTemplate">
 <em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">StringTemplate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">definition</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>string.Template<span class="p">]</span></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#StringTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.StringTemplate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.Template</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#eve.codegen.BaseTemplate" title="eve.codegen.BaseTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.codegen.BaseTemplate</span></code></a></p>
 <p>Template adapter for <cite>string.Template</cite>.</p>
 <dl class="py attribute">
 <dt id="eve.codegen.StringTemplate.definition">
@@ -278,24 +355,37 @@
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="eve.codegen.StringTemplate.render_template">
-<code class="sig-name descname">render_template</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#StringTemplate.render_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.StringTemplate.render_template" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="eve.codegen.StringTemplate.render_values">
+<code class="sig-name descname">render_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#StringTemplate.render_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.StringTemplate.render_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Placeholder values provided as keyword arguments.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The rendered string.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eve.codegen.TemplateRenderingError" title="eve.codegen.TemplateRenderingError"><strong>TemplateRenderingError</strong></a> – If the template rendering fails.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt id="eve.codegen.Template">
-<em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">Template</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">definition</span><span class="p">:</span> <span class="n">Any</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#Template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.Template" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
-<p>Abstract class defining the Template interface.</p>
-<p>Subclassess adapting this interface to different template engines will
-only need to implement the abstract methods.</p>
-<dl class="py method">
-<dt id="eve.codegen.Template.from_file">
-<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>os.PathLike<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#eve.codegen.Template" title="eve.codegen.Template">eve.codegen.Template</a><a class="reference internal" href="../_modules/eve/codegen.html#Template.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.Template.from_file" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">Template</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#Template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.Template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Protocol</span></code></p>
+<p>Protocol (abstract base class) defining the Template interface.</p>
+<p>Direct subclassess of this base class only need to implement the
+abstract methods to adapt different template engines to this
+interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eve.codegen.TemplateDefinitionError" title="eve.codegen.TemplateDefinitionError"><strong>TemplateDefinitionError</strong></a> – If the template definition contains errors.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt id="eve.codegen.Template.render">
 <code class="sig-name descname">render</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mapping</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#Template.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.Template.render" title="Permalink to this definition">¶</a></dt>
@@ -304,17 +394,58 @@ only need to implement the abstract methods.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mapping</strong> – A mapping whose keys match the template placeholders.</p></li>
-<li><p><strong>**kwargs</strong> – placeholder values might be also provided as
-keyword arguments, and they will take precedence over <code class="docutils literal notranslate"><span class="pre">mapping</span></code>
-values for duplicated keys.</p></li>
+<li><p><strong>**kwargs</strong> – Placeholder values provided as keyword arguments (they will
+take precedence over <code class="docutils literal notranslate"><span class="pre">mapping</span></code> values for duplicated keys.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The rendered string.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eve.codegen.TemplateRenderingError" title="eve.codegen.TemplateRenderingError"><strong>TemplateRenderingError</strong></a> – If the template rendering fails.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="eve.codegen.Template.render_template">
-<em class="property">abstract </em><code class="sig-name descname">render_template</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#Template.render_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.Template.render_template" title="Permalink to this definition">¶</a></dt>
+<dt id="eve.codegen.Template.render_values">
+<em class="property">abstract </em><code class="sig-name descname">render_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/codegen.html#Template.render_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.Template.render_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the template.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Placeholder values provided as keyword arguments.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The rendered string.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eve.codegen.TemplateRenderingError" title="eve.codegen.TemplateRenderingError"><strong>TemplateRenderingError</strong></a> – If the template rendering fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt id="eve.codegen.TemplateDefinitionError">
+<em class="property">exception </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">TemplateDefinitionError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#TemplateDefinitionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.TemplateDefinitionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eve.exceptions.EveTypeError" title="eve.exceptions.EveTypeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.exceptions.EveTypeError</span></code></a></p>
+<p>Template definition error.</p>
+<dl class="py attribute">
+<dt id="eve.codegen.TemplateDefinitionError.info">
+<code class="sig-name descname">info</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></em><a class="headerlink" href="#eve.codegen.TemplateDefinitionError.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt id="eve.codegen.TemplateRenderingError">
+<em class="property">exception </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">TemplateRenderingError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#TemplateRenderingError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.TemplateRenderingError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eve.exceptions.EveRuntimeError" title="eve.exceptions.EveRuntimeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.exceptions.EveRuntimeError</span></code></a></p>
+<p>Run-time error rendering a template.</p>
+<dl class="py attribute">
+<dt id="eve.codegen.TemplateRenderingError.info">
+<code class="sig-name descname">info</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></em><a class="headerlink" href="#eve.codegen.TemplateRenderingError.info" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -802,9 +933,20 @@ Defaults to <cite>False</cite>.</p>
 <dt id="eve.exceptions.EveError">
 <em class="property">class </em><code class="sig-prename descclassname">eve.exceptions.</code><code class="sig-name descname">EveError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/exceptions.html#EveError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.exceptions.EveError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for Eve-specific exceptions.</p>
+<p class="rubric">Notes</p>
+<p>This base class has to be always inherited together with a standard</p>
+<p>exception, and thus it should not be used as direct superclass
+for custom exceptions. Inherit directly from <a class="reference internal" href="#eve.exceptions.EveTypeError" title="eve.exceptions.EveTypeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">EveTypeError</span></code></a>,
+<a class="reference internal" href="#eve.exceptions.EveTypeError" title="eve.exceptions.EveTypeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">EveTypeError</span></code></a>, etc. instead.</p>
+<dl class="py attribute">
+<dt id="eve.exceptions.EveError.info">
+<code class="sig-name descname">info</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></em><a class="headerlink" href="#eve.exceptions.EveError.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt id="eve.exceptions.EveError.message_template">
-<code class="sig-name descname">message_template</code><em class="property"> = 'Generic Eve error (info: {info}) '</em><a class="headerlink" href="#eve.exceptions.EveError.message_template" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">message_template</code><em class="property"> = 'Generic Eve error [{info}]'</em><a class="headerlink" href="#eve.exceptions.EveError.message_template" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -813,9 +955,15 @@ Defaults to <cite>False</cite>.</p>
 <dt id="eve.exceptions.EveRuntimeError">
 <em class="property">exception </em><code class="sig-prename descclassname">eve.exceptions.</code><code class="sig-name descname">EveRuntimeError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/exceptions.html#EveRuntimeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.exceptions.EveRuntimeError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#eve.exceptions.EveError" title="eve.exceptions.EveError"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.exceptions.EveError</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>Base class for Eve-specific run-time errors.</p>
+<dl class="py attribute">
+<dt id="eve.exceptions.EveRuntimeError.info">
+<code class="sig-name descname">info</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></em><a class="headerlink" href="#eve.exceptions.EveRuntimeError.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt id="eve.exceptions.EveRuntimeError.message_template">
-<code class="sig-name descname">message_template</code><em class="property"> = 'Runtime error (info: {info})'</em><a class="headerlink" href="#eve.exceptions.EveRuntimeError.message_template" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">message_template</code><em class="property"> = 'Runtime error [{info}]'</em><a class="headerlink" href="#eve.exceptions.EveRuntimeError.message_template" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -824,9 +972,15 @@ Defaults to <cite>False</cite>.</p>
 <dt id="eve.exceptions.EveTypeError">
 <em class="property">exception </em><code class="sig-prename descclassname">eve.exceptions.</code><code class="sig-name descname">EveTypeError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/exceptions.html#EveTypeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.exceptions.EveTypeError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#eve.exceptions.EveError" title="eve.exceptions.EveError"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.exceptions.EveError</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></p>
+<p>Base class for Eve-specific type errors.</p>
+<dl class="py attribute">
+<dt id="eve.exceptions.EveTypeError.info">
+<code class="sig-name descname">info</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></em><a class="headerlink" href="#eve.exceptions.EveTypeError.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt id="eve.exceptions.EveTypeError.message_template">
-<code class="sig-name descname">message_template</code><em class="property"> = 'Invalid or unexpected type (info: {info})'</em><a class="headerlink" href="#eve.exceptions.EveTypeError.message_template" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">message_template</code><em class="property"> = 'Invalid or unexpected type [{info}]'</em><a class="headerlink" href="#eve.exceptions.EveTypeError.message_template" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -835,9 +989,15 @@ Defaults to <cite>False</cite>.</p>
 <dt id="eve.exceptions.EveValueError">
 <em class="property">exception </em><code class="sig-prename descclassname">eve.exceptions.</code><code class="sig-name descname">EveValueError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/exceptions.html#EveValueError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.exceptions.EveValueError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#eve.exceptions.EveError" title="eve.exceptions.EveError"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.exceptions.EveError</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
+<p>Base class for Eve-specific value errors.</p>
+<dl class="py attribute">
+<dt id="eve.exceptions.EveValueError.info">
+<code class="sig-name descname">info</code><em class="property">: Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span></em><a class="headerlink" href="#eve.exceptions.EveValueError.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt id="eve.exceptions.EveValueError.message_template">
-<code class="sig-name descname">message_template</code><em class="property"> = 'Invalid value (info: {info})'</em><a class="headerlink" href="#eve.exceptions.EveValueError.message_template" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">message_template</code><em class="property"> = 'Invalid value [{info}]'</em><a class="headerlink" href="#eve.exceptions.EveValueError.message_template" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1289,52 +1449,6 @@ IDs are not longer guaranteed to be unique.</p>
 <em class="property">classmethod </em><code class="sig-name descname">sequential_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">prefix</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">width</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/utils.html#UIDGenerator.sequential_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.utils.UIDGenerator.sequential_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a sequential unique id (for the current session).</p>
 </dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="eve.utils.XStringFormatter">
-<em class="property">class </em><code class="sig-prename descclassname">eve.utils.</code><code class="sig-name descname">XStringFormatter</code><a class="reference internal" href="../_modules/eve/utils.html#XStringFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.utils.XStringFormatter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">string.Formatter</span></code></p>
-<p>Custom <code class="xref py py-class docutils literal notranslate"><span class="pre">string.Formatter</span></code> implementation with f-string-like functionality.</p>
-<p>Implementation follows as close as possible the implementation style
-of <code class="xref py py-class docutils literal notranslate"><span class="pre">string.Formatter</span></code> in the standard library.</p>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fmt</span> <span class="o">=</span> <span class="n">XStringFormatter</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.1</span><span class="p">,</span> <span class="mf">2.22</span><span class="p">,</span> <span class="mf">3.333</span><span class="p">,</span> <span class="mf">4.444</span><span class="p">]</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;{&#39;;&#39;.join(str((i, d)) for i, d in enumerate(data))}&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
-<span class="go">&#39;(0, 1.1);(1, 2.22);(2, 3.333);(3, 4.444)&#39;</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The current implementation is not 100% f-string compatible due to
-limitations in the <cite>format</cite> specification parser (<code class="xref py py-meth docutils literal notranslate"><span class="pre">string.Formatter.parser()</span></code>).
-Most flagrant limitation is that <code class="docutils literal notranslate"><span class="pre">{</span></code> and <code class="docutils literal notranslate"><span class="pre">}</span></code> characters are strictly forbidden
-inside expressions.</p>
-<p>See <a class="reference external" href="https://www.python.org/dev/peps/pep-0498/">PEP 498</a> for more details.</p>
-</div>
-<dl class="py method">
-<dt id="eve.utils.XStringFormatter.format_field">
-<code class="sig-name descname">format_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">Any</span></em>, <em class="sig-param"><span class="n">format_spec</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/utils.html#XStringFormatter.format_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.utils.XStringFormatter.format_field" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="eve.utils.XStringFormatter.get_field">
-<code class="sig-name descname">get_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span></em>, <em class="sig-param"><span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/eve/utils.html#XStringFormatter.get_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.utils.XStringFormatter.get_field" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="eve.utils.XStringFormatter.get_value">
-<code class="sig-name descname">get_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span></em>, <em class="sig-param"><span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/eve/utils.html#XStringFormatter.get_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.utils.XStringFormatter.get_value" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="eve.utils.XStringFormatter.vformat">
-<code class="sig-name descname">vformat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">format_string</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">args</span><span class="p">:</span> <span class="n">Sequence</span></em>, <em class="sig-param"><span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/eve/utils.html#XStringFormatter.vformat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.utils.XStringFormatter.vformat" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
