@@ -22,18 +22,20 @@ from __future__ import annotations
 import abc
 import collections.abc
 import contextlib
-import os
+import inspect
+import re
 import string
 import sys
 import textwrap
 import types
+import typing
 from subprocess import PIPE, Popen
 
 import black
 import jinja2
 from mako import template as mako_tpl
 
-from . import type_definitions, utils
+from . import exceptions, type_definitions, utils
 from .concepts import Node, TreeNode
 from .typingx import (
     Any,
@@ -45,10 +47,10 @@ from .typingx import (
     List,
     Mapping,
     Optional,
+    Protocol,
     Sequence,
     Set,
     Tuple,
-    Type,
     TypeVar,
     Union,
     cast,
@@ -67,8 +69,32 @@ except ImportError:
 
 SourceFormatter = Callable[[str], str]
 
-#: Global dict storing registered formatters
+#: Global dict storing registered formatters.
 SOURCE_FORMATTERS: Dict[str, SourceFormatter] = {}
+
+
+class FormatterNameError(exceptions.EveRuntimeError):
+    """Run-time error registering a new source code formatter."""
+
+    ...
+
+
+class FormattingError(exceptions.EveRuntimeError):
+    """Run-time error applying a source code formatter."""
+
+    ...
+
+
+class TemplateDefinitionError(exceptions.EveTypeError):
+    """Template definition error."""
+
+    ...
+
+
+class TemplateRenderingError(exceptions.EveRuntimeError):
+    """Run-time error rendering a template."""
+
+    ...
 
 
 def register_formatter(language: str) -> Callable[[SourceFormatter], SourceFormatter]:
@@ -76,7 +102,7 @@ def register_formatter(language: str) -> Callable[[SourceFormatter], SourceForma
 
     def _decorator(formatter: SourceFormatter) -> SourceFormatter:
         if language in SOURCE_FORMATTERS:
-            raise ValueError(f"Another formatter for language '{language}' already exists")
+            raise FormatterNameError(f"Another formatter for language '{language}' already exists")
 
         assert callable(formatter)
         SOURCE_FORMATTERS[language] = formatter
@@ -147,12 +173,12 @@ def format_source(language: str, source: str, *, skip_errors: bool = True, **kwa
         if formatter:
             return formatter(source, **kwargs)  # type: ignore # Callable does not support **kwargs
         else:
-            raise RuntimeError(f"Missing formatter for '{language}' language")
+            raise FormattingError(f"Missing formatter for '{language}' language")
     except Exception as e:
         if skip_errors:
             return source
         else:
-            raise RuntimeError(
+            raise FormattingError(
                 f"Something went wrong when trying to format '{language}' source code"
             ) from e
 
@@ -315,30 +341,32 @@ class TextBlock:
 TemplateT = TypeVar("TemplateT", bound="Template")
 
 
-class Template(abc.ABC):
-    """Abstract class defining the Template interface.
+@typing.runtime_checkable
+class Template(Protocol):
+    """Protocol (abstract base class) defining the Template interface.
 
-    Subclassess adapting this interface to different template engines will
-    only need to implement the abstract methods.
+    Direct subclassess of this base class only need to implement the
+    abstract methods to adapt different template engines to this
+    interface.
+
+    Raises:
+        TemplateDefinitionError: If the template definition contains errors.
+
     """
-
-    @classmethod
-    def from_file(cls: Type[TemplateT], file_path: Union[str, os.PathLike]) -> Template:
-        if cls is Template:
-            raise RuntimeError("This method can only be called in concrete Template subclasses")
-
-        with open(file_path, "r") as f:
-            definition = f.read()
-        return cls(definition)
 
     def render(self, mapping: Optional[Mapping[str, str]] = None, **kwargs: Any) -> str:
         """Render the template.
 
         Args:
             mapping: A mapping whose keys match the template placeholders.
-            **kwargs: placeholder values might be also provided as
-                keyword arguments, and they will take precedence over ``mapping``
-                values for duplicated keys.
+            **kwargs: Placeholder values provided as keyword arguments (they will
+                take precedence over ``mapping`` values for duplicated keys.
+
+        Returns:
+            The rendered string.
+
+        Raises:
+            TemplateRenderingError: If the template rendering fails.
 
         """
         if not mapping:
@@ -346,76 +374,184 @@ class Template(abc.ABC):
         if kwargs:
             mapping = {**mapping, **kwargs}
 
-        return self.render_template(**mapping)
+        return self.render_values(**mapping)
 
     @abc.abstractmethod
     def __init__(self, definition: Any, **kwargs: Any) -> None:
         pass
 
     @abc.abstractmethod
-    def render_template(self, **kwargs: Any) -> str:
+    def render_values(self, **kwargs: Any) -> str:
+        """Render the template.
+
+        Args:
+            **kwargs: Placeholder values provided as keyword arguments.
+
+        Returns:
+            The rendered string.
+
+        Raises:
+            TemplateRenderingError: If the template rendering fails.
+
+        """
         pass
 
 
-class FormatTemplate(Template):
-    """Template adapter for :class:`StringFormatter`."""
+class BaseTemplate(Template):
+    """Helper class to add source location info of template definitions."""
+
+    definition: Any
+    definition_loc: Optional[Tuple[str, int]]
+
+    def __init__(self) -> None:
+        self.definition_loc = None
+        frame = inspect.currentframe()
+        try:
+            if frame is not None:
+                (filename, lineno, _, _, _) = inspect.getframeinfo(frame.f_back.f_back)
+                self.definition_loc = (filename, lineno)
+        except Exception:
+            self.definition_loc = None
+        finally:
+            del frame
+
+    def __str__(self) -> str:
+        result = f"<{type(self).__qualname__}: '{self.definition}'>"
+        if self.definition_loc:
+            result += f" created at {self.definition_loc[0]}:{self.definition_loc[1]}"
+        return result
+
+
+class FormatTemplate(BaseTemplate):
+    """Template adapter to render regular strings as fully-featured f-strings."""
 
     definition: str
 
-    _formatter_: ClassVar[string.Formatter] = utils.XStringFormatter()
-
     def __init__(self, definition: str, **kwargs: Any) -> None:
-        self.definition = definition
+        super().__init__()
+        self.definition = f'(f"""{definition}""")'
 
-    def render_template(self, **kwargs: Any) -> str:
-        return self._formatter_.format(self.definition, **kwargs)
+    def render_values(self, **kwargs: Any) -> str:
+        try:
+            result = eval(self.definition, {}, kwargs or {})
+            assert isinstance(result, str)
+            return result
+        except Exception as e:
+            message = f"<{type(self).__name__}: '{self.definition}'>"
+            if self.definition_loc:
+                message += f" (created at {self.definition_loc[0]}:{self.definition_loc[1]})"
+            message += " rendering error."
+
+            raise TemplateRenderingError(message, template=self) from e
 
 
-class StringTemplate(Template):
+class StringTemplate(BaseTemplate):
     """Template adapter for `string.Template`."""
 
     definition: string.Template
 
     def __init__(self, definition: Union[str, string.Template], **kwargs: Any) -> None:
+        super().__init__()
         if isinstance(definition, str):
             definition = string.Template(definition)
         assert isinstance(definition, string.Template)
         self.definition = definition
 
-    def render_template(self, **kwargs: Any) -> str:
-        return self.definition.substitute(**kwargs)
+    def render_values(self, **kwargs: Any) -> str:
+        try:
+            return self.definition.substitute(**kwargs)
+        except Exception as e:
+            message = f"<{type(self).__name__}>"
+            if self.definition_loc:
+                message += f" (created at {self.definition_loc[0]}:{self.definition_loc[1]})"
+            try:
+                loc_info = re.search(r"line (\d+), col (\d+)", str(e))
+                message += f" rendering error at template line: {loc_info[1]}, column {loc_info[2]}."  # type: ignore
+            except Exception:
+                message += " rendering error."
+
+            raise TemplateRenderingError(message, template=self) from e
 
 
-class JinjaTemplate(Template):
+class JinjaTemplate(BaseTemplate):
     """Template adapter for `jinja2.Template`."""
 
     definition: jinja2.Template
 
+    __jinja_env__ = jinja2.Environment(undefined=jinja2.StrictUndefined)
+
     def __init__(self, definition: Union[str, jinja2.Template], **kwargs: Any) -> None:
-        if isinstance(definition, str):
-            definition = jinja2.Template(definition)
-        assert isinstance(definition, jinja2.Template)
-        self.definition = definition
+        super().__init__()
+        try:
+            if isinstance(definition, str):
+                definition = self.__jinja_env__.from_string(definition)
+            assert isinstance(definition, jinja2.Template)
+            self.definition = definition
+        except Exception as e:
+            message = "Error in JinjaTemplate"
+            if self.definition_loc:
+                message += f" created at {self.definition_loc[0]}:{self.definition_loc[1]}"
+                try:
+                    if hasattr(e, "lineno"):
+                        message += f" (error likely around line: {e.lineno})"  # type: ignore  # assume Jinja exception
+                except Exception:
+                    message = f"{message}:\n---\n{definition}\n---\n"
 
-    def render_template(self, **kwargs: Any) -> str:
-        return self.definition.render(**kwargs)
+            raise TemplateDefinitionError(message, definition=definition) from e
+
+    def render_values(self, **kwargs: Any) -> str:
+        try:
+            return self.definition.render(**kwargs)
+        except Exception as e:
+            message = f"<{type(self).__name__}>"
+            if self.definition_loc:
+                message += f" (created at {self.definition_loc[0]}:{self.definition_loc[1]})"
+            try:
+                message += f" rendering error at template line: {e.lineno}."  # type: ignore  # assume Jinja exception
+            except Exception:
+                message += " rendering error."
+
+            raise TemplateRenderingError(message, template=self) from e
 
 
-class MakoTemplate(Template):
+class MakoTemplate(BaseTemplate):
     """Template adapter for `mako.template.Template`."""
 
     definition: mako_tpl.Template
 
     def __init__(self, definition: mako_tpl.Template, **kwargs: Any) -> None:
-        if isinstance(definition, str):
-            definition = mako_tpl.Template(definition)
-        assert isinstance(definition, mako_tpl.Template)
-        self.definition = definition
+        super().__init__()
+        try:
+            if isinstance(definition, str):
+                definition = mako_tpl.Template(definition)
+            assert isinstance(definition, mako_tpl.Template)
+            self.definition = definition
+        except Exception as e:
+            message = "Error in MakoTemplate"
+            if self.definition_loc:
+                message += f" created at {self.definition_loc[0]}:{self.definition_loc[1]}"
+                try:
+                    message += f" (error likely around line {e.lineno}, column: {getattr(e, 'pos', '?')})"  # type: ignore  # assume Mako exception
+                except Exception:
+                    message = f"{message}:\n---\n{definition}\n---\n"
 
-    def render_template(self, **kwargs: Any) -> str:
-        result = self.definition.render(**kwargs)
-        assert isinstance(result, str)
-        return result
+            raise TemplateDefinitionError(message, definition=definition) from e
+
+    def render_values(self, **kwargs: Any) -> str:
+        try:
+            result = self.definition.render(**kwargs)
+            assert isinstance(result, str)
+            return result
+        except Exception as e:
+            message = f"<{type(self).__name__}>"
+            if self.definition_loc:
+                message += f" (created at {self.definition_loc[0]}:{self.definition_loc[1]})"
+            try:
+                message += f" rendering error at template line: {e.lineno}, column: {getattr(e, 'pos', '?')}"  # type: ignore  # assume Mako exception
+            except Exception:
+                message += " rendering error."
+
+            raise TemplateRenderingError(message, template=self) from e
 
 
 class TemplatedGenerator(NodeVisitor):
@@ -467,13 +603,13 @@ class TemplatedGenerator(NodeVisitor):
 
     """
 
-    _templates_: ClassVar[Mapping[str, Template]]
+    __templates__: ClassVar[Mapping[str, Template]]
 
     @classmethod
     def __init_subclass__(cls, *, inherit_templates: bool = True, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)  # type: ignore  # mypy issues 4335, 4660
-        if "_templates_" in cls.__dict__:
-            raise TypeError(f"Invalid '_templates_' member in class {cls}")
+        if "__templates__" in cls.__dict__:
+            raise TypeError(f"Invalid '__templates__' member in class {cls}")
 
         templates: Dict[str, Template] = {}
         if inherit_templates:
@@ -482,7 +618,7 @@ class TemplatedGenerator(NodeVisitor):
                     issubclass(templated_gen_class, TemplatedGenerator)
                     and templated_gen_class is not TemplatedGenerator
                 ):
-                    templates.update(templated_gen_class._templates_)
+                    templates.update(templated_gen_class.__templates__)
 
         templates.update(
             {
@@ -492,7 +628,7 @@ class TemplatedGenerator(NodeVisitor):
             }
         )
 
-        cls._templates_ = types.MappingProxyType(templates)
+        cls.__templates__ = types.MappingProxyType(templates)
 
     @classmethod
     def apply(cls, root: TreeNode, **kwargs: Any) -> Union[str, Collection[str]]:
@@ -522,15 +658,25 @@ class TemplatedGenerator(NodeVisitor):
     def generic_visit(self, node: TreeNode, **kwargs: Any) -> Union[str, Collection[str]]:
         result: Union[str, Collection[str]] = ""
         if isinstance(node, Node):
-            template, _ = self.get_template(node)
+            template, key = self.get_template(node)
             if template:
-                result = self.render_template(
-                    template,
-                    node,
-                    self.transform_children(node, **kwargs),
-                    self.transform_impl_fields(node, **kwargs),
-                    **kwargs,
-                )
+                try:
+                    result = self.render_template(
+                        template,
+                        node,
+                        self.transform_children(node, **kwargs),
+                        self.transform_impl_fields(node, **kwargs),
+                        **kwargs,
+                    )
+                except TemplateRenderingError as e:
+                    # Raise a new exception with extra information keeping the original cause
+                    raise TemplateRenderingError(
+                        f"Error in '{key}' template when rendering node '{node}'.\n"
+                        + getattr(e, "message", str(e)),
+                        **e.info,
+                        node=node,
+                    ) from e.__cause__
+
         elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
             node, type_definitions.ATOMIC_COLLECTION_TYPES
         ):
@@ -549,7 +695,7 @@ class TemplatedGenerator(NodeVisitor):
         if isinstance(node, Node):
             for node_class in node.__class__.__mro__:
                 template_key = node_class.__name__
-                template = self._templates_.get(template_key, None)
+                template = self.__templates__.get(template_key, None)
                 if template is not None or node_class is Node:
                     break
 

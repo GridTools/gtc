@@ -20,15 +20,18 @@
 from typing import *  # isort:skip
 
 import sys  # isort:skip
+from typing import *
+from typing import IO, BinaryIO, TextIO
+
 
 if sys.version_info < (3, 8):
     from typing_extensions import Final, Literal, Protocol, TypedDict, runtime_checkable
 
 del sys
 
+
 T = TypeVar("T")
 FrozenList = Tuple[T, ...]
-
 
 AnyCallable = Callable[..., Any]
 AnyNoneCallable = Callable[..., None]
