@@ -17,12 +17,16 @@
 """General utility functions. Some functionalities are directly imported from dependencies."""
 
 
+from __future__ import annotations
+
 import collections.abc
 import enum
+import functools
 import hashlib
 import itertools
 import pickle
 import re
+import types
 import uuid
 import warnings
 
@@ -39,33 +43,27 @@ from boltons.strutils import (  # noqa: F401
 )
 from boltons.typeutils import classproperty  # noqa: F401
 
-from .type_definitions import DELETE, NOTHING
-from .typingx import Any, Callable, Iterable, Iterator, List, Optional, Type, Union
+from .type_definitions import NOTHING
+from .typingx import (
+    Any,
+    AnyCallable,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 
-def filter_map(
-    func: Callable[..., Any], iterable: Iterable[Any], *, delete_sentinel: Any = DELETE
-) -> Iterator[Any]:
-    """Mapping function supporting elimination of items.
-
-    Args:
-        iterable: iterable object to be processed.
-        delete_sentinel: sentinel object which marks items to be deleted from the
-            the output (note that comparison is made by identity NOT by value).
-
-    Notes:
-        The default `delete_sentinel` value (:data:`eve.DELETE`) can also be
-        accessed as :data:`filter_map.DELETE`.
-
-    """
-    for item in iterable:
-        result = func(item)
-        if result is not delete_sentinel:
-            yield result
-
-
-#: Shortcut to the global DELETE sentinel value
-filter_map.DELETE = DELETE  # type: ignore
+try:
+    import cytoolz as toolz
+except ModuleNotFoundError:
+    import toolz
 
 
 def get_item(obj: Any, key: Any, default: Any = NOTHING) -> Any:
@@ -281,3 +279,351 @@ class UIDGenerator:
         if start < next(cls.__counter):
             warnings.warn("Unsafe reset of global UIDGenerator", RuntimeWarning)
         cls.__counter = itertools.count(start)
+
+
+# -- Iterators --
+def as_xiter(iterator_func: Callable[..., Iterator]) -> Callable[..., XIterator]:
+    """Wrap the provided callable to convert its output in a :class:`XIterator`."""
+
+    @functools.wraps(iterator_func)
+    def _xiterator(*args: Any, **keywords: Any) -> XIterator:
+        return xiter(iterator_func(*args, **keywords))
+
+    return _xiterator
+
+
+def xiter(iterable: Iterable) -> XIterator:
+    """Create an XIterator from any iterable (like ``iter()``)."""
+
+    if isinstance(iterable, collections.abc.Iterator):
+        it = iterable
+    elif isinstance(iterable, collections.abc.Iterable):
+        it = iter(iterable)
+    else:
+        raise ValueError(f"Invalid iterable instance: '{iterable}'.")
+
+    return XIterator(it)
+
+
+def xiter_args(*args: Any, **kwargs: Any) -> FrozenArgs:
+    if len(args) != 1:
+        raise ValueError(f"A single {XIterator.__name__} argument is required.")
+
+    return FrozenArgs(*args, **kwargs)
+
+
+class FrozenArgs:
+    """Immutable object catching function call args and kwargs."""
+
+    args: Tuple[Any, ...]
+    kwargs: Mapping[str, Any]
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__setattr__("args", args)
+        super().__setattr__("kwargs", types.MappingProxyType(kwargs))
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        raise TypeError(f"{type(self).__name__} is immutable.")
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(args={self.args}, kwargs={self.kwargs})"
+
+
+class XIterator(collections.abc.Iterator):
+    """Iterator wrapper defining operators for extra functionality.
+
+    Features:
+
+        - ``[]``: select elements from an iterable (equivalent to ``itertools.islice(self.iterator, start, stop, step)``).
+          For detailed information check :func:`itertools.islice` reference.
+
+            >>> it = xiter(range(10))
+            >>> list(it[2:8:2])
+            [2, 4, 6]
+
+        - ``&``: filter elements with callables (equivalent to ``filter(callable, iterator)``).
+          For detailed information check :func:`filter` reference.
+
+            >>> it = xiter(range(4))
+            >>> list(it & (lambda x: x % 2 == 0))
+            [0, 2]
+
+            >>> it = xiter(range(4))
+            >>> list(it & (lambda x: x % 2 == 0) & (lambda x: x > 1))
+            [2]
+
+        - ``|``: apply a callable to every iterator element (equivalent to ``map(callable, iterator)``).
+          For detailed information check :func:`map` reference.
+
+            >>> it = xiter(range(3))
+            >>> list(it | str)
+            ['0', '1', '2']
+
+            >>> it = xiter(range(3))
+            >>> list(it | (lambda x: -x) | str)
+            ['0', '-1', '-2']
+
+            If the callable requires additional arguments, ``lambda`` of :func:`functools.partial`
+            functions can be used:
+
+            >>> def times(a, b):
+            ...     return a * b
+            >>> times_2 = functools.partial(times, 2)
+            >>> it = xiter(range(4))
+            >>> list(it | (lambda x: x + 1) | times_2)
+            [2, 4, 6, 8]
+
+            Curried functions generated by :func:`toolz.curry` will also work as expected:
+
+            >>> @toolz.curry
+            ... def mul(x, y):
+            ...     return x * y
+            >>> it = xiter(range(4))
+            >>> list(it | (lambda x: x + 1) | mul(5))
+            [5, 10, 15, 20]
+
+        - ``@``: pick data from each item in a sequence (equivalent to ``toolz.itertoolz.pluck(index, iterator)``).
+          For detailed information check :func:`toolz.itertoolz.pluck` reference.
+
+            >>> it = xiter([('a', 1), ('b', 2), ('c', 3)])
+            >>> list(it @ 0)
+            ['a', 'b', 'c']
+
+            >>> it = xiter([
+            ...     dict(name="AA", age=20, country="US"),
+            ...     dict(name="BB", age=30, country="UK"),
+            ...     dict(name="CC", age=40, country="CH")
+            ... ])
+            >>> list(it @ ["name", "age"])
+            [('AA', 20), ('BB', 30), ('CC', 40)]
+
+        - ``+``: chain iterators (equivalent to ``itertools.chain(it_a, it_b)``).
+          For detailed information check :func:`itertools.chain` reference.
+
+            >>> it_a, it_b = xiter(range(2)), xiter(['a', 'b'])
+            >>> list(it_a + it_b)
+            [0, 1, 'a', 'b']
+
+            >>> it_b = xiter(['a', 'b'])
+            >>> list([0, 1] + it_b)
+            [0, 1, 'a', 'b']
+
+        - ``-``: diff iterators (equivalent to ``toolz.itertoolz.diff(it_a, it_b)``).
+          For detailed information check :func:`toolz.itertoolz.diff` reference.
+
+            >>> it_a, it_b = xiter([1, 2, 3]), xiter([1, 3, 5])
+            >>> list(it_a - it_b)
+            [(2, 3), (3, 5)]
+
+            >>> it_b = xiter([1, 3, 5])
+            >>> list([1, 2, 3] - it_b)
+            [(2, 3), (3, 5)]
+
+            Adding missing values:
+
+            >>> it_a, it_b = xiter([1, 2, 3, 4]), xiter([1, 3, 5])
+            >>> list(it_a - xiter_args(it_b, default=None))
+            [(2, 3), (3, 5), (4, None)]
+
+            >>> it_b = xiter([1, 3, 5])
+            >>> list(xiter_args([1, 2, 3, 4], default=None) - it_b)
+            [(2, 3), (3, 5), (4, None)]
+
+
+        - ``*``: product of iterators (equivalent to ``itertools.product(it_a, it_b)``).
+          For detailed information check :func:`itertools.product` reference.
+
+            >>> it_a, it_b = xiter([0, 1]), xiter(['a', 'b'])
+            >>> list(it_a * it_b)
+            [(0, 'a'), (0, 'b'), (1, 'a'), (1, 'b')]
+
+            >>> it_b = xiter(['a', 'b'])
+            >>> list([0, 1] * it_b)
+            [(0, 'a'), (0, 'b'), (1, 'a'), (1, 'b')]
+
+            Product of an iterator with itself:
+
+            >>> it_a = xiter([0, 1])
+            >>> list(it_a * 3)
+            [(0, 0, 0), (1, 1, 1)]
+
+            >>> it_a = xiter([0, 1])
+            >>> list(3 * it_a)
+            [(0, 0, 0), (1, 1, 1)]
+
+        - ``/``: partition iterator into tuples of length at most ``n``
+          (equivalent to ``toolz.itertoolz.partition_all(n, iterator)``).
+          For detailed information check :func:`toolz.itertoolz.partition_all` reference.
+
+            >>> it = xiter(range(7))
+            >>> list(it / 3)
+            [(0, 1, 2), (3, 4, 5), (6,)]
+
+        - ``//``: partition iterator into tuples of length ``n``
+          (equivalent to ``toolz.itertoolz.partition(n, iterator)``).
+          For detailed information check :func:`toolz.itertoolz.partition` reference.
+
+            >>> it = xiter(range(7))
+            >>> list(it // 3)
+            [(0, 1, 2), (3, 4, 5)]
+
+            >>> it = xiter(range(7))
+            >>> list(it // xiter_args(3, pad=None))
+            [(0, 1, 2), (3, 4, 5), (6, None, None)]
+
+        - ``%``: take every nth item in sequence (equivalent to ``toolz.itertoolz.take_nth(n, iterator)``).
+          For detailed information check :func:`toolz.itertoolz.take_nth` reference.
+
+            >>> it = xiter(range(7))
+            >>> list(it % 3)
+            [0, 3, 6]
+
+        - ``**``: zip iterators (equivalent to ``zip(it_a, it_b)``).
+          For detailed information check :func:`zip` reference.
+
+            >>> it_a = xiter(range(3))
+            >>> it_b = ['a', 'b', 'c']
+            >>> list(it_a ** it_b)
+            [(0, 'a'), (1, 'b'), (2, 'c')]
+
+            >>> it_a = range(3)
+            >>> it_b = xiter(['a', 'b', 'c'])
+            >>> list(it_a ** it_b)
+            [(0, 'a'), (1, 'b'), (2, 'c')]
+
+        - ``~``: unzip iterator (equivalent to ``zip(*iterator)``).
+          For detailed information check :func:`zip` reference.
+
+            >>> it = xiter([('a', 1), ('b', 2), ('c', 3)])
+            >>> list(~it)
+            [('a', 'b', 'c'), (1, 2, 3)]
+
+    """
+
+    iterator: Iterator[Any]
+
+    def __init__(self, it: Union[Iterable, Iterator]) -> None:
+        if not isinstance(it, collections.abc.Iterator):
+            raise ValueError(f"Invalid iterator instance: '{it}'.")
+        if isinstance(it, XIterator):
+            self.iterator = it.iterator
+        else:
+            self.iterator = it
+
+    def __getattr__(self, name: str) -> Any:
+        """Forward special methods to wrapped iterator."""
+        if name.startswith("__") and name.endswith("__"):
+            return getattr(self.iterator, name)
+
+    def __next__(self) -> Any:
+        return next(self.iterator)
+
+    def __getitem__(self, index: Union[Tuple[int, ...], slice]) -> XIterator:
+        if not isinstance(index, slice):
+            if isinstance(index, int):
+                index = slice(index)
+            elif isinstance(index, tuple):
+                index = slice(*index)
+            else:
+                raise ValueError(f"Invalid slice object: '{index}'.")
+
+        return XIterator(itertools.islice(self.iterator, index.start, index.stop, index.step))
+
+    def __and__(self, func: Callable[..., bool]) -> XIterator:
+        if not callable(func):
+            raise ValueError(f"Invalid function or callable: '{func}'.")
+        return XIterator(filter(func, self.iterator))
+
+    def __or__(self, func: AnyCallable) -> XIterator:
+        if not callable(func):
+            raise ValueError(f"Invalid function or callable: '{func}'.")
+        return XIterator(map(func, self.iterator))
+
+    def __matmul__(self, index: Union[int, str, List[Union[int, str]]]) -> XIterator:
+        if isinstance(index, collections.abc.Iterable) and not isinstance(index, list):
+            index = list(index)
+        return XIterator(toolz.itertoolz.pluck(index, self.iterator))
+
+    def __add__(self, other: Iterator) -> XIterator:
+        if not isinstance(other, XIterator):
+            other = xiter(other)
+        return XIterator(itertools.chain(self.iterator, other.iterator))
+
+    def __sub__(self, other: Union[Iterator, FrozenArgs]) -> XIterator:
+        kwargs: Dict[str, Any] = {}
+        if isinstance(other, FrozenArgs):
+            assert len(other.args) == 1
+            kwargs = {**other.kwargs}
+            unknown_options = set(kwargs.keys()) - {"default", "key"}
+            if unknown_options:
+                raise ValueError(f"Unknown options: {unknown_options}")
+            other = other.args[0]
+
+        if not isinstance(other, XIterator):
+            other = xiter(other)  # type: ignore  # impossible to verify at compile-time
+        return XIterator(toolz.itertoolz.diff(self.iterator, other.iterator, **kwargs))
+
+    def __mul__(self, other: Union[Iterator, int]) -> XIterator:
+        if isinstance(other, int):
+            if other < 0:
+                raise ValueError(
+                    f"Only non-negative integer numbers are accepted (provided: {other})."
+                )
+            return XIterator(map(lambda item: tuple([item] * other), self.iterator))  # type: ignore  # mypy gets confused with `other`
+        else:
+            if not isinstance(other, XIterator):
+                other = xiter(other)
+        return XIterator(itertools.product(self.iterator, other.iterator))
+
+    def __truediv__(self, other: int) -> XIterator:
+        if not isinstance(other, int) or other < 1:
+            raise ValueError(f"Only positive integer numbers are accepted (provided: {other}).")
+        return XIterator(toolz.itertoolz.partition_all(other, self.iterator))
+
+    def __floordiv__(self, other: int) -> XIterator:
+        kwargs: Dict[str, Any] = {}
+        if isinstance(other, FrozenArgs):
+            assert len(other.args) == 1
+            kwargs = {**other.kwargs}
+            unknown_options = set(kwargs.keys()) - {"pad"}
+            if unknown_options:
+                raise ValueError(f"Unknown options: {unknown_options}")
+            other = other.args[0]
+
+        if not isinstance(other, int) or other < 1:
+            raise ValueError(f"Only positive integer numbers are accepted (provided: {other}).")
+        return XIterator(toolz.itertoolz.partition(other, self.iterator, **kwargs))
+
+    def __mod__(self, other: int) -> XIterator:
+        if not isinstance(other, int) or other < 1:
+            raise ValueError(f"Only positive integer numbers are accepted (provided: {other}).")
+        return XIterator(toolz.itertoolz.take_nth(other, self.iterator))
+
+    def __pow__(self, other: Iterator) -> XIterator:
+        if not isinstance(other, XIterator):
+            other = xiter(other)
+        return XIterator(zip(self.iterator, other.iterator))
+
+    def __invert__(self) -> XIterator:
+        return XIterator(zip(*self.iterator))
+
+    def __radd__(self, other: Iterator) -> XIterator:
+        return xiter(other).__add__(self)
+
+    def __rsub__(self, other: Union[Iterator, FrozenArgs]) -> XIterator:
+        kwargs: Dict[str, Any] = {}
+        if isinstance(other, FrozenArgs):
+            assert len(other.args) == 1
+            kwargs = {**other.kwargs}
+            other = other.args[0]
+        assert not isinstance(other, FrozenArgs)
+        return xiter(other).__sub__(xiter_args(self, **kwargs))
+
+    def __rmul__(self, other: Union[Iterator, int]) -> XIterator:
+        if isinstance(other, int):
+            return xiter(self).__mul__(other)
+        else:
+            return xiter(other).__mul__(self)
+
+    def __rpow__(self, other: Iterator) -> XIterator:
+        return xiter(other).__pow__(self)
