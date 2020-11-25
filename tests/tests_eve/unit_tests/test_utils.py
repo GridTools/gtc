@@ -17,12 +17,14 @@
 import copy
 import dataclasses
 import hashlib
+import string
 from typing import Any
 
 import pydantic
 import pytest
 
 import eve.utils
+from eve.utils import XIterator
 
 
 def test_get_item():
@@ -200,7 +202,7 @@ def test_case_style_converter(name_with_cases):
             ]
 
 
-# -- TestUIDGenerator --
+# -- UIDGenerator --
 class TestUIDGenerator:
     def test_random_id(self):
         from eve.utils import UIDGenerator
@@ -236,3 +238,22 @@ class TestUIDGenerator:
         assert int(UIDGenerator.sequential_id()) == counter + 1
         with pytest.warns(RuntimeWarning, match="Unsafe reset"):
             UIDGenerator.reset_sequence(counter)
+
+
+# -- Iterators --
+def test_xiter():
+    from eve.utils import xiter
+
+    it = xiter(range(6))
+    assert isinstance(it, XIterator)
+    assert list(it) == [0, 1, 2, 3, 4, 5]
+
+    it = xiter([0, 1, 2, 3, 4, 5])
+    assert isinstance(it, XIterator)
+    assert list(it) == [0, 1, 2, 3, 4, 5]
+
+
+def test_xenumerate():
+    from eve.utils import xenumerate
+
+    assert list(xenumerate(string.ascii_letters[:3])) == [(0, "a"), (1, "b"), (2, "c")]

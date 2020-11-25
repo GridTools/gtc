@@ -27,6 +27,7 @@ import itertools
 import pickle
 import re
 import types
+import typing
 import uuid
 import warnings
 
@@ -56,6 +57,7 @@ from .typingx import (
     Optional,
     Tuple,
     Type,
+    TypeVar,
     Union,
 )
 
@@ -282,17 +284,22 @@ class UIDGenerator:
 
 
 # -- Iterators --
-def as_xiter(iterator_func: Callable[..., Iterator]) -> Callable[..., XIterator]:
+
+T = TypeVar("T")
+S = TypeVar("S")
+
+
+def as_xiter(iterator_func: Callable[..., Iterator[T]]) -> Callable[..., XIterator[T]]:
     """Wrap the provided callable to convert its output in a :class:`XIterator`."""
 
     @functools.wraps(iterator_func)
-    def _xiterator(*args: Any, **keywords: Any) -> XIterator:
+    def _xiterator(*args: Any, **keywords: Any) -> XIterator[T]:
         return xiter(iterator_func(*args, **keywords))
 
     return _xiterator
 
 
-def xiter(iterable: Iterable) -> XIterator:
+def xiter(iterable: Iterable[T]) -> XIterator[T]:
     """Create an XIterator from any iterable (like ``iter()``)."""
 
     if isinstance(iterable, collections.abc.Iterator):
@@ -305,11 +312,12 @@ def xiter(iterable: Iterable) -> XIterator:
     return XIterator(it)
 
 
-def xiter_args(*args: Any, **kwargs: Any) -> FrozenArgs:
-    if len(args) != 1:
-        raise ValueError(f"A single {XIterator.__name__} argument is required.")
+xenumerate = as_xiter(enumerate)
 
-    return FrozenArgs(*args, **kwargs)
+
+def xiter_args(it: Iterable[T], **kwargs: Any) -> FrozenArgs:
+    """Create a :class:`FrozenArgs` instance passing extra keywords for :class:`XIterator` operators."""
+    return FrozenArgs(it, **kwargs)
 
 
 class FrozenArgs:
@@ -329,7 +337,7 @@ class FrozenArgs:
         return f"{type(self).__name__}(args={self.args}, kwargs={self.kwargs})"
 
 
-class XIterator(collections.abc.Iterator):
+class XIterator(collections.abc.Iterator, Iterable[T]):
     """Iterator wrapper defining operators for extra functionality.
 
     Features:
@@ -500,9 +508,9 @@ class XIterator(collections.abc.Iterator):
 
     """
 
-    iterator: Iterator[Any]
+    iterator: Iterator[T]
 
-    def __init__(self, it: Union[Iterable, Iterator]) -> None:
+    def __init__(self, it: Union[Iterable[T], Iterator[T]]) -> None:
         if not isinstance(it, collections.abc.Iterator):
             raise ValueError(f"Invalid iterator instance: '{it}'.")
         if isinstance(it, XIterator):
@@ -511,14 +519,14 @@ class XIterator(collections.abc.Iterator):
             self.iterator = it
 
     def __getattr__(self, name: str) -> Any:
-        """Forward special methods to wrapped iterator."""
+        # Forward special methods to wrapped iterator
         if name.startswith("__") and name.endswith("__"):
             return getattr(self.iterator, name)
 
-    def __next__(self) -> Any:
+    def __next__(self) -> T:
         return next(self.iterator)
 
-    def __getitem__(self, index: Union[Tuple[int, ...], slice]) -> XIterator:
+    def __getitem__(self, index: Union[Tuple[int, ...], slice]) -> XIterator[T]:
         if not isinstance(index, slice):
             if isinstance(index, int):
                 index = slice(index)
@@ -529,27 +537,27 @@ class XIterator(collections.abc.Iterator):
 
         return XIterator(itertools.islice(self.iterator, index.start, index.stop, index.step))
 
-    def __and__(self, func: Callable[..., bool]) -> XIterator:
+    def __and__(self, func: Callable[..., bool]) -> XIterator[T]:
         if not callable(func):
             raise ValueError(f"Invalid function or callable: '{func}'.")
         return XIterator(filter(func, self.iterator))
 
-    def __or__(self, func: AnyCallable) -> XIterator:
+    def __or__(self, func: AnyCallable) -> XIterator[Any]:
         if not callable(func):
             raise ValueError(f"Invalid function or callable: '{func}'.")
         return XIterator(map(func, self.iterator))
 
-    def __matmul__(self, index: Union[int, str, List[Union[int, str]]]) -> XIterator:
+    def __matmul__(self, index: Union[int, str, List[Union[int, str]]]) -> XIterator[Any]:
         if isinstance(index, collections.abc.Iterable) and not isinstance(index, list):
             index = list(index)
         return XIterator(toolz.itertoolz.pluck(index, self.iterator))
 
-    def __add__(self, other: Iterator) -> XIterator:
+    def __add__(self, other: Iterable[S]) -> XIterator[Union[T, S]]:
         if not isinstance(other, XIterator):
             other = xiter(other)
         return XIterator(itertools.chain(self.iterator, other.iterator))
 
-    def __sub__(self, other: Union[Iterator, FrozenArgs]) -> XIterator:
+    def __sub__(self, other: Union[Iterable[S], FrozenArgs]) -> XIterator[Tuple[T, S]]:
         kwargs: Dict[str, Any] = {}
         if isinstance(other, FrozenArgs):
             assert len(other.args) == 1
@@ -563,7 +571,9 @@ class XIterator(collections.abc.Iterator):
             other = xiter(other)  # type: ignore  # impossible to verify at compile-time
         return XIterator(toolz.itertoolz.diff(self.iterator, other.iterator, **kwargs))
 
-    def __mul__(self, other: Union[Iterator, int]) -> XIterator:
+    def __mul__(
+        self, other: Union[Iterable[S], int]
+    ) -> Union[XIterator[Tuple[T, S]], XIterator[Tuple[T, T]]]:
         if isinstance(other, int):
             if other < 0:
                 raise ValueError(
@@ -575,12 +585,12 @@ class XIterator(collections.abc.Iterator):
                 other = xiter(other)
         return XIterator(itertools.product(self.iterator, other.iterator))
 
-    def __truediv__(self, other: int) -> XIterator:
+    def __truediv__(self, other: int) -> XIterator[Tuple[T, ...]]:
         if not isinstance(other, int) or other < 1:
             raise ValueError(f"Only positive integer numbers are accepted (provided: {other}).")
         return XIterator(toolz.itertoolz.partition_all(other, self.iterator))
 
-    def __floordiv__(self, other: int) -> XIterator:
+    def __floordiv__(self, other: int) -> XIterator[Tuple[T, ...]]:
         kwargs: Dict[str, Any] = {}
         if isinstance(other, FrozenArgs):
             assert len(other.args) == 1
@@ -594,23 +604,23 @@ class XIterator(collections.abc.Iterator):
             raise ValueError(f"Only positive integer numbers are accepted (provided: {other}).")
         return XIterator(toolz.itertoolz.partition(other, self.iterator, **kwargs))
 
-    def __mod__(self, other: int) -> XIterator:
+    def __mod__(self, other: int) -> XIterator[T]:
         if not isinstance(other, int) or other < 1:
             raise ValueError(f"Only positive integer numbers are accepted (provided: {other}).")
         return XIterator(toolz.itertoolz.take_nth(other, self.iterator))
 
-    def __pow__(self, other: Iterator) -> XIterator:
+    def __pow__(self, other: Iterable[S]) -> XIterator[Tuple[T, S]]:
         if not isinstance(other, XIterator):
             other = xiter(other)
         return XIterator(zip(self.iterator, other.iterator))
 
-    def __invert__(self) -> XIterator:
-        return XIterator(zip(*self.iterator))
+    def __invert__(self) -> XIterator[Tuple[Any, ...]]:
+        return XIterator(zip(*self.iterator))  # type: ignore  # mypy gets confused with *args
 
-    def __radd__(self, other: Iterator) -> XIterator:
+    def __radd__(self, other: Iterable[S]) -> XIterator[Union[T, S]]:
         return xiter(other).__add__(self)
 
-    def __rsub__(self, other: Union[Iterator, FrozenArgs]) -> XIterator:
+    def __rsub__(self, other: Union[Iterable[S], FrozenArgs]) -> XIterator[Tuple[S, T]]:
         kwargs: Dict[str, Any] = {}
         if isinstance(other, FrozenArgs):
             assert len(other.args) == 1
@@ -619,11 +629,13 @@ class XIterator(collections.abc.Iterator):
         assert not isinstance(other, FrozenArgs)
         return xiter(other).__sub__(xiter_args(self, **kwargs))
 
-    def __rmul__(self, other: Union[Iterator, int]) -> XIterator:
+    def __rmul__(
+        self, other: Union[Iterable[S], int]
+    ) -> Union[XIterator[Tuple[S, T]], XIterator[Tuple[T, T]]]:
         if isinstance(other, int):
-            return xiter(self).__mul__(other)
+            return self.__mul__(other)  # type: ignore  # mypy gets confused and the actual type is hard to express
         else:
-            return xiter(other).__mul__(self)
+            return xiter(other).__mul__(self)  # type: ignore  # mypy gets confused and the actual type is hard to express
 
-    def __rpow__(self, other: Iterator) -> XIterator:
-        return xiter(other).__pow__(self)
+    def __rpow__(self, other: Iterable[S]) -> XIterator[Tuple[S, T]]:
+        return typing.cast(XIterator[S], xiter(other)).__pow__(self)
