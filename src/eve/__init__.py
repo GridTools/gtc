@@ -45,7 +45,6 @@ from .iterators import traverse_tree
 from .traits import SymbolTableTrait
 from .tree_utils import FindNodes
 from .type_definitions import (
-    DELETE,
     NOTHING,
     Bool,
     Bytes,

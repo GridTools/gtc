@@ -41,15 +41,12 @@ from pydantic import (  # noqa: F401
 )
 from pydantic.types import ConstrainedStr
 
-from .typingx import Any, Callable, Generator, Type
+from .typingx import Any, Callable, Generator, Type, Union
 
 
 #: Marker value used to avoid confusion with `None`
 #: (specially in contexts where `None` could be a valid value)
 NOTHING = boltons.typeutils.make_sentinel(name="NOTHING", var_name="NOTHING")
-
-#: Marker value used as a sentinel value to delete items
-DELETE = boltons.typeutils.make_sentinel(name="DELETE", var_name="DELETE")
 
 
 #: Collection types considered as single elements
@@ -148,18 +145,22 @@ class SymbolName(ConstrainedStr):
 
     @staticmethod
     @functools.lru_cache(maxsize=None)
-    def constrained(pattern: str) -> Type[SymbolName]:
+    def constrained(pattern: Union[str, re.Pattern]) -> Type[SymbolName]:
         """Create a new SymbolName subclass using the provided string as validation RE."""
 
-        xxh64 = xxhash.xxh64()
-        xxh64.update(pattern.encode())
-        subclass_name = f"SymbolName_{xxh64.hexdigest()[-8:]}"
-
-        if isinstance(pattern, str):
+        if isinstance(pattern, re.Pattern):
+            regex = pattern
+            pattern = pattern.pattern
+        else:
             try:
                 regex = re.compile(pattern)
             except re.error as e:
                 raise TypeError(f"Invalid regular expression definition:  '{pattern}'.") from e
+
+        assert isinstance(pattern, str)
+        xxh64 = xxhash.xxh64()
+        xxh64.update(pattern.encode())
+        subclass_name = f"SymbolName_{xxh64.hexdigest()[-8:]}"
         namespace = dict(regex=regex)
 
         return type(subclass_name, (SymbolName,), namespace)

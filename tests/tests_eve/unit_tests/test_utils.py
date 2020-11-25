@@ -25,27 +25,6 @@ import pytest
 import eve.utils
 
 
-def test_filter_map():
-    from eve.utils import filter_map
-
-    LENGTH = 12
-
-    def map_int_to_string(int_or_float):
-        if not isinstance(int_or_float, int):
-            return filter_map.DELETE
-        else:
-            return int_or_float, str(int_or_float)
-
-    assert all(
-        isinstance(i, int) and str_i == str(i)
-        for i, str_i in filter_map(map_int_to_string, range(LENGTH))
-    )
-
-    odds = list(filter_map(lambda x: x if x % 2 else None, range(LENGTH), delete_sentinel=None))
-    assert all(isinstance(i, int) and ((i % 2) != 0) for i in odds)
-    assert len(odds) == LENGTH // 2
-
-
 def test_get_item():
     from eve.utils import get_item
 

@@ -23,16 +23,13 @@ import pytest
 import eve
 
 
-def test_sentinels():
-    from eve.type_definitions import DELETE, NOTHING
+def test_sentinel():
+    from eve.type_definitions import NOTHING
 
-    values = [0, 1, 2, NOTHING, 4, DELETE, 6]
+    values = [0, 1, 2, NOTHING, 4, 6]
 
     assert values.index(NOTHING) == 3
     assert values[values.index(NOTHING)] is NOTHING
-
-    assert values.index(DELETE) == 5
-    assert values[values.index(DELETE)] is DELETE
 
 
 def test_symbol_types():
