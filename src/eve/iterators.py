@@ -20,7 +20,7 @@
 import collections.abc
 from typing import Iterator
 
-from . import concepts
+from . import concepts, utils
 from .type_definitions import Enum
 from .typingx import Any, Generator, List, Optional
 
@@ -31,6 +31,7 @@ class TraversalOrder(Enum):
     LEVELS_ORDER = "levels"
 
 
+@utils.as_xiter
 def traverse_pre(
     node: concepts.TreeNode, *, with_keys: bool = False, __key__: Optional[Any] = None
 ) -> Generator[concepts.TreeIterationItem, None, None]:
@@ -53,6 +54,7 @@ def traverse_pre(
             yield from traverse_pre(child, with_keys=False)
 
 
+@utils.as_xiter
 def traverse_post(
     node: concepts.TreeNode, *, with_keys: bool = False, __key__: Optional[Any] = None
 ) -> Generator[concepts.TreeIterationItem, None, None]:
@@ -74,6 +76,7 @@ def traverse_post(
         yield node
 
 
+@utils.as_xiter
 def traverse_levels(
     node: concepts.TreeNode,
     *,
