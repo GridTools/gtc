@@ -21,7 +21,7 @@ import collections.abc
 import copy
 import operator
 
-from . import concepts, type_definitions
+from . import concepts, type_definitions, utils
 from .concepts import NOTHING
 from .typingx import (
     Any,
@@ -151,8 +151,8 @@ class NodeTranslator(NodeVisitor):
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
         result: Any = None
-        if isinstance(node, (concepts.Node, collections.abc.Collection)) and not isinstance(
-            node, type_definitions.ATOMIC_COLLECTION_TYPES
+        if isinstance(node, (concepts.Node, collections.abc.Collection)) and utils.is_collection(
+            node
         ):
             tmp_items: Collection[concepts.TreeNode] = []
             if isinstance(node, concepts.Node):
@@ -215,8 +215,8 @@ class NodeMutator(NodeVisitor):
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
         result: Any = node
-        if isinstance(node, (concepts.Node, collections.abc.Collection)) and not isinstance(
-            node, type_definitions.ATOMIC_COLLECTION_TYPES
+        if isinstance(node, (concepts.Node, collections.abc.Collection)) and utils.is_collection(
+            node
         ):
             items: Iterable[Tuple[Any, Any]] = []
             tmp_items: Collection[concepts.TreeNode] = []

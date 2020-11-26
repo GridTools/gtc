@@ -30,9 +30,10 @@ import types
 import typing
 import uuid
 import warnings
+from typing import Generic
 
 import xxhash
-from boltons.iterutils import flatten, flatten_iter  # noqa: F401
+from boltons.iterutils import flatten, flatten_iter, is_collection  # noqa: F401
 from boltons.strutils import (  # noqa: F401
     a10n,
     asciify,
@@ -44,12 +45,15 @@ from boltons.strutils import (  # noqa: F401
 )
 from boltons.typeutils import classproperty  # noqa: F401
 
+from . import type_definitions
 from .type_definitions import NOTHING
 from .typingx import (
     Any,
     AnyCallable,
     Callable,
     Dict,
+    FrozenSet,
+    Generic,
     Iterable,
     Iterator,
     List,
@@ -68,7 +72,31 @@ except ModuleNotFoundError:
     import toolz
 
 
-def get_item(obj: Any, key: Any, default: Any = NOTHING) -> Any:
+def isinstancechecker(types: Iterable[Type]):
+    if not isinstance(types, (type, tuple)):
+        if is_collection(types):
+            types = tuple(*types)
+        else:
+            raise ValueError(f"Invalid type(s) definition: '{types}'.")
+    return lambda obj: isinstance(obj, types)
+
+
+def attrchecker(name: str):
+    if not isinstance(name, str):
+        raise ValueError(f"Invalid attribute name: '{name}'.")
+    return lambda obj: hasattr(obj, name)
+
+
+def sattrgetter(name: str, default: Any = NOTHING) -> Any:
+    if not isinstance(name, str):
+        raise ValueError(f"Invalid attribute name: '{name}'.")
+    if default is NOTHING:
+        return lambda obj: getattr(obj, name)
+    else:
+        return lambda obj: getattr(obj, name, default=default)
+
+
+def sgetitem(obj: Any, key: Any, default: Any = NOTHING) -> Any:
     """Similar to :func:`operator.getitem()` accepting a default value."""
 
     if default is NOTHING:
@@ -80,6 +108,10 @@ def get_item(obj: Any, key: Any, default: Any = NOTHING) -> Any:
             result = default
 
     return result
+
+
+def sitemgetter(key: Any, default: Any = NOTHING) -> Any:
+    return lambda obj: sgetitem(obj, key, default=default)
 
 
 def register_subclasses(*subclasses: Type) -> Callable[[Type], Type]:
@@ -284,9 +316,38 @@ class UIDGenerator:
 
 
 # -- Iterators --
-
 T = TypeVar("T")
 S = TypeVar("S")
+
+
+class SemanticSet(collections.abc.Set, Generic[T]):
+    items: FrozenSet[T]
+
+    def __init__(self, *args: Any):
+        if len(args) == 1 and is_collection(args[0]):
+            super().__setattr__("items", frozenset(args[0]))
+        else:
+            super().__setattr__("items", frozenset(args))
+
+    def __contains__(self, item: Any) -> bool:
+        return self.items.__contains__(item)
+
+    def __iter__(self) -> Iterator[T]:
+        return self.items.__iter__()
+
+    def __len__(self) -> int:
+        return self.items.__len__()
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        raise TypeError(f"{type(self).__name__} is immutable.")
+
+
+class any_of(SemanticSet):
+    pass
+
+
+class all_of(SemanticSet):
+    pass
 
 
 def as_xiter(iterator_func: Callable[..., Iterator[T]]) -> Callable[..., XIterator[T]]:

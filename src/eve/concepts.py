@@ -265,9 +265,7 @@ def generic_iter_children(
     children_iterator: Iterable[Union[Any, Tuple[KeyValue, Any]]] = iter(())
     if isinstance(node, Node):
         children_iterator = node.iter_children() if with_keys else node.iter_children_values()
-    elif isinstance(node, collections.abc.Sequence) and not isinstance(
-        node, type_definitions.ATOMIC_COLLECTION_TYPES
-    ):
+    elif isinstance(node, collections.abc.Sequence) and utils.is_collection(node):
         children_iterator = enumerate(node) if with_keys else iter(node)
     elif isinstance(node, collections.abc.Set):
         children_iterator = zip(node, node) if with_keys else iter(node)  # type: ignore  # problems with iter(Set)

@@ -25,7 +25,8 @@ from . import typingx  # isort:skip
 from . import exceptions, type_definitions  # isort:skip
 from . import utils  # isort:skip
 from . import concepts  # isort:skip
-from . import iterators, traits, visitors  # isort:skip
+from . import iterators  # isort:skip
+from . import traits, visitors  # isort:skip
 from . import codegen, tree_utils  # isort:skip
 
 

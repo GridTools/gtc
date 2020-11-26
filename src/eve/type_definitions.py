@@ -49,19 +49,6 @@ from .typingx import Any, Callable, Generator, Type, Union
 NOTHING = boltons.typeutils.make_sentinel(name="NOTHING", var_name="NOTHING")
 
 
-#: Collection types considered as single elements
-ATOMIC_COLLECTION_TYPES = (str, bytes, bytearray)
-
-
-class AtomicCollection(abc.ABC):
-    """Abstract base class for atomic collection types."""
-
-    ...
-
-
-for t in ATOMIC_COLLECTION_TYPES:
-    AtomicCollection.register(t)  # type: ignore  # mypy gets it wrong
-
 #: Typing definitions for `__get_validators__()` methods (defined but not exported in `pydantic.typing`)
 PydanticCallableGenerator = Generator[Callable[..., Any], None, None]
 
