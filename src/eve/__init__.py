@@ -21,7 +21,7 @@
 # Disable isort to avoid circular imports
 from .version import __version__, __versioninfo__  # isort:skip
 
-# Dependency-free import order
+# Import order respecting dependencies between modules
 from . import typingx  # isort:skip
 from . import exceptions, type_definitions  # isort:skip
 from . import utils  # isort:skip
