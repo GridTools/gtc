@@ -23,7 +23,7 @@ import collections.abc
 
 from . import concepts, utils
 from .type_definitions import Enum
-from .typingx import Any, Generator, Iterable, List, Optional, Sequence, Tuple, Type, Union
+from .typingx import Any, Generator, Iterable, List, Optional, Tuple, Union
 
 
 try:
@@ -70,7 +70,7 @@ class TraversalOrder(Enum):
 @utils.as_xiter
 def iter_tree_pre(
     node: concepts.TreeNode, *, with_keys: bool = False, __key__: Optional[Any] = None
-) -> Generator[concepts.TreeIterationItem, None, None]:
+) -> Generator[TreeIterationItem, None, None]:
     """Create a pre-order tree traversal iterator (Depth-First Search).
 
     Args:
@@ -93,7 +93,7 @@ def iter_tree_pre(
 @utils.as_xiter
 def iter_tree_post(
     node: concepts.TreeNode, *, with_keys: bool = False, __key__: Optional[Any] = None
-) -> Generator[concepts.TreeIterationItem, None, None]:
+) -> Generator[TreeIterationItem, None, None]:
     """Create a post-order tree traversal iterator (Depth-First Search).
 
     Args:
@@ -119,7 +119,7 @@ def iter_tree_levels(
     with_keys: bool = False,
     __key__: Optional[Any] = None,
     __queue__: Optional[List] = None,
-) -> Generator[concepts.TreeIterationItem, None, None]:
+) -> Generator[TreeIterationItem, None, None]:
     """Create a tree traversal iterator by levels (Breadth-First Search).
 
     Args:
@@ -148,7 +148,7 @@ def iter_tree(
     traversal_order: TraversalOrder = TraversalOrder.PRE_ORDER,
     *,
     with_keys: bool = False,
-) -> utils.XIterator[concepts.TreeIterationItem]:
+) -> utils.XIterator[TreeIterationItem]:
     """Create a tree traversal iterator.
 
     Args:

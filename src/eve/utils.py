@@ -529,8 +529,10 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         """
         return XIterator(filter(isinstancechecker([*types]), self.iterator))
 
-    def getattr(self, *names: str, default: Any = NOTHING) -> XIterator[Any]:
-        """Get provided attributes from each item in a sequence (equivalent to ``map(sattrgetter(*names), self)``).
+    def getattr(  # noqa  # A003: shadowing a python builtin
+        self, *names: str, default: Any = NOTHING
+    ) -> XIterator[Any]:
+        """Get provided attributes from each item in a sequence (equivalent to ``map(sattrgetter(*names, default=default), self)``).
 
         For detailed information check :func:`sattrgetter` and :func:`operator.attrgetter` reference.
 
@@ -576,10 +578,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         else:
             return XIterator(toolz.itertoolz.pluck(ind, self.iterator, default))
 
-    def chain(
-        self,
-        *others: Iterable,
-    ) -> XIterator[Union[T, S]]:
+    def chain(self, *others: Iterable,) -> XIterator[Union[T, S]]:
         """Chain iterators (equivalent to ``itertools.chain(self, *others)``).
 
         For detailed information check :func:`itertools.chain` reference.
@@ -598,10 +597,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         return XIterator(itertools.chain(self.iterator, *iterators))
 
     def diff(
-        self,
-        *others: Iterable,
-        default: Any = NOTHING,
-        key: Union[NOTHING, Callable] = NOTHING,
+        self, *others: Iterable, default: Any = NOTHING, key: Union[NOTHING, Callable] = NOTHING,
     ) -> XIterator[Tuple[T, S]]:
         """Diff iterators (equivalent to ``toolz.itertoolz.diff(self, *others)``).
 
@@ -683,7 +679,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
             raise ValueError(f"Only positive integer numbers are accepted (provided: {n}).")
         return XIterator(toolz.itertoolz.partition_all(n, self.iterator))
 
-    def partition(self, n: int, *, pad: Any = NOTHING) -> XIterator[Tuple[T, ...]]:
+    def partition(self, n: int, *, fill: Any = NOTHING) -> XIterator[Tuple[T, ...]]:
         """Partition iterator into tuples of length ``n`` (equivalent to ``toolz.itertoolz.partition(n, self)``).
 
         For detailed information check :func:`toolz.itertoolz.partition` reference.
@@ -694,13 +690,13 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
             [(0, 1, 2), (3, 4, 5)]
 
             >>> it = xiter(range(7))
-            >>> list(it.partition(3, pad=None))
+            >>> list(it.partition(3, fill=None))
             [(0, 1, 2), (3, 4, 5), (6, None, None)]
 
         """
         kwargs: Dict[str, Any] = {}
-        if pad is not NOTHING:
-            kwargs["pad"] = pad
+        if fill is not NOTHING:
+            kwargs["pad"] = fill
 
         if not isinstance(n, int) or n < 1:
             raise ValueError(f"Only positive integer numbers are accepted (provided: {n}).")
@@ -835,14 +831,226 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         else:
             return XIterator(toolz.itertoolz.unique(self.iterator, key=key))
 
-    def groupby(self):
-        pass
+    @typing.overload
+    def groupby(self, *key: str) -> XIterator[Tuple[Any, List[T]]]:
+        ...
 
-    def reduceby(self):
-        pass
+    @typing.overload
+    def groupby(self, key: List[Any]) -> XIterator[Tuple[Any, List[T]]]:
+        ...
+
+    @typing.overload
+    def groupby(self, key: Callable[[T], Any]) -> XIterator[Tuple[Any, List[T]]]:
+        ...
+
+    def groupby(
+        self, key: Union[str, List[Any], Callable[[T], Any]], *attr_keys: str, as_dict: bool = False
+    ) -> Union[XIterator[Tuple[Any, List[T]]], Dict]:
+        """Group a sequence by a given key (more or less equivalent to ``toolz.itertoolz.groupby(key, self)``
+        with some caveats).
+
+        The `key` argument is used in the following way:
+
+            - if `key` is a callable, it will be passed directly to :func:`toolz.itertoolz.groupby`
+              to compute an actual `key` value for each item in the sequence.
+            - if `key` is a ``str`` or (multiple ``str`` args) they will be used as
+              attributes names (:func:`operator.attrgetter`).
+            - if `key` is a ``list`` of values, they will be used as index values for :func:`operator.itemgetter`.
+
+        Keyword Arguments:
+            as_dict: if `True`, it will return the groups ``dict`` instead of an :class:`XIterator`
+                over `groups.items()`.
+
+        For detailed information check :func:`toolz.itertoolz.groupby` reference.
+
+        Examples:
+            >>> it = xiter([(1.0, -1.0), (1.0,-2.0), (2.2, -3.0)])
+            >>> list(it.groupby([0]))
+            [(1.0, [(1.0, -1.0), (1.0, -2.0)]), (2.2, [(2.2, -3.0)])]
+
+            >>> data = [
+            ...     {'x': 1.0, 'y': -1.0, 'z': 1.0},
+            ...     {'x': 1.0, 'y': -2.0, 'z': 1.0},
+            ...     {'x': 2.2, 'y': -3.0, 'z': 2.2}
+            ... ]
+            >>> list(xiter(data).groupby(['x']))
+            [(1.0, [{'x': 1.0, 'y': -1.0, 'z': 1.0}, {'x': 1.0, 'y': -2.0, 'z': 1.0}]), (2.2, [{'x': 2.2, 'y': -3.0, 'z': 2.2}])]
+            >>> list(xiter(data).groupby(['x', 'z']))
+            [((1.0, 1.0), [{'x': 1.0, 'y': -1.0, 'z': 1.0}, {'x': 1.0, 'y': -2.0, 'z': 1.0}]), ((2.2, 2.2), [{'x': 2.2, 'y': -3.0, 'z': 2.2}])]
+
+            >>> from collections import namedtuple
+            >>> Point = namedtuple('Point', ['x', 'y', 'z'])
+            >>> data = [Point(1.0, -2.0, 1.0), Point(1.0, -2.0, 1.0), Point(2.2, 3.0, 2.0)]
+            >>> list(xiter(data).groupby('x'))
+            [(1.0, [Point(x=1.0, y=-2.0, z=1.0), Point(x=1.0, y=-2.0, z=1.0)]), (2.2, [Point(x=2.2, y=3.0, z=2.0)])]
+            >>> list(xiter(data).groupby('x', 'z'))
+            [((1.0, 1.0), [Point(x=1.0, y=-2.0, z=1.0), Point(x=1.0, y=-2.0, z=1.0)]), ((2.2, 2.0), [Point(x=2.2, y=3.0, z=2.0)])]
+
+            >>> it = xiter(['Alice', 'Bob', 'Charlie', 'Dan', 'Edith', 'Frank'])
+            >>> list(it.groupby(len))
+            [(5, ['Alice', 'Edith', 'Frank']), (3, ['Bob', 'Dan']), (7, ['Charlie'])]
+
+        """
+        if (not callable(key) and not isinstance(key, (int, str, list))) or not all(
+            isinstance(i, str) for i in attr_keys
+        ):
+            raise TypeError(f"Invalid 'key' function or attribute name: '{key}'.")
+        if callable(key):
+            groupby_key = key
+        elif isinstance(key, list):
+            groupby_key = operator.itemgetter(*key)
+        else:
+            assert isinstance(key, str)
+            groupby_key = operator.attrgetter(key, *attr_keys)
+
+        groups = toolz.itertoolz.groupby(groupby_key, self.iterator)
+        return groups if as_dict else xiter(groups.items())
+
+    def accumulate(self, func: Callable[[Any, T], Any] = operator.add, *, init=None) -> XIterator:
+        """Reduce an iterator using a callable (equivalent to ``itertools.accumulate(self, func, init)``).
+
+        For detailed information check :func:`itertools.accumulate` reference.
+
+        Examples:
+            >>> it = xiter(range(5))
+            >>> list(it.accumulate())
+            [0, 1, 3, 6, 10]
+
+            >>> it = xiter(range(5))
+            >>> list(it.accumulate(init=10))
+            [10, 10, 11, 13, 16, 20]
+
+            >>> it = xiter(range(1, 5))
+            >>> list(it.accumulate((lambda x, y: x * y), init=-1))
+            [-1, -1, -2, -6, -24]
+
+        """
+        return XIterator(itertools.accumulate(self.iterator, func, initial=init))
+
+    def reduce(self, bin_op_func: Callable[[Any, T], Any], *, init: Any = None) -> Any:
+        """Reduce an iterator using a callable (equivalent to ``functools.reduce(bin_op_func, self, init)``).
+
+        For detailed information check :func:`functools.reduce` reference.
+
+        Examples:
+            >>> it = xiter(range(5))
+            >>> it.reduce((lambda accu, i: accu + i), init=0)
+            10
+
+            >>> it = xiter(['a', 'b', 'c', 'd', 'e'])
+            >>> sorted(it.reduce((lambda accu, item: (accu or set()) | {item} if item in 'aeiou' else accu)))
+            ['a', 'e']
+
+        """
+        return functools.reduce(bin_op_func, self.iterator, init)
+
+    @typing.overload
+    def reduceby(
+        self,
+        bin_op_func: Callable[[Any, T], Any],
+        *key: str,
+        init: Any = NOTHING,
+        as_dict: bool = False,
+    ) -> XIterator[Tuple[Any, Any]]:
+        ...
+
+    @typing.overload
+    def reduceby(
+        self,
+        bin_op_func: Callable[[Any, T], Any],
+        key: List[Any],
+        *,
+        init: Any = NOTHING,
+        as_dict: bool = False,
+    ) -> XIterator[Tuple[Any, Any]]:
+        ...
+
+    @typing.overload
+    def reduceby(
+        self,
+        bin_op_func: Callable[[Any, T], Any],
+        key: Callable[[T], Any],
+        *,
+        init: Any = NOTHING,
+        as_dict: bool = False,
+    ) -> XIterator[Tuple[Any, Any]]:
+        ...
+
+    def reduceby(
+        self,
+        bin_op_func: Callable[[Any, T], Any],
+        key: Union[str, List[Any], Callable[[T], Any]],
+        *attr_keys: str,
+        init: Any = NOTHING,
+        as_dict: bool = False,
+    ) -> Union[XIterator[Tuple[Any, Any]], Dict]:
+        """Group a sequence by a given key and simultaneously perform a reduction inside the groups
+        more or less equivalent to ``toolz.itertoolz.reduceby(key, bin_op_func, self, init)``
+        with some caveats).
+
+        The `key` argument is used in the following way:
+
+            - if `key` is a callable, it will be passed directly to :func:`toolz.itertoolz.reduceby`
+              to compute an actual `key` value for each item in the sequence.
+            - if `key` is a ``str`` or (multiple ``str`` args) they will be used as
+              attributes names (:func:`operator.attrgetter`).
+            - if `key` is a ``list`` of values, they will be used as index values for :func:`operator.itemgetter`.
+
+        Keyword Arguments:
+            as_dict: if `True`, it will return the groups ``dict`` instead of an :class:`XIterator`
+                over `groups.items()`.
+
+        For detailed information check :func:`toolz.itertoolz.reduceby` reference.
+
+        Examples:
+            >>> it = xiter([(1.0, -1.0), (1.0,-2.0), (2.2, -3.0)])
+            >>> list(it.reduceby((lambda accu, _: accu + 1), [0], init=0))
+            [(1.0, 2), (2.2, 1)]
+
+            >>> data = [
+            ...     {'x': 1.0, 'y': -1.0, 'z': 1.0},
+            ...     {'x': 1.0, 'y': -2.0, 'z': 1.0},
+            ...     {'x': 2.2, 'y': -3.0, 'z': 2.2}
+            ... ]
+            >>> list(xiter(data).reduceby((lambda accu, _: accu + 1), ['x'], init=0))
+            [(1.0, 2), (2.2, 1)]
+            >>> list(xiter(data).reduceby((lambda accu, _: accu + 1), ['x', 'z'], init=0))
+            [((1.0, 1.0), 2), ((2.2, 2.2), 1)]
+
+            >>> from collections import namedtuple
+            >>> Point = namedtuple('Point', ['x', 'y', 'z'])
+            >>> data = [Point(1.0, -2.0, 1.0), Point(1.0, -2.0, 1.0), Point(2.2, 3.0, 2.0)]
+            >>> list(xiter(data).reduceby((lambda accu, _: accu + 1), 'x', init=0))
+            [(1.0, 2), (2.2, 1)]
+            >>> list(xiter(data).reduceby((lambda accu, _: accu + 1), 'x', 'z', init=0))
+            [((1.0, 1.0), 2), ((2.2, 2.0), 1)]
+
+            >>> it = xiter(['Alice', 'Bob', 'Charlie', 'Dan', 'Edith', 'Frank'])
+            >>> list(it.reduceby(lambda nvowels, name: nvowels + sum(i in 'aeiou' for i in name), len, init=0))
+            [(5, 4), (3, 2), (7, 3)]
+
+        """
+
+        if (not callable(key) and not isinstance(key, (int, str, list))) or not all(
+            isinstance(i, str) for i in attr_keys
+        ):
+            raise TypeError(f"Invalid 'key' function or attribute name: '{key}'.")
+        if callable(key):
+            groupby_key = key
+        elif isinstance(key, list):
+            groupby_key = operator.itemgetter(*key)
+        else:
+            assert isinstance(key, str)
+            groupby_key = operator.attrgetter(key, *attr_keys)
+
+        if init is not NOTHING:
+            groups = toolz.itertoolz.reduceby(groupby_key, bin_op_func, self.iterator, init=init)
+        else:
+            groups = toolz.itertoolz.reduceby(groupby_key, bin_op_func, self.iterator)
+        return groups if as_dict else xiter(groups.items())
 
     def to_list(self) -> List[T]:
-        """Expand iterator into a ``list`` (equivalent to ``list(iterator)``).
+        """Expand iterator into a ``list`` (equivalent to ``list(self)``).
 
         Examples:
             >>> it = xiter(range(5))
@@ -853,7 +1061,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         return list(self.iterator)
 
     def to_set(self) -> Set[T]:
-        """Expand iterator into a ``set`` (equivalent to ``set(iterator)``).
+        """Expand iterator into a ``set`` (equivalent to ``set(self)``).
 
         Examples:
             >>> it = xiter([1, 2, 3, 1, 3, -1])
