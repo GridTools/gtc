@@ -25,7 +25,7 @@ import functools
 import pydantic
 import pydantic.generics
 
-from . import type_definitions, utils
+from . import utils
 from .type_definitions import NOTHING, IntEnum, Str, StrEnum
 from .typingx import (
     Any,

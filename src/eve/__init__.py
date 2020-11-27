@@ -42,7 +42,7 @@ from .concepts import (
     in_field,
     out_field,
 )
-from .iterators import traverse_tree
+from .iterators import select_from, traverse_tree
 from .traits import SymbolTableTrait
 from .tree_utils import FindNodes
 from .type_definitions import (

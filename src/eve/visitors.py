@@ -21,7 +21,7 @@ import collections.abc
 import copy
 import operator
 
-from . import concepts, type_definitions, utils
+from . import concepts, utils
 from .concepts import NOTHING
 from .typingx import (
     Any,

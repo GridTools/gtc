@@ -27,8 +27,8 @@ import eve.utils
 from eve.utils import XIterator
 
 
-def test_getitem():
-    from eve.utils import getitem
+def test_sgetitem():
+    from eve.utils import sgetitem
 
     mapping = {
         "true": True,
@@ -40,28 +40,28 @@ def test_getitem():
     sequence = [False, True, True]
 
     # Items in collections
-    assert getitem(mapping, "true")
-    assert not getitem(mapping, "false")
-    assert getitem(sequence, 1)
-    assert not getitem(sequence, 0)
+    assert sgetitem(mapping, "true")
+    assert not sgetitem(mapping, "false")
+    assert sgetitem(sequence, 1)
+    assert not sgetitem(sequence, 0)
 
     # Items in mapping and providing default value
-    assert getitem(mapping, "true", False)
-    assert not getitem(mapping, "false", True)
-    assert getitem(sequence, 1, False)
-    assert not getitem(sequence, 0, True)
+    assert sgetitem(mapping, "true", False)
+    assert not sgetitem(mapping, "false", True)
+    assert sgetitem(sequence, 1, False)
+    assert not sgetitem(sequence, 0, True)
 
     # Missing items in mapping and providing default value
-    assert getitem(mapping, "", True)
-    assert not getitem(mapping, "", False)
-    assert getitem(sequence, 1000, True)
-    assert not getitem(sequence, 1000, False)
+    assert sgetitem(mapping, "", True)
+    assert not sgetitem(mapping, "", False)
+    assert sgetitem(sequence, 1000, True)
+    assert not sgetitem(sequence, 1000, False)
 
     # Missing items in mapping without providing default value
     with pytest.raises(KeyError):
-        assert getitem(mapping, "")
+        assert sgetitem(mapping, "")
     with pytest.raises(IndexError):
-        assert getitem(sequence, 1000)
+        assert sgetitem(sequence, 1000)
 
 
 def test_register_subclasses():

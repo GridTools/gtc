@@ -35,7 +35,7 @@ import black
 import jinja2
 from mako import template as mako_tpl
 
-from . import exceptions, type_definitions, utils
+from . import exceptions, utils
 from .concepts import Node, TreeNode
 from .typingx import (
     Any,

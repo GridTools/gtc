@@ -19,7 +19,6 @@
 
 from __future__ import annotations
 
-import abc
 import enum
 import functools
 import re

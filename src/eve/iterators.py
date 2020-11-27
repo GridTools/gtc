@@ -17,12 +17,15 @@
 """Iterator utils."""
 
 
-import collections.abc
-from typing import Iterator
-
 from . import concepts, utils
 from .type_definitions import Enum
-from .typingx import Any, Generator, List, Optional
+from .typingx import Any, Generator, List, Optional, Sequence, Type, Union
+
+
+try:
+    import cytoolz as toolz
+except ModuleNotFoundError:
+    import toolz  # noqa
 
 
 class TraversalOrder(Enum):
@@ -112,7 +115,7 @@ def traverse_tree(
     traversal_order: TraversalOrder = TraversalOrder.PRE_ORDER,
     *,
     with_keys: bool = False,
-) -> Iterator[concepts.TreeIterationItem]:
+) -> utils.XIterator[concepts.TreeIterationItem]:
     """Create a tree traversal iterator.
 
     Args:
@@ -124,6 +127,21 @@ def traverse_tree(
     """
     assert isinstance(traversal_order, TraversalOrder)
     iterator = globals()[f"traverse_{traversal_order.value}"](node=node, with_keys=with_keys)
-    assert isinstance(iterator, collections.abc.Iterator)
+    assert isinstance(iterator, utils.XIterator)
+
+    return iterator
+
+
+def select_from(
+    node: concepts.TreeNode,
+    traversal_order: TraversalOrder = TraversalOrder.PRE_ORDER,
+    *,
+    by_type: Optional[Union[Type, Sequence[Type]]] = None,
+) -> utils.XIterator[concepts.TreeIterationItem]:
+    """Create a tree traversal iterator."""
+
+    iterator = traverse_tree(node, traversal_order)
+    if by_type is not None:
+        iterator = iterator.filter(utils.isinstancechecker(by_type))
 
     return iterator
