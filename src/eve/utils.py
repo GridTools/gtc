@@ -53,6 +53,7 @@ from .typingx import (
     Iterator,
     List,
     Optional,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -499,6 +500,17 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
             raise ValueError(f"Invalid function or callable: '{func}'.")
         return XIterator(filter(func, self.iterator))
 
+    def filter_by_type(self, type_info: Union[Type, Iterable[Type]]) -> XIterator[T]:
+        """Filter elements using :func"`isinstance` checks (equivalent to ``filter(isinstancechecker(type_info), iterator)``).
+
+        Examples:
+            >>> it = xiter([1, '2', 3.3, [4, 5], {6, 7}])
+            >>> list(it.filter_by_type((int, float)))
+            [1, 3.3]
+
+        """
+        return XIterator(filter(isinstancechecker(type_info), self.iterator))
+
     def getitem(
         self, index: Union[int, str, List[Union[int, str]]], default: Any = NOTHING
     ) -> XIterator[Any]:
@@ -699,6 +711,26 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         """
         return XIterator(zip(*self.iterator))  # type: ignore  # mypy gets confused with *args
 
+    def unique(self, *, key: Union[NOTHING, Callable] = NOTHING) -> XIterator[T]:
+        """Return only unique elements of a sequence (equivalent to ``toolz.itertoolz.unique(iterator)``).
+
+        For detailed information check :func:`toolz.itertoolz.unique` reference.
+
+        Examples:
+            >>> it = xiter([1, 2, 3, 1, 3])
+            >>> list(it.unique())
+            [1, 2, 3]
+
+            >>> it = xiter(['cat', 'mouse', 'dog', 'hen'])
+            >>> list(it.unique(key=len))
+            ['cat', 'mouse']
+
+        """
+        if key is NOTHING:
+            return XIterator(toolz.itertoolz.unique(self.iterator))
+        else:
+            return XIterator(toolz.itertoolz.unique(self.iterator, key=key))
+
     @typing.overload
     def islice(self, __stop: int) -> XIterator[T]:
         ...
@@ -737,7 +769,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         return XIterator(itertools.islice(self.iterator, start, stop, step))
 
     def to_list(self) -> List[T]:
-        """Expand iterator into a list (equivalent to ``list(iterator)``).
+        """Expand iterator into a ``list`` (equivalent to ``list(iterator)``).
 
         Examples:
             >>> it = xiter(range(5))
@@ -746,3 +778,14 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
 
         """
         return list(self.iterator)
+
+    def to_set(self) -> Set[T]:
+        """Expand iterator into a ``set`` (equivalent to ``set(iterator)``).
+
+        Examples:
+            >>> it = xiter([1, 2, 3, 1, 3, -1])
+            >>> it.to_set()
+            {1, 2, 3, -1}
+
+        """
+        return set(self.iterator)

@@ -61,9 +61,9 @@ def bfs_ordered_tree():
     yield _make_tree(bfs_ordered_values)
 
 
-def test_traverse_pre(dfs_ordered_tree):
+def test_iter_tree_pre(dfs_ordered_tree):
     values = [
-        value for value in eve.iterators.traverse_pre(dfs_ordered_tree) if isinstance(value, int)
+        value for value in eve.iterators.iter_tree_pre(dfs_ordered_tree) if isinstance(value, int)
     ]
     assert values == list(sorted(values))
 
@@ -76,9 +76,9 @@ def test_traverse_pre(dfs_ordered_tree):
             assert item == simple_levels[i + 1 : i + 1 + len(item)]
 
 
-def test_traverse_post(dfs_ordered_tree):
+def test_iter_tree_post(dfs_ordered_tree):
     values = [
-        value for value in eve.iterators.traverse_post(dfs_ordered_tree) if isinstance(value, int)
+        value for value in eve.iterators.iter_tree_post(dfs_ordered_tree) if isinstance(value, int)
     ]
     assert values == list(sorted(values))
 
@@ -91,20 +91,22 @@ def test_traverse_post(dfs_ordered_tree):
             assert item == simple_levels[i - len(item) : i]
 
 
-def test_traverse_levels(bfs_ordered_tree):
+def test_iter_tree_levels(bfs_ordered_tree):
     values = [
-        value for value in eve.iterators.traverse_levels(bfs_ordered_tree) if isinstance(value, int)
+        value
+        for value in eve.iterators.iter_tree_levels(bfs_ordered_tree)
+        if isinstance(value, int)
     ]
     assert values == list(sorted(values))
 
 
 @pytest.mark.parametrize("tree", [bfs_ordered_tree, dfs_ordered_tree])
-def test_traverse_tree(tree):
+def test_iter_tree(tree):
     traversals = []
     for order in eve.iterators.TraversalOrder:
-        values = [value for value in eve.traverse_tree(tree, order, with_keys=True)]
+        values = [value for value in eve.iter_tree(tree, order, with_keys=True)]
         assert all(isinstance(v, tuple) for v in values)
         traversals.append(values)
-        traversals.append([value for value in eve.traverse_tree(tree, order)])
+        traversals.append([value for value in eve.iter_tree(tree, order)])
 
     assert all(len(traversals[0]) == len(t) for t in traversals)

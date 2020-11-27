@@ -16,6 +16,9 @@
 
 """Definitions of specific Eve exceptions."""
 
+
+from __future__ import annotations
+
 from .typingx import Any, Dict
 
 

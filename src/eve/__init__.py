@@ -43,7 +43,7 @@ from .concepts import (
     in_field,
     out_field,
 )
-from .iterators import select_from, traverse_tree
+from .iterators import iter_tree
 from .traits import SymbolTableTrait
 from .type_definitions import (
     NOTHING,

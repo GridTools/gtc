@@ -32,7 +32,7 @@ class SymbolTableTrait(concepts.Model):
     @staticmethod
     def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, Any]:
         collected = {}
-        for node in iterators.traverse_tree(root_node):
+        for node in iterators.iter_tree(root_node):
             if isinstance(node, concepts.BaseNode):
                 for name, metadata in node.__node_children__.items():
                     if isinstance(metadata["definition"].type_, type) and issubclass(

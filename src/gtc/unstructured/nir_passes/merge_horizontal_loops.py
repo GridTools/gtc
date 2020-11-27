@@ -131,7 +131,7 @@ def merge_horizontal_loops(
 
 def find_and_merge_horizontal_loops(root: Node):
     copy = root.copy(deep=True)
-    vertical_loops = eve.select_from(copy, by_type=nir.VerticalLoop).to_list()
+    vertical_loops = eve.iter_tree(copy).filter_by_type(nir.VerticalLoop).to_list()
     for loop in vertical_loops:
         loop = merge_horizontal_loops(loop, _find_merge_candidates(loop))
 

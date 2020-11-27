@@ -17,11 +17,13 @@
 """Visitor classes to work with IR trees."""
 
 
+from __future__ import annotations
+
 import collections.abc
 import copy
 import operator
 
-from . import concepts, utils
+from . import concepts, iterators, utils
 from .concepts import NOTHING
 from .typingx import (
     Any,
@@ -119,7 +121,7 @@ class NodeVisitor:
         return visitor(node, **kwargs)
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
-        for child in concepts.generic_iter_children(node):
+        for child in iterators.generic_iter_children(node):
             self.visit(child, **kwargs)
 
 

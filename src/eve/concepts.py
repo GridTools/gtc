@@ -19,13 +19,12 @@
 
 from __future__ import annotations
 
-import collections.abc
 import functools
 
 import pydantic
 import pydantic.generics
 
-from . import utils
+from . import iterators, utils
 from .type_definitions import NOTHING, IntEnum, Str, StrEnum
 from .typingx import (
     Any,
@@ -33,7 +32,6 @@ from .typingx import (
     ClassVar,
     Dict,
     Generator,
-    Iterable,
     List,
     Optional,
     Set,
@@ -225,6 +223,17 @@ class BaseNode(pydantic.BaseModel, metaclass=NodeMetaclass):
         for _, node in self.iter_children():
             yield node
 
+    def iter_tree_pre(self) -> utils.XIterator:
+        return iterators.iter_tree_pre(self)
+
+    def iter_tree_post(self) -> utils.XIterator:
+        return iterators.iter_tree_post(self)
+
+    def iter_tree_levels(self) -> utils.XIterator:
+        return iterators.iter_tree_levels(self)
+
+    iter_tree = iter_tree_pre
+
     class Config(BaseModelConfig):
         pass
 
@@ -244,35 +253,6 @@ class FrozenNode(Node):
 
     class Config(FrozenModelConfig):
         pass
-
-
-KeyValue = Tuple[Union[int, str], Any]
-TreeIterationItem = Union[Any, Tuple[KeyValue, Any]]
-
-
-def generic_iter_children(
-    node: TreeNode, *, with_keys: bool = False
-) -> Iterable[Union[Any, Tuple[KeyValue, Any]]]:
-    """Create an iterator to traverse values as Eve tree nodes.
-
-    Args:
-        with_keys: Return tuples of (key, object) values where keys are
-            the reference to the object node in the parent.
-            Defaults to `False`.
-
-    """
-
-    children_iterator: Iterable[Union[Any, Tuple[KeyValue, Any]]] = iter(())
-    if isinstance(node, Node):
-        children_iterator = node.iter_children() if with_keys else node.iter_children_values()
-    elif isinstance(node, collections.abc.Sequence) and utils.is_collection(node):
-        children_iterator = enumerate(node) if with_keys else iter(node)
-    elif isinstance(node, collections.abc.Set):
-        children_iterator = zip(node, node) if with_keys else iter(node)  # type: ignore  # problems with iter(Set)
-    elif isinstance(node, collections.abc.Mapping):
-        children_iterator = node.items() if with_keys else node.values()
-
-    return children_iterator
 
 
 # -- Misc --
