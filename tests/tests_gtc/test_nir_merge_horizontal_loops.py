@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from eve import FindNodes
+import eve
 from gtc import common
 from gtc.unstructured import nir
 from gtc.unstructured.nir_passes.merge_horizontal_loops import (
@@ -219,7 +219,7 @@ class TestNIRMergeHorizontalLoops:
         stencil = nir.Stencil(vertical_loops=[vertical_loop_1, vertical_loop_2])
         result = find_and_merge_horizontal_loops(stencil)
 
-        vloops = FindNodes().by_type(nir.VerticalLoop, result)
+        vloops = eve.select_from(result, by_type=nir.VerticalLoop).to_list()
         assert len(vloops) == 2
         for vloop in vloops:
             # TODO more precise checks

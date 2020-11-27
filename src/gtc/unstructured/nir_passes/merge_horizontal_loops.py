@@ -54,8 +54,7 @@ class _FindMergeCandidatesAnalysis(NodeVisitor):
 
     @classmethod
     def find(cls, root, **kwargs) -> List[List[nir.HorizontalLoop]]:
-        """Runs the visitor, returns merge candidates.
-        """
+        """Runs the visitor, returns merge candidates."""
         instance = cls()
         instance.visit(root, **kwargs)
         if len(instance.candidate) > 1:
@@ -87,13 +86,11 @@ def _find_merge_candidates(root: nir.VerticalLoop):
 
 
 class MergeHorizontalLoops(NodeTranslator):
-    """
-    """
+    """"""
 
     @classmethod
     def apply(cls, root: nir.VerticalLoop, merge_candidates, **kwargs) -> nir.VerticalLoop:
-        """
-        """
+        """"""
         # merge_candidates = _find_merge_candidates(root)
         return cls().visit(root, merge_candidates=merge_candidates)
 
@@ -134,7 +131,7 @@ def merge_horizontal_loops(
 
 def find_and_merge_horizontal_loops(root: Node):
     copy = root.copy(deep=True)
-    vertical_loops = eve.FindNodes().by_type(nir.VerticalLoop, copy)
+    vertical_loops = eve.select_from(copy, by_type=nir.VerticalLoop).to_list()
     for loop in vertical_loops:
         loop = merge_horizontal_loops(loop, _find_merge_candidates(loop))
 

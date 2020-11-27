@@ -21,13 +21,14 @@
 # Disable isort to avoid circular imports
 from .version import __version__, __versioninfo__  # isort:skip
 
+# Dependency-free import order
 from . import typingx  # isort:skip
 from . import exceptions, type_definitions  # isort:skip
 from . import utils  # isort:skip
 from . import concepts  # isort:skip
 from . import iterators  # isort:skip
 from . import traits, visitors  # isort:skip
-from . import codegen, tree_utils  # isort:skip
+from . import codegen  # isort:skip
 
 
 from .concepts import (
@@ -44,7 +45,6 @@ from .concepts import (
 )
 from .iterators import select_from, traverse_tree
 from .traits import SymbolTableTrait
-from .tree_utils import FindNodes
 from .type_definitions import (
     NOTHING,
     Bool,
