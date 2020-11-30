@@ -49,6 +49,7 @@ from .typingx import (
     Any,
     AnyCallable,
     Callable,
+    Collection,
     Dict,
     Iterable,
     Iterator,
@@ -63,8 +64,10 @@ from .typingx import (
 
 
 try:
+    # For perfomance reasons, try to use cytoolz when possible (using cython)
     import cytoolz as toolz
 except ModuleNotFoundError:
+    # Fall back to pure Python toolz
     import toolz
 
 
@@ -96,8 +99,8 @@ def isinstancechecker(type_info: Union[Type, Iterable[Type]]) -> Callable[[Any],
     return lambda obj: isinstance(obj, types)
 
 
-def attrchecker(name: str) -> Callable[[Any], bool]:
-    """Return a callable object that checks if operand has `name` attribute.
+def attrchecker(*names: str) -> Callable[[Any], bool]:
+    """Return a callable object that checks if operand has all `names` attributes.
 
     Examples:
         >>> from collections import namedtuple
@@ -107,34 +110,40 @@ def attrchecker(name: str) -> Callable[[Any], bool]:
         >>> checker(point)
         True
 
+        >>> checker = attrchecker('x', 'y')
+        >>> checker(point)
+        True
+
         >>> checker = attrchecker('z')
         >>> checker(point)
         False
 
     """
-    if not isinstance(name, str):
-        raise ValueError(f"Invalid attribute name: '{name}'.")
-    return lambda obj: hasattr(obj, name)
+    if not all(isinstance(name, str) for name in names):
+        raise TypeError(f"Arguments with invalid attribute names: '{names}'.")
+    return lambda obj: all(hasattr(obj, name) for name in names)
 
 
-def sattrgetter(*names: str, default: Any = NOTHING) -> Callable[[Any], Any]:
+def attrgetter_(*names: str, default: Any = NOTHING) -> Callable[[Any], Any]:
     """Return a callable object that gets `names` attributes from its operand.
+
+    Similar to :func:`operator.attrgetter()` but accepts a default value.
 
     Examples:
         >>> from collections import namedtuple
         >>> Point = namedtuple('Point', ['x', 'y'])
         >>> point = Point(1.0, 2.0)
-        >>> getter = sattrgetter('x')
+        >>> getter = attrgetter_('x')
         >>> getter(point)
         1.0
 
         >>> import math
-        >>> getter = sattrgetter('z', default=math.nan)
+        >>> getter = attrgetter_('z', default=math.nan)
         >>> getter(point)
         nan
 
         >>> import math
-        >>> getter = sattrgetter('x', 'y', 'z', default=math.nan)
+        >>> getter = attrgetter_('x', 'y', 'z', default=math.nan)
         >>> getter(point)
         (1.0, 2.0, nan)
 
@@ -160,16 +169,18 @@ def sattrgetter(*names: str, default: Any = NOTHING) -> Callable[[Any], Any]:
         return _getter_with_defaults
 
 
-def sgetitem(obj: Any, key: Any, default: Any = NOTHING) -> Any:
-    """Similar to :func:`operator.getitem()` accepting a default value.
+def getitem_(obj: Any, key: Any, default: Any = NOTHING) -> Any:
+    """Return the value of `obj` at index `key`.
+
+    Similar to :func:`operator.getitem()` but accepts a default value.
 
     Examples:
         >>> d = {'a': 1}
-        >>> sgetitem(d, 'a')
+        >>> getitem_(d, 'a')
         1
 
         >>> d = {'a': 1}
-        >>> sgetitem(d, 'b', 'default')
+        >>> getitem_(d, 'b', 'default')
         'default'
 
     """
@@ -184,22 +195,24 @@ def sgetitem(obj: Any, key: Any, default: Any = NOTHING) -> Any:
     return result
 
 
-def sitemgetter(key: Any, default: Any = NOTHING) -> Callable[[Any], Any]:
+def itemgetter_(key: Any, default: Any = NOTHING) -> Callable[[Any], Any]:
     """Return a callable object that gets `key` item from its operand.
+
+    Similar to :func:`operator.itemgetter()` but accepts a default value.
 
     Examples:
         >>> d = {'a': 1}
-        >>> getter = sitemgetter('a')
+        >>> getter = itemgetter_('a')
         >>> getter(d)
         1
 
         >>> d = {'a': 1}
-        >>> getter = sitemgetter('b', 'default')
+        >>> getter = itemgetter_('b', 'default')
         >>> getter(d)
         'default'
 
     """
-    return lambda obj: sgetitem(obj, key, default=default)
+    return lambda obj: getitem_(obj, key, default=default)
 
 
 def register_subclasses(*subclasses: Type) -> Callable[[Type], Type]:
@@ -426,7 +439,7 @@ def xiter(iterable: Iterable[T]) -> XIterator[T]:
     elif isinstance(iterable, collections.abc.Iterable):
         it = iter(iterable)
     else:
-        raise ValueError(f"Invalid iterable instance: '{iterable}'.")
+        raise TypeError(f"Invalid iterable instance: '{iterable}'.")
 
     return XIterator(it)
 
@@ -441,8 +454,8 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
 
     def __init__(self, it: Union[Iterable[T], Iterator[T]]) -> None:
         if not isinstance(it, collections.abc.Iterator):
-            raise ValueError(f"Invalid iterator instance: '{it}'.")
-        super().__setattr__("iterator", it.iterator if isinstance(it, XIterator) else it)
+            raise TypeError(f"Invalid iterator instance: '{it}'.")
+        object.__setattr__(self, "iterator", it.iterator if isinstance(it, XIterator) else it)
 
     def __getattr__(self, name: str) -> Any:
         # Forward special methods to wrapped iterator
@@ -515,26 +528,148 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
 
         """
         if not callable(func):
-            raise ValueError(f"Invalid function or callable: '{func}'.")
+            raise TypeError(f"Invalid function or callable: '{func}'.")
         return XIterator(filter(func, self.iterator))
 
-    def filter_by_type(self, *types: Type) -> XIterator[T]:
-        """Filter elements using :func"`isinstance` checks (equivalent to ``filter(isinstancechecker([*types]), self)``).
+    def if_isinstance(self, *types: Type) -> XIterator[T]:
+        """Filter elements using :func:`isinstance` checks (equivalent to
+        ``xiter(item for item in self if isinstance(item, types))``).
 
         Examples:
             >>> it = xiter([1, '2', 3.3, [4, 5], {6, 7}])
-            >>> list(it.filter_by_type(int, float))
+            >>> list(it.if_isinstance(int, float))
             [1, 3.3]
 
         """
         return XIterator(filter(isinstancechecker([*types]), self.iterator))
 
+    def if_not_isinstance(self, *types: Type) -> XIterator[T]:
+        """Filter elements using negated :func:`isinstance` checks (equivalent to
+        ``xiter(item for item in self if not isinstance(item, types))``).
+
+        Examples:
+            >>> it = xiter([1, '2', 3.3, [4, 5], {6, 7}])
+            >>> list(it.if_not_isinstance(int, float))
+            ['2', [4, 5], {6, 7}]
+
+        """
+        return XIterator(
+            filter(toolz.functoolz.complement(isinstancechecker([*types])), self.iterator)
+        )
+
+    def if_is(self, obj: Any) -> XIterator[T]:
+        """Filter elements using :func:`operator.is_` checks (equivalent to
+        ``xiter(item for item in self if item is obj)``).
+
+        Examples:
+            >>> it = xiter([1, None, 1, 123456789, None, 123456789])
+            >>> list(it.if_is(None))
+            [None, None]
+
+            >>> it = xiter([1, None, 1, 123456789, None, 123456789])
+            >>> list(it.if_is(1))
+            [1, 1]
+
+            >>> it = xiter([1, None, 1, 123456789, None, 123456789])
+            >>> list(it.if_is(123456789))
+            []
+
+        """
+        return XIterator(filter(lambda x: operator.is_(x, obj), self.iterator))
+
+    def if_is_not(self, obj: Any) -> XIterator[T]:
+        """Filter elements using negated  :func:`operator.is_` checks (equivalent to
+        ``xiter(item for item in self if item is not obj)``).
+
+        Examples:
+            >>> it = xiter([1, None, 1, 123456789, None, 123456789])
+            >>> list(it.if_is_not(None))
+            [1, 1, 123456789, 123456789]
+
+            >>> it = xiter([1, None, 1, 123456789, None, 123456789])
+            >>> list(it.if_is_not(1))
+            [None, 123456789, None, 123456789]
+
+            >>> it = xiter([1, None, 1, 123456789, None, 123456789])
+            >>> list(it.if_is_not(123456789))
+            [1, None, 1, 123456789, None, 123456789]
+
+        """
+        return XIterator(filter(lambda x: not operator.is_(x, obj), self.iterator))
+
+    def if_in(self, collection: Collection[T]) -> XIterator[T]:
+        """Filter elements using :func:`operator.contains` checks (equivalent to
+        ``xiter(item for item in self if item in collection)``).
+
+        Examples:
+            >>> it = xiter(range(8))
+            >>> list(it.if_in([0, 2, 4, 6]))
+            [0, 2, 4, 6]
+
+        """
+        return XIterator(filter(lambda x: operator.contains(collection, x), self.iterator))
+
+    def if_not_in(self, collection: Collection[T]) -> XIterator[T]:
+        """Filter elements using negated :func:`operator.contains` checks (equivalent to
+        ``xiter(item for item in self if item not in collection)``).
+
+        Examples:
+            >>> it = xiter(range(8))
+            >>> list(it.if_not_in([0, 2, 4, 6]))
+            [1, 3, 5, 7]
+
+        """
+        return XIterator(filter(lambda x: not operator.contains(collection, x), self.iterator))
+
+    def if_contains(self, *values: Any) -> XIterator[T]:
+        """Filter elements using :func:`operator.contains` checks (equivalent to
+        ``xiter(item for item in self if all(v in item for v in values))``).
+
+        Examples:
+            >>> it = xiter([None, (0, 1, 2), "a", (1, 2, 3), (2, 3, 4), "b"])
+            >>> list(it.if_contains(2))
+            [(0, 1, 2), (1, 2, 3), (2, 3, 4)]
+
+            >>> it = xiter([None, (0, 1, 2), "a", (1, 2, 3), (2, 3, 4), "b"])
+            >>> list(it.if_contains(1, 2))
+            [(0, 1, 2), (1, 2, 3)]
+
+        """
+
+        def _contains(a: Any, collection: Tuple) -> bool:
+            try:
+                return all(operator.contains(a, v) for v in collection)
+            except Exception:
+                return False
+
+        return XIterator(filter((lambda x: _contains(x, values)), self.iterator))
+
+    def if_hasattr(self, *names: str) -> XIterator[T]:
+        """Filter elements using :func:`hasattr` checks (equivalent to ``filter(attrchecker(names), self)``).
+
+        Examples:
+            >>> it = xiter([1, '2', 3.3, [4, 5], {6, 7}])
+            >>> list(it.if_hasattr('__len__'))
+            ['2', [4, 5], {6, 7}]
+
+            >>> it = xiter([1, '2', 3.3, [4, 5], {6, 7}])
+            >>> list(it.if_hasattr('__len__', 'index'))
+            ['2', [4, 5]]
+
+        """
+        return XIterator(filter(attrchecker(*names), self.iterator))
+
     def getattr(  # noqa  # A003: shadowing a python builtin
         self, *names: str, default: Any = NOTHING
     ) -> XIterator[Any]:
-        """Get provided attributes from each item in a sequence (equivalent to ``map(sattrgetter(*names, default=default), self)``).
+        """Get provided attributes from each item in a sequence (equivalent to ``map(attrgetter_(*names, default=default), self)``).
 
-        For detailed information check :func:`sattrgetter` and :func:`operator.attrgetter` reference.
+        Keyword Arguments:
+            default: returned value if the item does not contain an attribute
+                with the provided `name`.
+
+        For detailed information check :func:`attrgetter_` and :func:`operator.attrgetter` reference.
+
 
         Examples:
             >>> from collections import namedtuple
@@ -548,10 +683,14 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
             [(1.0, None), (2.0, None), (3.0, None)]
 
         """
-        return XIterator(map(sattrgetter(*names, default=default), self.iterator))
+        return XIterator(map(attrgetter_(*names, default=default), self.iterator))
 
     def getitem(self, *indices: Union[int, str], default: Any = NOTHING) -> XIterator[Any]:
         """Get provided indices data from each item in a sequence (equivalent to ``toolz.itertoolz.pluck(indices, self)``).
+
+        Keyword Arguments:
+            default: returned value if the item does not contain an `index`
+                with the provided value.
 
         For detailed information check :func:`toolz.itertoolz.pluck` reference.
 
@@ -569,7 +708,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
             [('AA', 20), ('BB', 30), ('CC', 40), (None, None)]
 
         """
-        ind: Union[Any, List[Any]]
+        ind: Any  # a hashable item or a list of hashable items
         if len(indices) == 1:
             ind = indices[0]
         else:
@@ -579,7 +718,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         else:
             return XIterator(toolz.itertoolz.pluck(ind, self.iterator, default))
 
-    def chain(self, *others: Iterable,) -> XIterator[Union[T, S]]:
+    def chain(self, *others: Iterable) -> XIterator[Union[T, S]]:
         """Chain iterators (equivalent to ``itertools.chain(self, *others)``).
 
         For detailed information check :func:`itertools.chain` reference.
@@ -601,6 +740,10 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         self, *others: Iterable, default: Any = NOTHING, key: Union[NOTHING, Callable] = NOTHING,
     ) -> XIterator[Tuple[T, S]]:
         """Diff iterators (equivalent to ``toolz.itertoolz.diff(self, *others)``).
+
+        Keyword Arguments:
+            default: returned value for missing items.
+            key: callable computing the key to use per item in the sequence.
 
         For detailed information check :func:`toolz.itertoolz.diff` reference.
 
@@ -665,43 +808,48 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
                 other = xiter(other)
         return XIterator(itertools.product(self.iterator, other.iterator))
 
-    def partition_all(self, n: int) -> XIterator[Tuple[T, ...]]:
-        """Partition iterator into tuples of length at most ``n`` (equivalent to ``toolz.itertoolz.partition_all(n, self)``).
+    def partition(
+        self, n: int, *, exact: bool = False, fill: Any = NOTHING
+    ) -> XIterator[Tuple[T, ...]]:
+        """Partition iterator into tuples of length `n` (``exact=True``) or at most `n`
+        (``exact=False``). Equivalent to ``toolz.itertoolz.partition(n, self)`` or
+        ``toolz.itertoolz.partition_all(n, self)``).
 
-        For detailed information check :func:`toolz.itertoolz.partition_all` reference.
+        For detailed information check :func:`toolz.itertoolz.partition` and
+        :func:`toolz.itertoolz.partition_all` reference.
 
-        Examples:
-            >>> it = xiter(range(7))
-            >>> list(it.partition_all(3))
-            [(0, 1, 2), (3, 4, 5), (6,)]
-
-        """
-        if not isinstance(n, int) or n < 1:
-            raise ValueError(f"Only positive integer numbers are accepted (provided: {n}).")
-        return XIterator(toolz.itertoolz.partition_all(n, self.iterator))
-
-    def partition(self, n: int, *, fill: Any = NOTHING) -> XIterator[Tuple[T, ...]]:
-        """Partition iterator into tuples of length ``n`` (equivalent to ``toolz.itertoolz.partition(n, self)``).
-
-        For detailed information check :func:`toolz.itertoolz.partition` reference.
+        Keyword Arguments:
+            exact: if `True`, it will return tuples of length `n`. If `False`, the last
+                tuple could have a smaller size if there are not enough items in the sequence.
+            fill: if provided together with ``exact=True``, this value will be used to fill
+                the last tuple until it has exactly length `n`.
 
         Examples:
             >>> it = xiter(range(7))
             >>> list(it.partition(3))
+            [(0, 1, 2), (3, 4, 5), (6,)]
+
+            >>> it = xiter(range(7))
+            >>> list(it.partition(3, exact=True))
             [(0, 1, 2), (3, 4, 5)]
 
             >>> it = xiter(range(7))
-            >>> list(it.partition(3, fill=None))
+            >>> list(it.partition(3, exact=True, fill=None))
             [(0, 1, 2), (3, 4, 5), (6, None, None)]
 
         """
-        kwargs: Dict[str, Any] = {}
-        if fill is not NOTHING:
-            kwargs["pad"] = fill
-
         if not isinstance(n, int) or n < 1:
             raise ValueError(f"Only positive integer numbers are accepted (provided: {n}).")
-        return XIterator(toolz.itertoolz.partition(n, self.iterator, **kwargs))
+
+        if exact:
+            if fill is NOTHING:
+                iterator = toolz.itertoolz.partition(n, self.iterator)
+            else:
+                iterator = toolz.itertoolz.partition(n, self.iterator, pad=fill)
+        else:
+            iterator = toolz.itertoolz.partition_all(n, self.iterator)
+
+        return XIterator(iterator)
 
     def take_nth(self, n: int) -> XIterator[T]:
         """Take every nth item in sequence (equivalent to ``toolz.itertoolz.take_nth(n, self)``).
@@ -722,6 +870,9 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         self, *others: Iterable, fill: Any = NOTHING
     ) -> XIterator[Tuple[T, S]]:
         """Zip iterators (equivalent to ``zip(self, *others)`` or ``itertools.zip_longest(self, *others, fillvalue=fill)``).
+
+        Keyword Arguments:
+            fill: value used to fill the result for sequences with fewer items.
 
         For detailed information check :func:`zip` and :func:`itertools.zip_longest` reference.
 
@@ -809,11 +960,14 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
 
         """
         if not isinstance(selectors, collections.abc.Iterable):
-            raise ValueError(f"Non-iterable 'selectors' value: '{selectors}'.")
+            raise TypeError(f"Non-iterable 'selectors' value: '{selectors}'.")
         return XIterator(itertools.compress(self.iterator, selectors))
 
     def unique(self, *, key: Union[NOTHING, Callable] = NOTHING) -> XIterator[T]:
         """Return only unique elements of a sequence (equivalent to ``toolz.itertoolz.unique(self)``).
+
+        Keyword Arguments:
+            key: callable computing the key to use per item in the sequence.
 
         For detailed information check :func:`toolz.itertoolz.unique` reference.
 
@@ -916,6 +1070,9 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
     ) -> XIterator:
         """Reduce an iterator using a callable (equivalent to ``itertools.accumulate(self, func, init)``).
 
+        Keyword Arguments:
+            init: initial value for the accumulation.
+
         For detailed information check :func:`itertools.accumulate` reference.
 
         Examples:
@@ -936,6 +1093,9 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
 
     def reduce(self, bin_op_func: Callable[[Any, T], Any], *, init: Any = None) -> Any:
         """Reduce an iterator using a callable (equivalent to ``functools.reduce(bin_op_func, self, init)``).
+
+        Keyword Arguments:
+            init: initial value for the reduction.
 
         For detailed information check :func:`functools.reduce` reference.
 
@@ -1005,6 +1165,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
             - if `key` is a ``list`` of values, they will be used as index values for :func:`operator.itemgetter`.
 
         Keyword Arguments:
+            init: initial value for the reduction.
             as_dict: if `True`, it will return the groups ``dict`` instead of an :class:`XIterator`
                 over `groups.items()`.
 

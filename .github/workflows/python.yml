@@ -21,7 +21,7 @@ jobs:
                   python-version: ${{ matrix.python-version }}
             - name: Install gtc and dependencies
               run: |
-                  python3 -m pip install .[cpp]
+                  python3 -m pip install .[all]
                   python3 -m pip install -r requirements_dev.txt  # TODO(havogt): remove once we don't include debugtools
             - name: Run pre-commit checks
               run: |

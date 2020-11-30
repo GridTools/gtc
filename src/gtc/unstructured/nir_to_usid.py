@@ -131,7 +131,7 @@ class NirToUsid(eve.NodeTranslator):
             )
         )
 
-        field_accesses = eve.iter_tree(node.stmt).filter_by_type(nir.FieldAccess).to_list()
+        field_accesses = eve.iter_tree(node.stmt).if_isinstance(nir.FieldAccess).to_list()
 
         other_sids_entries = {}
         primary_sid_entries = set()
@@ -150,7 +150,7 @@ class NirToUsid(eve.NodeTranslator):
                     other_sids_entries[secondary_loc] = set()
                 other_sids_entries[secondary_loc].add(usid.SidCompositeEntry(name=acc.name))
 
-        neighloops = eve.iter_tree(node.stmt).filter_by_type(nir.NeighborLoop).to_list()
+        neighloops = eve.iter_tree(node.stmt).if_isinstance(nir.NeighborLoop).to_list()
         for loop in neighloops:
             transformed_neighbors = self.visit(loop.neighbors, **kwargs)
             connectivity_name = str(transformed_neighbors) + "_conn"

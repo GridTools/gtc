@@ -94,7 +94,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
-        vardecl = result.iter_tree().filter_by_type(sir.VarDeclStmt).to_list()[0]
+        vardecl = result.iter_tree().if_isinstance(sir.VarDeclStmt).to_list()[0]
         assert vardecl.location_type == sir.LocationType.Cell
 
     def test_reduction(self):
@@ -116,7 +116,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
-        vardecl = eve.iter_tree(result).filter_by_type(sir.VarDeclStmt).to_list()[0]
+        vardecl = eve.iter_tree(result).if_isinstance(sir.VarDeclStmt).to_list()[0]
         assert vardecl.location_type == sir.LocationType.Edge
 
     def test_chain_assignment(self):
@@ -131,7 +131,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
-        vardecls = eve.iter_tree(result).filter_by_type(sir.VarDeclStmt).to_list()
+        vardecls = eve.iter_tree(result).if_isinstance(sir.VarDeclStmt).to_list()
         assert len(vardecls) == 2
         for vardecl in vardecls:
             assert vardecl.location_type == sir.LocationType.Cell

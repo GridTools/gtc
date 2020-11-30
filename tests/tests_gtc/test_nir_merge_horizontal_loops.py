@@ -219,7 +219,7 @@ class TestNIRMergeHorizontalLoops:
         stencil = nir.Stencil(vertical_loops=[vertical_loop_1, vertical_loop_2])
         result = find_and_merge_horizontal_loops(stencil)
 
-        vloops = eve.iter_tree(result).filter_by_type(nir.VerticalLoop).to_list()
+        vloops = eve.iter_tree(result).if_isinstance(nir.VerticalLoop).to_list()
         assert len(vloops) == 2
         for vloop in vloops:
             # TODO more precise checks
