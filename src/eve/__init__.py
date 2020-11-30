@@ -22,12 +22,12 @@ from .version import __version__, __versioninfo__  # isort:skip
 
 # Internal dependencies between modules (each line depends on some of the previous ones):
 #
-#   typingx
-#   exceptions, type_definitions
-#   utils
-#   concepts <-> iterators  # circular dependency only inside methods, it should be safe
-#   traits, visitors
-#   codegen
+#   - typingx  (no dependencies)
+#   - exceptions, type_definitions
+#   - utils
+#   - concepts <-> iterators  (circular dependency only inside methods, it should be safe)
+#   - traits, visitors
+#   - codegen
 #
 
 from .concepts import (
