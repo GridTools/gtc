@@ -149,12 +149,12 @@ def sattrgetter(*names: str, default: Any = NOTHING) -> Callable[[Any], Any]:
         if len(names) == 1:
             name = names[0]
 
-            def _getter_with_defaults(obj):
+            def _getter_with_defaults(obj: Any) -> Any:
                 return getattr(obj, name, default)
 
         else:
 
-            def _getter_with_defaults(obj):
+            def _getter_with_defaults(obj: Any) -> Any:
                 return tuple(getattr(obj, name, default) for name in names)
 
         return _getter_with_defaults
@@ -569,6 +569,7 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
             [('AA', 20), ('BB', 30), ('CC', 40), (None, None)]
 
         """
+        ind: Union[Any, List[Any]]
         if len(indices) == 1:
             ind = indices[0]
         else:
@@ -832,15 +833,19 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
             return XIterator(toolz.itertoolz.unique(self.iterator, key=key))
 
     @typing.overload
-    def groupby(self, *key: str) -> XIterator[Tuple[Any, List[T]]]:
+    def groupby(
+        self, key: str, *other_keys: str, as_dict: bool = False
+    ) -> XIterator[Tuple[Any, List[T]]]:
         ...
 
     @typing.overload
-    def groupby(self, key: List[Any]) -> XIterator[Tuple[Any, List[T]]]:
+    def groupby(self, key: List[Any], *, as_dict: bool = False) -> XIterator[Tuple[Any, List[T]]]:
         ...
 
     @typing.overload
-    def groupby(self, key: Callable[[T], Any]) -> XIterator[Tuple[Any, List[T]]]:
+    def groupby(
+        self, key: Callable[[T], Any], *, as_dict: bool = False
+    ) -> XIterator[Tuple[Any, List[T]]]:
         ...
 
     def groupby(
@@ -906,7 +911,9 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         groups = toolz.itertoolz.groupby(groupby_key, self.iterator)
         return groups if as_dict else xiter(groups.items())
 
-    def accumulate(self, func: Callable[[Any, T], Any] = operator.add, *, init=None) -> XIterator:
+    def accumulate(
+        self, func: Callable[[Any, T], Any] = operator.add, *, init: Any = None
+    ) -> XIterator:
         """Reduce an iterator using a callable (equivalent to ``itertools.accumulate(self, func, init)``).
 
         For detailed information check :func:`itertools.accumulate` reference.
@@ -948,7 +955,8 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
     def reduceby(
         self,
         bin_op_func: Callable[[Any, T], Any],
-        *key: str,
+        key: str,
+        *other_keys: str,
         init: Any = NOTHING,
         as_dict: bool = False,
     ) -> XIterator[Tuple[Any, Any]]:
