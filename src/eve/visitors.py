@@ -17,11 +17,13 @@
 """Visitor classes to work with IR trees."""
 
 
+from __future__ import annotations
+
 import collections.abc
 import copy
 import operator
 
-from . import concepts, type_definitions
+from . import concepts, iterators, utils
 from .concepts import NOTHING
 from .typingx import (
     Any,
@@ -119,7 +121,7 @@ class NodeVisitor:
         return visitor(node, **kwargs)
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
-        for child in concepts.generic_iter_children(node):
+        for child in iterators.generic_iter_children(node):
             self.visit(child, **kwargs)
 
 
@@ -151,8 +153,8 @@ class NodeTranslator(NodeVisitor):
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
         result: Any = None
-        if isinstance(node, (concepts.Node, collections.abc.Collection)) and not isinstance(
-            node, type_definitions.ATOMIC_COLLECTION_TYPES
+        if isinstance(node, (concepts.Node, collections.abc.Collection)) and utils.is_collection(
+            node
         ):
             tmp_items: Collection[concepts.TreeNode] = []
             if isinstance(node, concepts.Node):
@@ -215,8 +217,8 @@ class NodeMutator(NodeVisitor):
 
     def generic_visit(self, node: concepts.TreeNode, **kwargs: Any) -> Any:
         result: Any = node
-        if isinstance(node, (concepts.Node, collections.abc.Collection)) and not isinstance(
-            node, type_definitions.ATOMIC_COLLECTION_TYPES
+        if isinstance(node, (concepts.Node, collections.abc.Collection)) and utils.is_collection(
+            node
         ):
             items: Iterable[Tuple[Any, Any]] = []
             tmp_items: Collection[concepts.TreeNode] = []

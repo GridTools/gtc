@@ -233,4 +233,4 @@ class SirToNaive(NodeTranslator):
             self.isControlFlow = False
             return self.visit(node.root)
         else:
-            raise "unreachable: there should not be an AST node in the stencil ast"
+            raise RuntimeError("Unreachable: there should not be an AST node in the stencil AST")

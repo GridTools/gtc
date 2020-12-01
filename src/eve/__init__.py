@@ -18,16 +18,17 @@
 
 
 # flake8: noqa  # disable flake8 because of non-used imports warnings
-# Disable isort to avoid circular imports
 from .version import __version__, __versioninfo__  # isort:skip
 
-from . import typingx  # isort:skip
-from . import exceptions, type_definitions  # isort:skip
-from . import utils  # isort:skip
-from . import concepts  # isort:skip
-from . import iterators, traits, visitors  # isort:skip
-from . import codegen, tree_utils  # isort:skip
-
+# Internal dependencies between modules (each line depends on some of the previous ones):
+#
+#   - typingx  (no dependencies)
+#   - exceptions, type_definitions
+#   - utils
+#   - concepts <-> iterators  (circular dependency only inside methods, it should be safe)
+#   - traits, visitors
+#   - codegen
+#
 
 from .concepts import (
     FieldKind,
@@ -41,11 +42,9 @@ from .concepts import (
     in_field,
     out_field,
 )
-from .iterators import traverse_tree
+from .iterators import iter_tree
 from .traits import SymbolTableTrait
-from .tree_utils import FindNodes
 from .type_definitions import (
-    DELETE,
     NOTHING,
     Bool,
     Bytes,

@@ -16,7 +16,7 @@
 
 import pytest
 
-from eve import FindNodes
+import eve
 from gtc import common, sir
 from gtc.unstructured.sir_passes.infer_local_variable_location_type import (
     AnalysisException,
@@ -94,7 +94,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
-        vardecl = FindNodes.by_type(sir.VarDeclStmt, result)[0]
+        vardecl = result.iter_tree().if_isinstance(sir.VarDeclStmt).to_list()[0]
         assert vardecl.location_type == sir.LocationType.Cell
 
     def test_reduction(self):
@@ -116,7 +116,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
-        vardecl = FindNodes.by_type(sir.VarDeclStmt, result)[0]
+        vardecl = eve.iter_tree(result).if_isinstance(sir.VarDeclStmt).to_list()[0]
         assert vardecl.location_type == sir.LocationType.Edge
 
     def test_chain_assignment(self):
@@ -131,7 +131,7 @@ class TestInferLocalVariableLocationType:
 
         result = InferLocalVariableLocationTypeTransformation.apply(stencil)
 
-        vardecls = FindNodes.by_type(sir.VarDeclStmt, result)
+        vardecls = eve.iter_tree(result).if_isinstance(sir.VarDeclStmt).to_list()
         assert len(vardecls) == 2
         for vardecl in vardecls:
             assert vardecl.location_type == sir.LocationType.Cell

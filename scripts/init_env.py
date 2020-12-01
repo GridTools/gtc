@@ -59,9 +59,9 @@ class VenvManager(VManager):
     def make_install_commands(cls, requirements: str, venv_path: Optional[str] = None) -> List[str]:
         pip_prefix = f"{venv_path}/bin/pip3" if venv_path else "pip3"
         if requirements == "run":
-            return [f"{pip_prefix} install -e {REPO_ROOT}[cpp]"]
+            return [f"{pip_prefix} install -e {REPO_ROOT}[all]"]
         elif requirements == "develop":
-            return [f"{pip_prefix} install -e {REPO_ROOT}[cpp] -r {REPO_ROOT}/requirements_dev.txt"]
+            return [f"{pip_prefix} install -e {REPO_ROOT}[all] -r {REPO_ROOT}/requirements_dev.txt"]
         else:
             return []
 
@@ -81,9 +81,9 @@ class CondaManager(VManager):
     def make_install_commands(cls, requirements: str, venv_path: Optional[str] = None) -> List[str]:
         pip_prefix = f"conda run -p {venv_path} pip3" if venv_path else "pip3"
         if requirements == "run":
-            return [f"{pip_prefix} install -e {REPO_ROOT}[cpp]"]
+            return [f"{pip_prefix} install -e {REPO_ROOT}[all]"]
         elif requirements == "develop":
-            return [f"{pip_prefix} install -e {REPO_ROOT}[cpp] -r {REPO_ROOT}/requirements_dev.txt"]
+            return [f"{pip_prefix} install -e {REPO_ROOT}[all] -r {REPO_ROOT}/requirements_dev.txt"]
         else:
             return []
 

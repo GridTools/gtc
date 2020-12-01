@@ -35,7 +35,7 @@ import black
 import jinja2
 from mako import template as mako_tpl
 
-from . import exceptions, type_definitions, utils
+from . import exceptions, utils
 from .concepts import Node, TreeNode
 from .typingx import (
     Any,
@@ -677,9 +677,9 @@ class TemplatedGenerator(NodeVisitor):
                         node=node,
                     ) from e.__cause__
 
-        elif isinstance(node, (collections.abc.Sequence, collections.abc.Set)) and not isinstance(
-            node, type_definitions.ATOMIC_COLLECTION_TYPES
-        ):
+        elif isinstance(
+            node, (collections.abc.Sequence, collections.abc.Set)
+        ) and utils.is_collection(node):
             result = [self.visit(value, **kwargs) for value in node]
         elif isinstance(node, collections.abc.Mapping):
             result = {key: self.visit(value, **kwargs) for key, value in node.items()}

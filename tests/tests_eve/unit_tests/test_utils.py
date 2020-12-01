@@ -17,37 +17,18 @@
 import copy
 import dataclasses
 import hashlib
+import string
 from typing import Any
 
 import pydantic
 import pytest
 
 import eve.utils
+from eve.utils import XIterator
 
 
-def test_filter_map():
-    from eve.utils import filter_map
-
-    LENGTH = 12
-
-    def map_int_to_string(int_or_float):
-        if not isinstance(int_or_float, int):
-            return filter_map.DELETE
-        else:
-            return int_or_float, str(int_or_float)
-
-    assert all(
-        isinstance(i, int) and str_i == str(i)
-        for i, str_i in filter_map(map_int_to_string, range(LENGTH))
-    )
-
-    odds = list(filter_map(lambda x: x if x % 2 else None, range(LENGTH), delete_sentinel=None))
-    assert all(isinstance(i, int) and ((i % 2) != 0) for i in odds)
-    assert len(odds) == LENGTH // 2
-
-
-def test_get_item():
-    from eve.utils import get_item
+def test_getitem_():
+    from eve.utils import getitem_
 
     mapping = {
         "true": True,
@@ -59,28 +40,28 @@ def test_get_item():
     sequence = [False, True, True]
 
     # Items in collections
-    assert get_item(mapping, "true")
-    assert not get_item(mapping, "false")
-    assert get_item(sequence, 1)
-    assert not get_item(sequence, 0)
+    assert getitem_(mapping, "true")
+    assert not getitem_(mapping, "false")
+    assert getitem_(sequence, 1)
+    assert not getitem_(sequence, 0)
 
     # Items in mapping and providing default value
-    assert get_item(mapping, "true", False)
-    assert not get_item(mapping, "false", True)
-    assert get_item(sequence, 1, False)
-    assert not get_item(sequence, 0, True)
+    assert getitem_(mapping, "true", False)
+    assert not getitem_(mapping, "false", True)
+    assert getitem_(sequence, 1, False)
+    assert not getitem_(sequence, 0, True)
 
     # Missing items in mapping and providing default value
-    assert get_item(mapping, "", True)
-    assert not get_item(mapping, "", False)
-    assert get_item(sequence, 1000, True)
-    assert not get_item(sequence, 1000, False)
+    assert getitem_(mapping, "", True)
+    assert not getitem_(mapping, "", False)
+    assert getitem_(sequence, 1000, True)
+    assert not getitem_(sequence, 1000, False)
 
     # Missing items in mapping without providing default value
     with pytest.raises(KeyError):
-        assert get_item(mapping, "")
+        assert getitem_(mapping, "")
     with pytest.raises(IndexError):
-        assert get_item(sequence, 1000)
+        assert getitem_(sequence, 1000)
 
 
 def test_register_subclasses():
@@ -221,7 +202,7 @@ def test_case_style_converter(name_with_cases):
             ]
 
 
-# -- TestUIDGenerator --
+# -- UIDGenerator --
 class TestUIDGenerator:
     def test_random_id(self):
         from eve.utils import UIDGenerator
@@ -257,3 +238,22 @@ class TestUIDGenerator:
         assert int(UIDGenerator.sequential_id()) == counter + 1
         with pytest.warns(RuntimeWarning, match="Unsafe reset"):
             UIDGenerator.reset_sequence(counter)
+
+
+# -- Iterators --
+def test_xiter():
+    from eve.utils import xiter
+
+    it = xiter(range(6))
+    assert isinstance(it, XIterator)
+    assert list(it) == [0, 1, 2, 3, 4, 5]
+
+    it = xiter([0, 1, 2, 3, 4, 5])
+    assert isinstance(it, XIterator)
+    assert list(it) == [0, 1, 2, 3, 4, 5]
+
+
+def test_xenumerate():
+    from eve.utils import xenumerate
+
+    assert list(xenumerate(string.ascii_letters[:3])) == [(0, "a"), (1, "b"), (2, "c")]
