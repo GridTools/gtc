@@ -387,7 +387,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">isControlFlow</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="s2">&quot;unreachable: there should not be an AST node in the stencil ast&quot;</span></div></div>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unreachable: there should not be an AST node in the stencil AST&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

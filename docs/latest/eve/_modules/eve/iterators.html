@@ -171,12 +171,48 @@
 <span class="sd">&quot;&quot;&quot;Iterator utils.&quot;&quot;&quot;</span>
 
 
-<span class="kn">import</span> <span class="nn">collections.abc</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterator</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">concepts</span>
+<span class="kn">import</span> <span class="nn">collections.abc</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">concepts</span><span class="p">,</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">cytoolz</span> <span class="k">as</span> <span class="nn">toolz</span>
+<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">toolz</span>  <span class="c1"># noqa</span>
+
+
+<span class="n">KeyValue</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span>
+<span class="n">TreeIterationItem</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">KeyValue</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="generic_iter_children"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.generic_iter_children">[docs]</a><span class="k">def</span> <span class="nf">generic_iter_children</span><span class="p">(</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">TreeNode</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">with_keys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">KeyValue</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+    <span class="sd">&quot;&quot;&quot;Create an iterator to traverse values as Eve tree nodes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        with_keys: Return tuples of (key, object) values where keys are</span>
+<span class="sd">            the reference to the object node in the parent.</span>
+<span class="sd">            Defaults to `False`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">children_iterator</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">KeyValue</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(())</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">concepts</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+        <span class="n">children_iterator</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">iter_children</span><span class="p">()</span> <span class="k">if</span> <span class="n">with_keys</span> <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">iter_children_values</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="n">utils</span><span class="o">.</span><span class="n">is_collection</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="n">children_iterator</span> <span class="o">=</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="k">if</span> <span class="n">with_keys</span> <span class="k">else</span> <span class="nb">iter</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Set</span><span class="p">):</span>
+        <span class="n">children_iterator</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="k">if</span> <span class="n">with_keys</span> <span class="k">else</span> <span class="nb">iter</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>  <span class="c1"># type: ignore  # problems with iter(Set)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">children_iterator</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">with_keys</span> <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">children_iterator</span></div>
 
 
 <div class="viewcode-block" id="TraversalOrder"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.TraversalOrder">[docs]</a><span class="k">class</span> <span class="nc">TraversalOrder</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -185,9 +221,10 @@
     <span class="n">LEVELS_ORDER</span> <span class="o">=</span> <span class="s2">&quot;levels&quot;</span></div>
 
 
-<div class="viewcode-block" id="traverse_pre"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.traverse_pre">[docs]</a><span class="k">def</span> <span class="nf">traverse_pre</span><span class="p">(</span>
+<div class="viewcode-block" id="iter_tree_pre"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.iter_tree_pre">[docs]</a><span class="nd">@utils</span><span class="o">.</span><span class="n">as_xiter</span>
+<span class="k">def</span> <span class="nf">iter_tree_pre</span><span class="p">(</span>
     <span class="n">node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">TreeNode</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">with_keys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">__key__</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">concepts</span><span class="o">.</span><span class="n">TreeIterationItem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">TreeIterationItem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Create a pre-order tree traversal iterator (Depth-First Search).</span>
 
 <span class="sd">    Args:</span>
@@ -199,17 +236,18 @@
 
     <span class="k">if</span> <span class="n">with_keys</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">__key__</span><span class="p">,</span> <span class="n">node</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">concepts</span><span class="o">.</span><span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-            <span class="k">yield from</span> <span class="n">traverse_pre</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">__key__</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">yield from</span> <span class="n">iter_tree_pre</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">__key__</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">node</span>
-        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">concepts</span><span class="o">.</span><span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-            <span class="k">yield from</span> <span class="n">traverse_pre</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="k">yield from</span> <span class="n">iter_tree_pre</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="traverse_post"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.traverse_post">[docs]</a><span class="k">def</span> <span class="nf">traverse_post</span><span class="p">(</span>
+<div class="viewcode-block" id="iter_tree_post"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.iter_tree_post">[docs]</a><span class="nd">@utils</span><span class="o">.</span><span class="n">as_xiter</span>
+<span class="k">def</span> <span class="nf">iter_tree_post</span><span class="p">(</span>
     <span class="n">node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">TreeNode</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">with_keys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">__key__</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">concepts</span><span class="o">.</span><span class="n">TreeIterationItem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">TreeIterationItem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Create a post-order tree traversal iterator (Depth-First Search).</span>
 
 <span class="sd">    Args:</span>
@@ -219,22 +257,23 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">with_keys</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">concepts</span><span class="o">.</span><span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-            <span class="k">yield from</span> <span class="n">traverse_post</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">__key__</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">yield from</span> <span class="n">iter_tree_post</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">__key__</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
         <span class="k">yield</span> <span class="n">__key__</span><span class="p">,</span> <span class="n">node</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">concepts</span><span class="o">.</span><span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-            <span class="k">yield from</span> <span class="n">traverse_post</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="k">yield from</span> <span class="n">iter_tree_post</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">yield</span> <span class="n">node</span></div>
 
 
-<div class="viewcode-block" id="traverse_levels"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.traverse_levels">[docs]</a><span class="k">def</span> <span class="nf">traverse_levels</span><span class="p">(</span>
+<div class="viewcode-block" id="iter_tree_levels"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.iter_tree_levels">[docs]</a><span class="nd">@utils</span><span class="o">.</span><span class="n">as_xiter</span>
+<span class="k">def</span> <span class="nf">iter_tree_levels</span><span class="p">(</span>
     <span class="n">node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">TreeNode</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">with_keys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">__key__</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">__queue__</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">concepts</span><span class="o">.</span><span class="n">TreeIterationItem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">TreeIterationItem</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Create a tree traversal iterator by levels (Breadth-First Search).</span>
 
 <span class="sd">    Args:</span>
@@ -246,24 +285,24 @@
     <span class="n">__queue__</span> <span class="o">=</span> <span class="n">__queue__</span> <span class="ow">or</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">with_keys</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">__key__</span><span class="p">,</span> <span class="n">node</span>
-        <span class="n">__queue__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">concepts</span><span class="o">.</span><span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">__queue__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">__queue__</span><span class="p">:</span>
             <span class="n">key</span><span class="p">,</span> <span class="n">child</span> <span class="o">=</span> <span class="n">__queue__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="k">yield from</span> <span class="n">traverse_levels</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">__key__</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">__queue__</span><span class="o">=</span><span class="n">__queue__</span><span class="p">)</span>
+            <span class="k">yield from</span> <span class="n">iter_tree_levels</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">__key__</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">__queue__</span><span class="o">=</span><span class="n">__queue__</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">node</span>
-        <span class="n">__queue__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">concepts</span><span class="o">.</span><span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="n">__queue__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">generic_iter_children</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">__queue__</span><span class="p">:</span>
             <span class="n">child</span> <span class="o">=</span> <span class="n">__queue__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="k">yield from</span> <span class="n">traverse_levels</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">__queue__</span><span class="o">=</span><span class="n">__queue__</span><span class="p">)</span></div>
+            <span class="k">yield from</span> <span class="n">iter_tree_levels</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">__queue__</span><span class="o">=</span><span class="n">__queue__</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="traverse_tree"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.traverse_tree">[docs]</a><span class="k">def</span> <span class="nf">traverse_tree</span><span class="p">(</span>
+<div class="viewcode-block" id="iter_tree"><a class="viewcode-back" href="../../_source/eve.html#eve.iterators.iter_tree">[docs]</a><span class="k">def</span> <span class="nf">iter_tree</span><span class="p">(</span>
     <span class="n">node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">TreeNode</span><span class="p">,</span>
     <span class="n">traversal_order</span><span class="p">:</span> <span class="n">TraversalOrder</span> <span class="o">=</span> <span class="n">TraversalOrder</span><span class="o">.</span><span class="n">PRE_ORDER</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">with_keys</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">concepts</span><span class="o">.</span><span class="n">TreeIterationItem</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">utils</span><span class="o">.</span><span class="n">XIterator</span><span class="p">[</span><span class="n">TreeIterationItem</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Create a tree traversal iterator.</span>
 
 <span class="sd">    Args:</span>
@@ -274,8 +313,8 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">traversal_order</span><span class="p">,</span> <span class="n">TraversalOrder</span><span class="p">)</span>
-    <span class="n">iterator</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()[</span><span class="sa">f</span><span class="s2">&quot;traverse_</span><span class="si">{</span><span class="n">traversal_order</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">](</span><span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="n">with_keys</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Iterator</span><span class="p">)</span>
+    <span class="n">iterator</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()[</span><span class="sa">f</span><span class="s2">&quot;iter_tree_</span><span class="si">{</span><span class="n">traversal_order</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">](</span><span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">with_keys</span><span class="o">=</span><span class="n">with_keys</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">XIterator</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">iterator</span></div>
 </pre></div>

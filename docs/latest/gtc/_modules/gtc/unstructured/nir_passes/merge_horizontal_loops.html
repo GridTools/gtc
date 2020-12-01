@@ -208,8 +208,7 @@
 
 <div class="viewcode-block" id="_FindMergeCandidatesAnalysis.find"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops._FindMergeCandidatesAnalysis.find">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">nir</span><span class="o">.</span><span class="n">HorizontalLoop</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Runs the visitor, returns merge candidates.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Runs the visitor, returns merge candidates.&quot;&quot;&quot;</span>
         <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">candidate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -241,13 +240,11 @@
 
 
 <div class="viewcode-block" id="MergeHorizontalLoops"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops.MergeHorizontalLoops">[docs]</a><span class="k">class</span> <span class="nc">MergeHorizontalLoops</span><span class="p">(</span><span class="n">NodeTranslator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MergeHorizontalLoops.apply"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops.MergeHorizontalLoops.apply">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">,</span> <span class="n">merge_candidates</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
         <span class="c1"># merge_candidates = _find_merge_candidates(root)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">merge_candidates</span><span class="o">=</span><span class="n">merge_candidates</span><span class="p">)</span></div>
 
@@ -288,7 +285,7 @@
 
 <div class="viewcode-block" id="find_and_merge_horizontal_loops"><a class="viewcode-back" href="../../../../_source/gtc.unstructured.nir_passes.html#gtc.unstructured.nir_passes.merge_horizontal_loops.find_and_merge_horizontal_loops">[docs]</a><span class="k">def</span> <span class="nf">find_and_merge_horizontal_loops</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">Node</span><span class="p">):</span>
     <span class="n">copy</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">vertical_loops</span> <span class="o">=</span> <span class="n">eve</span><span class="o">.</span><span class="n">FindNodes</span><span class="p">()</span><span class="o">.</span><span class="n">by_type</span><span class="p">(</span><span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span>
+    <span class="n">vertical_loops</span> <span class="o">=</span> <span class="n">eve</span><span class="o">.</span><span class="n">iter_tree</span><span class="p">(</span><span class="n">copy</span><span class="p">)</span><span class="o">.</span><span class="n">if_isinstance</span><span class="p">(</span><span class="n">nir</span><span class="o">.</span><span class="n">VerticalLoop</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">vertical_loops</span><span class="p">:</span>
         <span class="n">loop</span> <span class="o">=</span> <span class="n">merge_horizontal_loops</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">_find_merge_candidates</span><span class="p">(</span><span class="n">loop</span><span class="p">))</span>
 

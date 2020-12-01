@@ -44,14 +44,6 @@ eve.traits module
    :undoc-members:
    :show-inheritance:
 
-eve.tree\_utils module
-----------------------
-
-.. automodule:: eve.tree_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 eve.type\_definitions module
 ----------------------------
 

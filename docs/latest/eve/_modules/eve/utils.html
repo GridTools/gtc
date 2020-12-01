@@ -171,17 +171,22 @@
 <span class="sd">&quot;&quot;&quot;General utility functions. Some functionalities are directly imported from dependencies.&quot;&quot;&quot;</span>
 
 
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">import</span> <span class="nn">collections.abc</span>
 <span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">operator</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">typing</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">xxhash</span>
-<span class="kn">from</span> <span class="nn">boltons.iterutils</span> <span class="kn">import</span> <span class="n">flatten</span><span class="p">,</span> <span class="n">flatten_iter</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span> <span class="nn">boltons.iterutils</span> <span class="kn">import</span> <span class="n">flatten</span><span class="p">,</span> <span class="n">flatten_iter</span><span class="p">,</span> <span class="n">is_collection</span>  <span class="c1"># noqa: F401</span>
 <span class="kn">from</span> <span class="nn">boltons.strutils</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
     <span class="n">a10n</span><span class="p">,</span>
     <span class="n">asciify</span><span class="p">,</span>
@@ -193,38 +198,146 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">boltons.typeutils</span> <span class="kn">import</span> <span class="n">classproperty</span>  <span class="c1"># noqa: F401</span>
 
-<span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">DELETE</span><span class="p">,</span> <span class="n">NOTHING</span>
-<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">NOTHING</span>
+<span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">AnyCallable</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Collection</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
 
-<div class="viewcode-block" id="filter_map"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.filter_map">[docs]</a><span class="k">def</span> <span class="nf">filter_map</span><span class="p">(</span>
-    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">iterable</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">delete_sentinel</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">DELETE</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Mapping function supporting elimination of items.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># For perfomance reasons, try to use cytoolz when possible (using cython)</span>
+    <span class="kn">import</span> <span class="nn">cytoolz</span> <span class="k">as</span> <span class="nn">toolz</span>
+<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+    <span class="c1"># Fall back to pure Python toolz</span>
+    <span class="kn">import</span> <span class="nn">toolz</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        iterable: iterable object to be processed.</span>
-<span class="sd">        delete_sentinel: sentinel object which marks items to be deleted from the</span>
-<span class="sd">            the output (note that comparison is made by identity NOT by value).</span>
 
-<span class="sd">    Notes:</span>
-<span class="sd">        The default `delete_sentinel` value (:data:`eve.DELETE`) can also be</span>
-<span class="sd">        accessed as :data:`filter_map.DELETE`.</span>
+<div class="viewcode-block" id="isinstancechecker"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.isinstancechecker">[docs]</a><span class="k">def</span> <span class="nf">isinstancechecker</span><span class="p">(</span><span class="n">type_info</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Type</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Type</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Return a callable object that checks if operand is an instance of `type_info`.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; checker = isinstancechecker((int, str))</span>
+<span class="sd">        &gt;&gt;&gt; checker(3)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; checker(&#39;3&#39;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; checker(3.3)</span>
+<span class="sd">        False</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">delete_sentinel</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">result</span></div>
+
+    <span class="n">types</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Type</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">type_info</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">(</span><span class="n">type_info</span><span class="p">,)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">type_info</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="n">is_collection</span><span class="p">(</span><span class="n">type_info</span><span class="p">):</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">type_info</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="n">type_info</span>  <span class="c1"># type:ignore  # it is checked at run-time</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">types</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid type(s) definition: &#39;</span><span class="si">{</span><span class="n">types</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">obj</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">types</span><span class="p">)</span></div>
 
 
-<span class="c1">#: Shortcut to the global DELETE sentinel value</span>
-<span class="n">filter_map</span><span class="o">.</span><span class="n">DELETE</span> <span class="o">=</span> <span class="n">DELETE</span>  <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="attrchecker"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.attrchecker">[docs]</a><span class="k">def</span> <span class="nf">attrchecker</span><span class="p">(</span><span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Return a callable object that checks if operand has all `names` attributes.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from collections import namedtuple</span>
+<span class="sd">        &gt;&gt;&gt; Point = namedtuple(&#39;Point&#39;, [&#39;x&#39;, &#39;y&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; point = Point(1.0, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; checker = attrchecker(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; checker(point)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; checker = attrchecker(&#39;x&#39;, &#39;y&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; checker(point)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; checker = attrchecker(&#39;z&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; checker(point)</span>
+<span class="sd">        False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Arguments with invalid attribute names: &#39;</span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">obj</span><span class="p">:</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_item"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.get_item">[docs]</a><span class="k">def</span> <span class="nf">get_item</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Similar to :func:`operator.getitem()` accepting a default value.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="attrgetter_"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.attrgetter_">[docs]</a><span class="k">def</span> <span class="nf">attrgetter_</span><span class="p">(</span><span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Return a callable object that gets `names` attributes from its operand.</span>
 
+<span class="sd">    Similar to :func:`operator.attrgetter()` but accepts a default value.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from collections import namedtuple</span>
+<span class="sd">        &gt;&gt;&gt; Point = namedtuple(&#39;Point&#39;, [&#39;x&#39;, &#39;y&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; point = Point(1.0, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; getter = attrgetter_(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; getter(point)</span>
+<span class="sd">        1.0</span>
+
+<span class="sd">        &gt;&gt;&gt; import math</span>
+<span class="sd">        &gt;&gt;&gt; getter = attrgetter_(&#39;z&#39;, default=math.nan)</span>
+<span class="sd">        &gt;&gt;&gt; getter(point)</span>
+<span class="sd">        nan</span>
+
+<span class="sd">        &gt;&gt;&gt; import math</span>
+<span class="sd">        &gt;&gt;&gt; getter = attrgetter_(&#39;x&#39;, &#39;y&#39;, &#39;z&#39;, default=math.nan)</span>
+<span class="sd">        &gt;&gt;&gt; getter(point)</span>
+<span class="sd">        (1.0, 2.0, nan)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attribute names must be strings (provided: </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">NOTHING</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="o">*</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">def</span> <span class="nf">_getter_with_defaults</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">_getter_with_defaults</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_getter_with_defaults</span></div>
+
+
+<div class="viewcode-block" id="getitem_"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.getitem_">[docs]</a><span class="k">def</span> <span class="nf">getitem_</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Return the value of `obj` at index `key`.</span>
+
+<span class="sd">    Similar to :func:`operator.getitem()` but accepts a default value.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; d = {&#39;a&#39;: 1}</span>
+<span class="sd">        &gt;&gt;&gt; getitem_(d, &#39;a&#39;)</span>
+<span class="sd">        1</span>
+
+<span class="sd">        &gt;&gt;&gt; d = {&#39;a&#39;: 1}</span>
+<span class="sd">        &gt;&gt;&gt; getitem_(d, &#39;b&#39;, &#39;default&#39;)</span>
+<span class="sd">        &#39;default&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">NOTHING</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -236,10 +349,30 @@
     <span class="k">return</span> <span class="n">result</span></div>
 
 
+<div class="viewcode-block" id="itemgetter_"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.itemgetter_">[docs]</a><span class="k">def</span> <span class="nf">itemgetter_</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Return a callable object that gets `key` item from its operand.</span>
+
+<span class="sd">    Similar to :func:`operator.itemgetter()` but accepts a default value.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; d = {&#39;a&#39;: 1}</span>
+<span class="sd">        &gt;&gt;&gt; getter = itemgetter_(&#39;a&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; getter(d)</span>
+<span class="sd">        1</span>
+
+<span class="sd">        &gt;&gt;&gt; d = {&#39;a&#39;: 1}</span>
+<span class="sd">        &gt;&gt;&gt; getter = itemgetter_(&#39;b&#39;, &#39;default&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; getter(d)</span>
+<span class="sd">        &#39;default&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">obj</span><span class="p">:</span> <span class="n">getitem_</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="register_subclasses"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.register_subclasses">[docs]</a><span class="k">def</span> <span class="nf">register_subclasses</span><span class="p">(</span><span class="o">*</span><span class="n">subclasses</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Type</span><span class="p">],</span> <span class="n">Type</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Class decorator to automatically register virtual subclasses.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; import abc</span>
 <span class="sd">        &gt;&gt;&gt; class MyVirtualSubclassA:</span>
 <span class="sd">        ...     pass</span>
@@ -435,6 +568,831 @@
         <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="nb">next</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">__counter</span><span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Unsafe reset of global UIDGenerator&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">__counter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">start</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># -- Iterators --</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;S&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="as_xiter"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.as_xiter">[docs]</a><span class="k">def</span> <span class="nf">as_xiter</span><span class="p">(</span><span class="n">iterator_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">T</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Wrap the provided callable to convert its output in a :class:`XIterator`.&quot;&quot;&quot;</span>
+
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">iterator_func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_xiterator</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">xiter</span><span class="p">(</span><span class="n">iterator_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">_xiterator</span></div>
+
+
+<div class="viewcode-block" id="xiter"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.xiter">[docs]</a><span class="k">def</span> <span class="nf">xiter</span><span class="p">(</span><span class="n">iterable</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Create an XIterator from any iterable (like ``iter()``).&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Iterator</span><span class="p">):</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="n">iterable</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid iterable instance: &#39;</span><span class="si">{</span><span class="n">iterable</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">it</span><span class="p">)</span></div>
+
+
+<span class="n">xenumerate</span> <span class="o">=</span> <span class="n">as_xiter</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="XIterator"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator">[docs]</a><span class="k">class</span> <span class="nc">XIterator</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Iterator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Iterator wrapper supporting method chaining for extra functionality.&quot;&quot;&quot;</span>
+
+    <span class="n">iterator</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">T</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">T</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Iterator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid iterator instance: &#39;</span><span class="si">{</span><span class="n">it</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;iterator&quot;</span><span class="p">,</span> <span class="n">it</span><span class="o">.</span><span class="n">iterator</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">XIterator</span><span class="p">)</span> <span class="k">else</span> <span class="n">it</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="c1"># Forward special methods to wrapped iterator</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> is immutable.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span>
+
+<div class="viewcode-block" id="XIterator.map"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">AnyCallable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>  <span class="c1"># noqa  # A003: shadowing a python builtin</span>
+        <span class="sd">&quot;&quot;&quot;Apply a callable to every iterator element (equivalent to ``map(func, self)``).</span>
+
+<span class="sd">        For detailed information check :func:`map` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(3))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.map(str))</span>
+<span class="sd">            [&#39;0&#39;, &#39;1&#39;, &#39;2&#39;]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(3))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.map(lambda x: -x).map(str))</span>
+<span class="sd">            [&#39;0&#39;, &#39;-1&#39;, &#39;-2&#39;]</span>
+
+<span class="sd">            If the callable requires additional arguments, ``lambda`` of :func:`functools.partial`</span>
+<span class="sd">            functions can be used:</span>
+
+<span class="sd">            &gt;&gt;&gt; def times(a, b):</span>
+<span class="sd">            ...     return a * b</span>
+<span class="sd">            &gt;&gt;&gt; times_2 = functools.partial(times, 2)</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(4))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.map(lambda x: x + 1).map(times_2))</span>
+<span class="sd">            [2, 4, 6, 8]</span>
+
+<span class="sd">            Curried functions generated by :func:`toolz.curry` will also work as expected:</span>
+
+<span class="sd">            &gt;&gt;&gt; @toolz.curry</span>
+<span class="sd">            ... def mul(x, y):</span>
+<span class="sd">            ...     return x * y</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(4))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.map(lambda x: x + 1).map(mul(5)))</span>
+<span class="sd">            [5, 10, 15, 20]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid function or callable: &#39;</span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.filter"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.filter">[docs]</a>    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span>  <span class="c1"># noqa  # A003: shadowing a python builtin</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements with callables (equivalent to ``filter(func, self)``).</span>
+
+<span class="sd">        For detailed information check :func:`filter` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(4))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.filter(lambda x: x % 2 == 0))</span>
+<span class="sd">            [0, 2]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(4))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.filter(lambda x: x % 2 == 0).filter(lambda x: x &gt; 1))</span>
+<span class="sd">            [2]</span>
+
+
+<span class="sd">        Notes:</span>
+<span class="sd">            `lambdas`, `partial` and `curried` functions are supported (see :meth:`map`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid function or callable: &#39;</span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.if_isinstance"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.if_isinstance">[docs]</a>    <span class="k">def</span> <span class="nf">if_isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements using :func:`isinstance` checks (equivalent to</span>
+<span class="sd">        ``xiter(item for item in self if isinstance(item, types))``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, &#39;2&#39;, 3.3, [4, 5], {6, 7}])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_isinstance(int, float))</span>
+<span class="sd">            [1, 3.3]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">isinstancechecker</span><span class="p">([</span><span class="o">*</span><span class="n">types</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.if_not_isinstance"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.if_not_isinstance">[docs]</a>    <span class="k">def</span> <span class="nf">if_not_isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements using negated :func:`isinstance` checks (equivalent to</span>
+<span class="sd">        ``xiter(item for item in self if not isinstance(item, types))``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, &#39;2&#39;, 3.3, [4, 5], {6, 7}])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_not_isinstance(int, float))</span>
+<span class="sd">            [&#39;2&#39;, [4, 5], {6, 7}]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span>
+            <span class="nb">filter</span><span class="p">(</span><span class="n">toolz</span><span class="o">.</span><span class="n">functoolz</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><span class="n">isinstancechecker</span><span class="p">([</span><span class="o">*</span><span class="n">types</span><span class="p">])),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="XIterator.if_is"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.if_is">[docs]</a>    <span class="k">def</span> <span class="nf">if_is</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements using :func:`operator.is_` checks (equivalent to</span>
+<span class="sd">        ``xiter(item for item in self if item is obj)``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, None, 1, 123456789, None, 123456789])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_is(None))</span>
+<span class="sd">            [None, None]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, None, 1, 123456789, None, 123456789])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_is(1))</span>
+<span class="sd">            [1, 1]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, None, 1, 123456789, None, 123456789])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_is(123456789))</span>
+<span class="sd">            []</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">operator</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">obj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.if_is_not"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.if_is_not">[docs]</a>    <span class="k">def</span> <span class="nf">if_is_not</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements using negated  :func:`operator.is_` checks (equivalent to</span>
+<span class="sd">        ``xiter(item for item in self if item is not obj)``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, None, 1, 123456789, None, 123456789])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_is_not(None))</span>
+<span class="sd">            [1, 1, 123456789, 123456789]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, None, 1, 123456789, None, 123456789])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_is_not(1))</span>
+<span class="sd">            [None, 123456789, None, 123456789]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, None, 1, 123456789, None, 123456789])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_is_not(123456789))</span>
+<span class="sd">            [1, None, 1, 123456789, None, 123456789]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="ow">not</span> <span class="n">operator</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">obj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.if_in"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.if_in">[docs]</a>    <span class="k">def</span> <span class="nf">if_in</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements using :func:`operator.contains` checks (equivalent to</span>
+<span class="sd">        ``xiter(item for item in self if item in collection)``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(8))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_in([0, 2, 4, 6]))</span>
+<span class="sd">            [0, 2, 4, 6]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">operator</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.if_not_in"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.if_not_in">[docs]</a>    <span class="k">def</span> <span class="nf">if_not_in</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements using negated :func:`operator.contains` checks (equivalent to</span>
+<span class="sd">        ``xiter(item for item in self if item not in collection)``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(8))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_not_in([0, 2, 4, 6]))</span>
+<span class="sd">            [1, 3, 5, 7]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="ow">not</span> <span class="n">operator</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.if_contains"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.if_contains">[docs]</a>    <span class="k">def</span> <span class="nf">if_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements using :func:`operator.contains` checks (equivalent to</span>
+<span class="sd">        ``xiter(item for item in self if all(v in item for v in values))``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([None, (0, 1, 2), &quot;a&quot;, (1, 2, 3), (2, 3, 4), &quot;b&quot;])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_contains(2))</span>
+<span class="sd">            [(0, 1, 2), (1, 2, 3), (2, 3, 4)]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([None, (0, 1, 2), &quot;a&quot;, (1, 2, 3), (2, 3, 4), &quot;b&quot;])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_contains(1, 2))</span>
+<span class="sd">            [(0, 1, 2), (1, 2, 3)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">collection</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">filter</span><span class="p">((</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">_contains</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">values</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.if_hasattr"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.if_hasattr">[docs]</a>    <span class="k">def</span> <span class="nf">if_hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Filter elements using :func:`hasattr` checks (equivalent to ``filter(attrchecker(names), self)``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, &#39;2&#39;, 3.3, [4, 5], {6, 7}])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_hasattr(&#39;__len__&#39;))</span>
+<span class="sd">            [&#39;2&#39;, [4, 5], {6, 7}]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, &#39;2&#39;, 3.3, [4, 5], {6, 7}])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.if_hasattr(&#39;__len__&#39;, &#39;index&#39;))</span>
+<span class="sd">            [&#39;2&#39;, [4, 5]]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">attrchecker</span><span class="p">(</span><span class="o">*</span><span class="n">names</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.getattr"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.getattr">[docs]</a>    <span class="k">def</span> <span class="nf">getattr</span><span class="p">(</span>  <span class="c1"># noqa  # A003: shadowing a python builtin</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Get provided attributes from each item in a sequence (equivalent to ``map(attrgetter_(*names, default=default), self)``).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            default: returned value if the item does not contain an attribute</span>
+<span class="sd">                with the provided `name`.</span>
+
+<span class="sd">        For detailed information check :func:`attrgetter_` and :func:`operator.attrgetter` reference.</span>
+
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; from collections import namedtuple</span>
+<span class="sd">            &gt;&gt;&gt; Point = namedtuple(&#39;Point&#39;, [&#39;x&#39;, &#39;y&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([Point(1.0, -1.0), Point(2.0, -2.0), Point(3.0, -3.0)])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.getattr(&#39;y&#39;))</span>
+<span class="sd">            [-1.0, -2.0, -3.0]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([Point(1.0, -1.0), Point(2.0, -2.0), Point(3.0, -3.0)])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.getattr(&#39;x&#39;, &#39;z&#39;, default=None))</span>
+<span class="sd">            [(1.0, None), (2.0, None), (3.0, None)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">attrgetter_</span><span class="p">(</span><span class="o">*</span><span class="n">names</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.getitem"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.getitem">[docs]</a>    <span class="k">def</span> <span class="nf">getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">indices</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Get provided indices data from each item in a sequence (equivalent to ``toolz.itertoolz.pluck(indices, self)``).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            default: returned value if the item does not contain an `index`</span>
+<span class="sd">                with the provided value.</span>
+
+<span class="sd">        For detailed information check :func:`toolz.itertoolz.pluck` reference.</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([(&#39;a&#39;, 1), (&#39;b&#39;, 2), (&#39;c&#39;, 3)])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.getitem(0))</span>
+<span class="sd">            [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([</span>
+<span class="sd">            ...     dict(name=&quot;AA&quot;, age=20, country=&quot;US&quot;),</span>
+<span class="sd">            ...     dict(name=&quot;BB&quot;, age=30, country=&quot;UK&quot;),</span>
+<span class="sd">            ...     dict(name=&quot;CC&quot;, age=40, country=&quot;EU&quot;),</span>
+<span class="sd">            ...     dict(country=&quot;CH&quot;)</span>
+<span class="sd">            ... ])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.getitem(&quot;name&quot;, &quot;age&quot;, default=None))</span>
+<span class="sd">            [(&#39;AA&#39;, 20), (&#39;BB&#39;, 30), (&#39;CC&#39;, 40), (None, None)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ind</span><span class="p">:</span> <span class="n">Any</span>  <span class="c1"># a hashable item or a list of hashable items</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">indices</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="n">NOTHING</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">default</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.chain"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.chain">[docs]</a>    <span class="k">def</span> <span class="nf">chain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">others</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="n">S</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Chain iterators (equivalent to ``itertools.chain(self, *others)``).</span>
+
+<span class="sd">        For detailed information check :func:`itertools.chain` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it_a, it_b = xiter(range(2)), xiter([&#39;a&#39;, &#39;b&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.chain(it_b))</span>
+<span class="sd">            [0, 1, &#39;a&#39;, &#39;b&#39;]</span>
+
+<span class="sd">            &gt;&gt;&gt; it_a = xiter(range(2))</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.chain([&#39;a&#39;, &#39;b&#39;], [&#39;A&#39;, &#39;B&#39;]))</span>
+<span class="sd">            [0, 1, &#39;a&#39;, &#39;b&#39;, &#39;A&#39;, &#39;B&#39;]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">iterators</span> <span class="o">=</span> <span class="p">[</span><span class="n">it</span><span class="o">.</span><span class="n">iterator</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">XIterator</span><span class="p">)</span> <span class="k">else</span> <span class="n">it</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">others</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="o">*</span><span class="n">iterators</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.diff"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.diff">[docs]</a>    <span class="k">def</span> <span class="nf">diff</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">others</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NOTHING</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="n">S</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Diff iterators (equivalent to ``toolz.itertoolz.diff(self, *others)``).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            default: returned value for missing items.</span>
+<span class="sd">            key: callable computing the key to use per item in the sequence.</span>
+
+<span class="sd">        For detailed information check :func:`toolz.itertoolz.diff` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it_a, it_b = xiter([1, 2, 3]), xiter([1, 3, 5])</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.diff(it_b))</span>
+<span class="sd">            [(2, 3), (3, 5)]</span>
+
+<span class="sd">            &gt;&gt;&gt; it_a, it_b, it_c = xiter([1, 2, 3]), xiter([1, 3, 5]), xiter([1, 2, 5])</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.diff(it_b, it_c))</span>
+<span class="sd">            [(2, 3, 2), (3, 5, 5)]</span>
+
+<span class="sd">            Adding missing values:</span>
+
+<span class="sd">            &gt;&gt;&gt; it_a = xiter([1, 2, 3, 4])</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.diff([1, 3, 5], default=None))</span>
+<span class="sd">            [(2, 3), (3, 5), (4, None)]</span>
+
+<span class="sd">            Use a key function:</span>
+
+<span class="sd">            &gt;&gt;&gt; it_a, it_b = xiter([&quot;Apples&quot;, &quot;Bananas&quot;]), xiter([&quot;apples&quot;, &quot;oranges&quot;])</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.diff(it_b, key=str.lower))</span>
+<span class="sd">            [(&#39;Bananas&#39;, &#39;oranges&#39;)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NOTHING</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NOTHING</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span>
+
+        <span class="n">iterators</span> <span class="o">=</span> <span class="p">[</span><span class="n">it</span><span class="o">.</span><span class="n">iterator</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">XIterator</span><span class="p">)</span> <span class="k">else</span> <span class="n">it</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">others</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="o">*</span><span class="n">iterators</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.product"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.product">[docs]</a>    <span class="k">def</span> <span class="nf">product</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">S</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="n">S</span><span class="p">]],</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;Product of iterators (equivalent to ``itertools.product(it_a, it_b)``).</span>
+
+<span class="sd">        For detailed information check :func:`itertools.product` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it_a, it_b = xiter([0, 1]), xiter([&#39;a&#39;, &#39;b&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.product(it_b))</span>
+<span class="sd">            [(0, &#39;a&#39;), (0, &#39;b&#39;), (1, &#39;a&#39;), (1, &#39;b&#39;)]</span>
+
+<span class="sd">            Product of an iterator with itself:</span>
+
+<span class="sd">            &gt;&gt;&gt; it_a = xiter([0, 1])</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.product(3))</span>
+<span class="sd">            [(0, 0, 0), (1, 1, 1)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">other</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Only non-negative integer numbers are accepted (provided: </span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">item</span><span class="p">]</span> <span class="o">*</span> <span class="n">other</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span>  <span class="c1"># type: ignore  # mypy gets confused with `other`</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">XIterator</span><span class="p">):</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">xiter</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.partition"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.partition">[docs]</a>    <span class="k">def</span> <span class="nf">partition</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">exact</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">fill</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Partition iterator into tuples of length `n` (``exact=True``) or at most `n`</span>
+<span class="sd">        (``exact=False``). Equivalent to ``toolz.itertoolz.partition(n, self)`` or</span>
+<span class="sd">        ``toolz.itertoolz.partition_all(n, self)``).</span>
+
+<span class="sd">        For detailed information check :func:`toolz.itertoolz.partition` and</span>
+<span class="sd">        :func:`toolz.itertoolz.partition_all` reference.</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            exact: if `True`, it will return tuples of length `n`. If `False`, the last</span>
+<span class="sd">                tuple could have a smaller size if there are not enough items in the sequence.</span>
+<span class="sd">            fill: if provided together with ``exact=True``, this value will be used to fill</span>
+<span class="sd">                the last tuple until it has exactly length `n`.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(7))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.partition(3))</span>
+<span class="sd">            [(0, 1, 2), (3, 4, 5), (6,)]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(7))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.partition(3, exact=True))</span>
+<span class="sd">            [(0, 1, 2), (3, 4, 5)]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(7))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.partition(3, exact=True, fill=None))</span>
+<span class="sd">            [(0, 1, 2), (3, 4, 5), (6, None, None)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only positive integer numbers are accepted (provided: </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">exact</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fill</span> <span class="ow">is</span> <span class="n">NOTHING</span><span class="p">:</span>
+                <span class="n">iterator</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iterator</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="n">fill</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">iterator</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">partition_all</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="XIterator.take_nth"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.take_nth">[docs]</a>    <span class="k">def</span> <span class="nf">take_nth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Take every nth item in sequence (equivalent to ``toolz.itertoolz.take_nth(n, self)``).</span>
+
+<span class="sd">        For detailed information check :func:`toolz.itertoolz.take_nth` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(7))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.take_nth(3))</span>
+<span class="sd">            [0, 3, 6]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only positive integer numbers are accepted (provided: </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">take_nth</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.zip"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.zip">[docs]</a>    <span class="k">def</span> <span class="nf">zip</span><span class="p">(</span>  <span class="c1"># noqa  # A003: shadowing a python builtin</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">others</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">fill</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="n">S</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Zip iterators (equivalent to ``zip(self, *others)`` or ``itertools.zip_longest(self, *others, fillvalue=fill)``).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            fill: value used to fill the result for sequences with fewer items.</span>
+
+<span class="sd">        For detailed information check :func:`zip` and :func:`itertools.zip_longest` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it_a = xiter(range(3))</span>
+<span class="sd">            &gt;&gt;&gt; it_b = [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; list(it_a.zip(it_b))</span>
+<span class="sd">            [(0, &#39;a&#39;), (1, &#39;b&#39;), (2, &#39;c&#39;)]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(3))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.zip([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;], [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;]))</span>
+<span class="sd">            [(0, &#39;a&#39;, &#39;A&#39;), (1, &#39;b&#39;, &#39;B&#39;), (2, &#39;c&#39;, &#39;C&#39;)]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(5))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.zip([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;], [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;], fill=None))</span>
+<span class="sd">            [(0, &#39;a&#39;, &#39;A&#39;), (1, &#39;b&#39;, &#39;B&#39;), (2, &#39;c&#39;, &#39;C&#39;), (3, None, None), (4, None, None)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">iterators</span> <span class="o">=</span> <span class="p">[</span><span class="n">it</span><span class="o">.</span><span class="n">iterator</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">XIterator</span><span class="p">)</span> <span class="k">else</span> <span class="n">it</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">others</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">fill</span> <span class="ow">is</span> <span class="n">NOTHING</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="o">*</span><span class="n">iterators</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">zip_longest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="o">*</span><span class="n">iterators</span><span class="p">,</span> <span class="n">fillvalue</span><span class="o">=</span><span class="n">fill</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.unzip"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.unzip">[docs]</a>    <span class="k">def</span> <span class="nf">unzip</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Unzip iterator (equivalent to ``zip(*self)``).</span>
+
+<span class="sd">        For detailed information check :func:`zip` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([(&#39;a&#39;, 1), (&#39;b&#39;, 2), (&#39;c&#39;, 3)])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.unzip())</span>
+<span class="sd">            [(&#39;a&#39;, &#39;b&#39;, &#39;c&#39;), (1, 2, 3)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span>  <span class="c1"># type: ignore  # mypy gets confused with *args</span></div>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">islice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__stop</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">islice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">__stop</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">__step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="XIterator.islice"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.islice">[docs]</a>    <span class="k">def</span> <span class="nf">islice</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">__start_or_stop</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">__stop_or_nothing</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">NOTHING</span><span class="p">]</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Select elements from an iterable (equivalent to ``itertools.islice(iterator, start, stop, step)``).</span>
+
+<span class="sd">        For detailed information check :func:`itertools.islice` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(10))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.islice(2))</span>
+<span class="sd">            [0, 1]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(10))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.islice(2, 8))</span>
+<span class="sd">            [2, 3, 4, 5, 6, 7]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(10))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.islice(2, 8, 2))</span>
+<span class="sd">            [2, 4, 6]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">__stop_or_nothing</span> <span class="ow">is</span> <span class="n">NOTHING</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="n">__start_or_stop</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">__start_or_stop</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="n">__stop_or_nothing</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.select"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.select">[docs]</a>    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selectors</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return only the elements which have a corresponding element in selectors that evaluates to True</span>
+<span class="sd">        (equivalent to ``itertools.compress(self, selectors)``).</span>
+
+<span class="sd">        For detailed information check :func:`itertools.compress` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, 2, 3, 1, 3])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.select([True, False, 1, False, 0]))</span>
+<span class="sd">            [1, 3]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selectors</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Non-iterable &#39;selectors&#39; value: &#39;</span><span class="si">{</span><span class="n">selectors</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">selectors</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.unique"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.unique">[docs]</a>    <span class="k">def</span> <span class="nf">unique</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NOTHING</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return only unique elements of a sequence (equivalent to ``toolz.itertoolz.unique(self)``).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            key: callable computing the key to use per item in the sequence.</span>
+
+<span class="sd">        For detailed information check :func:`toolz.itertoolz.unique` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, 2, 3, 1, 3])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.unique())</span>
+<span class="sd">            [1, 2, 3]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([&#39;cat&#39;, &#39;mouse&#39;, &#39;dog&#39;, &#39;hen&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.unique(key=len))</span>
+<span class="sd">            [&#39;cat&#39;, &#39;mouse&#39;]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="n">NOTHING</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">))</span></div>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">groupby</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">other_keys</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">as_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">]]]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">groupby</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">as_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">]]]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">groupby</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">as_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">]]]:</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="XIterator.groupby"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.groupby">[docs]</a>    <span class="k">def</span> <span class="nf">groupby</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">]],</span> <span class="o">*</span><span class="n">attr_keys</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">as_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">]]],</span> <span class="n">Dict</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Group a sequence by a given key (more or less equivalent to ``toolz.itertoolz.groupby(key, self)``</span>
+<span class="sd">        with some caveats).</span>
+
+<span class="sd">        The `key` argument is used in the following way:</span>
+
+<span class="sd">            - if `key` is a callable, it will be passed directly to :func:`toolz.itertoolz.groupby`</span>
+<span class="sd">              to compute an actual `key` value for each item in the sequence.</span>
+<span class="sd">            - if `key` is a ``str`` or (multiple ``str`` args) they will be used as</span>
+<span class="sd">              attributes names (:func:`operator.attrgetter`).</span>
+<span class="sd">            - if `key` is a ``list`` of values, they will be used as index values for :func:`operator.itemgetter`.</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            as_dict: if `True`, it will return the groups ``dict`` instead of an :class:`XIterator`</span>
+<span class="sd">                over `groups.items()`.</span>
+
+<span class="sd">        For detailed information check :func:`toolz.itertoolz.groupby` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([(1.0, -1.0), (1.0,-2.0), (2.2, -3.0)])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.groupby([0]))</span>
+<span class="sd">            [(1.0, [(1.0, -1.0), (1.0, -2.0)]), (2.2, [(2.2, -3.0)])]</span>
+
+<span class="sd">            &gt;&gt;&gt; data = [</span>
+<span class="sd">            ...     {&#39;x&#39;: 1.0, &#39;y&#39;: -1.0, &#39;z&#39;: 1.0},</span>
+<span class="sd">            ...     {&#39;x&#39;: 1.0, &#39;y&#39;: -2.0, &#39;z&#39;: 1.0},</span>
+<span class="sd">            ...     {&#39;x&#39;: 2.2, &#39;y&#39;: -3.0, &#39;z&#39;: 2.2}</span>
+<span class="sd">            ... ]</span>
+<span class="sd">            &gt;&gt;&gt; list(xiter(data).groupby([&#39;x&#39;]))</span>
+<span class="sd">            [(1.0, [{&#39;x&#39;: 1.0, &#39;y&#39;: -1.0, &#39;z&#39;: 1.0}, {&#39;x&#39;: 1.0, &#39;y&#39;: -2.0, &#39;z&#39;: 1.0}]), (2.2, [{&#39;x&#39;: 2.2, &#39;y&#39;: -3.0, &#39;z&#39;: 2.2}])]</span>
+<span class="sd">            &gt;&gt;&gt; list(xiter(data).groupby([&#39;x&#39;, &#39;z&#39;]))</span>
+<span class="sd">            [((1.0, 1.0), [{&#39;x&#39;: 1.0, &#39;y&#39;: -1.0, &#39;z&#39;: 1.0}, {&#39;x&#39;: 1.0, &#39;y&#39;: -2.0, &#39;z&#39;: 1.0}]), ((2.2, 2.2), [{&#39;x&#39;: 2.2, &#39;y&#39;: -3.0, &#39;z&#39;: 2.2}])]</span>
+
+<span class="sd">            &gt;&gt;&gt; from collections import namedtuple</span>
+<span class="sd">            &gt;&gt;&gt; Point = namedtuple(&#39;Point&#39;, [&#39;x&#39;, &#39;y&#39;, &#39;z&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; data = [Point(1.0, -2.0, 1.0), Point(1.0, -2.0, 1.0), Point(2.2, 3.0, 2.0)]</span>
+<span class="sd">            &gt;&gt;&gt; list(xiter(data).groupby(&#39;x&#39;))</span>
+<span class="sd">            [(1.0, [Point(x=1.0, y=-2.0, z=1.0), Point(x=1.0, y=-2.0, z=1.0)]), (2.2, [Point(x=2.2, y=3.0, z=2.0)])]</span>
+<span class="sd">            &gt;&gt;&gt; list(xiter(data).groupby(&#39;x&#39;, &#39;z&#39;))</span>
+<span class="sd">            [((1.0, 1.0), [Point(x=1.0, y=-2.0, z=1.0), Point(x=1.0, y=-2.0, z=1.0)]), ((2.2, 2.0), [Point(x=2.2, y=3.0, z=2.0)])]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([&#39;Alice&#39;, &#39;Bob&#39;, &#39;Charlie&#39;, &#39;Dan&#39;, &#39;Edith&#39;, &#39;Frank&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.groupby(len))</span>
+<span class="sd">            [(5, [&#39;Alice&#39;, &#39;Edith&#39;, &#39;Frank&#39;]), (3, [&#39;Bob&#39;, &#39;Dan&#39;]), (7, [&#39;Charlie&#39;])]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">)))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">attr_keys</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid &#39;key&#39; function or attribute name: &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="n">groupby_key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">groupby_key</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="o">*</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="n">groupby_key</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">attr_keys</span><span class="p">)</span>
+
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">groupby_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">groups</span> <span class="k">if</span> <span class="n">as_dict</span> <span class="k">else</span> <span class="n">xiter</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="XIterator.accumulate"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.accumulate">[docs]</a>    <span class="k">def</span> <span class="nf">accumulate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reduce an iterator using a callable (equivalent to ``itertools.accumulate(self, func, init)``).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            init: initial value for the accumulation.</span>
+
+<span class="sd">        For detailed information check :func:`itertools.accumulate` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(5))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.accumulate())</span>
+<span class="sd">            [0, 1, 3, 6, 10]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(5))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.accumulate(init=10))</span>
+<span class="sd">            [10, 10, 11, 13, 16, 20]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(1, 5))</span>
+<span class="sd">            &gt;&gt;&gt; list(it.accumulate((lambda x, y: x * y), init=-1))</span>
+<span class="sd">            [-1, -1, -2, -6, -24]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XIterator</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="n">init</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="XIterator.reduce"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bin_op_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">init</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reduce an iterator using a callable (equivalent to ``functools.reduce(bin_op_func, self, init)``).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            init: initial value for the reduction.</span>
+
+<span class="sd">        For detailed information check :func:`functools.reduce` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(5))</span>
+<span class="sd">            &gt;&gt;&gt; it.reduce((lambda accu, i: accu + i), init=0)</span>
+<span class="sd">            10</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;, &#39;e&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; sorted(it.reduce((lambda accu, item: (accu or set()) | {item} if item in &#39;aeiou&#39; else accu)))</span>
+<span class="sd">            [&#39;a&#39;, &#39;e&#39;]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">bin_op_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">init</span><span class="p">)</span></div>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">reduceby</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bin_op_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">other_keys</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">init</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">,</span>
+        <span class="n">as_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">reduceby</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bin_op_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">init</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">,</span>
+        <span class="n">as_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">reduceby</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bin_op_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">init</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">,</span>
+        <span class="n">as_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="XIterator.reduceby"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.reduceby">[docs]</a>    <span class="k">def</span> <span class="nf">reduceby</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bin_op_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">T</span><span class="p">],</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="o">*</span><span class="n">attr_keys</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">init</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">NOTHING</span><span class="p">,</span>
+        <span class="n">as_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">XIterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Dict</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Group a sequence by a given key and simultaneously perform a reduction inside the groups</span>
+<span class="sd">        more or less equivalent to ``toolz.itertoolz.reduceby(key, bin_op_func, self, init)``</span>
+<span class="sd">        with some caveats).</span>
+
+<span class="sd">        The `key` argument is used in the following way:</span>
+
+<span class="sd">            - if `key` is a callable, it will be passed directly to :func:`toolz.itertoolz.reduceby`</span>
+<span class="sd">              to compute an actual `key` value for each item in the sequence.</span>
+<span class="sd">            - if `key` is a ``str`` or (multiple ``str`` args) they will be used as</span>
+<span class="sd">              attributes names (:func:`operator.attrgetter`).</span>
+<span class="sd">            - if `key` is a ``list`` of values, they will be used as index values for :func:`operator.itemgetter`.</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            init: initial value for the reduction.</span>
+<span class="sd">            as_dict: if `True`, it will return the groups ``dict`` instead of an :class:`XIterator`</span>
+<span class="sd">                over `groups.items()`.</span>
+
+<span class="sd">        For detailed information check :func:`toolz.itertoolz.reduceby` reference.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([(1.0, -1.0), (1.0,-2.0), (2.2, -3.0)])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.reduceby((lambda accu, _: accu + 1), [0], init=0))</span>
+<span class="sd">            [(1.0, 2), (2.2, 1)]</span>
+
+<span class="sd">            &gt;&gt;&gt; data = [</span>
+<span class="sd">            ...     {&#39;x&#39;: 1.0, &#39;y&#39;: -1.0, &#39;z&#39;: 1.0},</span>
+<span class="sd">            ...     {&#39;x&#39;: 1.0, &#39;y&#39;: -2.0, &#39;z&#39;: 1.0},</span>
+<span class="sd">            ...     {&#39;x&#39;: 2.2, &#39;y&#39;: -3.0, &#39;z&#39;: 2.2}</span>
+<span class="sd">            ... ]</span>
+<span class="sd">            &gt;&gt;&gt; list(xiter(data).reduceby((lambda accu, _: accu + 1), [&#39;x&#39;], init=0))</span>
+<span class="sd">            [(1.0, 2), (2.2, 1)]</span>
+<span class="sd">            &gt;&gt;&gt; list(xiter(data).reduceby((lambda accu, _: accu + 1), [&#39;x&#39;, &#39;z&#39;], init=0))</span>
+<span class="sd">            [((1.0, 1.0), 2), ((2.2, 2.2), 1)]</span>
+
+<span class="sd">            &gt;&gt;&gt; from collections import namedtuple</span>
+<span class="sd">            &gt;&gt;&gt; Point = namedtuple(&#39;Point&#39;, [&#39;x&#39;, &#39;y&#39;, &#39;z&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; data = [Point(1.0, -2.0, 1.0), Point(1.0, -2.0, 1.0), Point(2.2, 3.0, 2.0)]</span>
+<span class="sd">            &gt;&gt;&gt; list(xiter(data).reduceby((lambda accu, _: accu + 1), &#39;x&#39;, init=0))</span>
+<span class="sd">            [(1.0, 2), (2.2, 1)]</span>
+<span class="sd">            &gt;&gt;&gt; list(xiter(data).reduceby((lambda accu, _: accu + 1), &#39;x&#39;, &#39;z&#39;, init=0))</span>
+<span class="sd">            [((1.0, 1.0), 2), ((2.2, 2.0), 1)]</span>
+
+<span class="sd">            &gt;&gt;&gt; it = xiter([&#39;Alice&#39;, &#39;Bob&#39;, &#39;Charlie&#39;, &#39;Dan&#39;, &#39;Edith&#39;, &#39;Frank&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; list(it.reduceby(lambda nvowels, name: nvowels + sum(i in &#39;aeiou&#39; for i in name), len, init=0))</span>
+<span class="sd">            [(5, 4), (3, 2), (7, 3)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">)))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">attr_keys</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid &#39;key&#39; function or attribute name: &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="n">groupby_key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">groupby_key</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="o">*</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="n">groupby_key</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">attr_keys</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NOTHING</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">reduceby</span><span class="p">(</span><span class="n">groupby_key</span><span class="p">,</span> <span class="n">bin_op_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">itertoolz</span><span class="o">.</span><span class="n">reduceby</span><span class="p">(</span><span class="n">groupby_key</span><span class="p">,</span> <span class="n">bin_op_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">groups</span> <span class="k">if</span> <span class="n">as_dict</span> <span class="k">else</span> <span class="n">xiter</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="XIterator.to_list"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.to_list">[docs]</a>    <span class="k">def</span> <span class="nf">to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Expand iterator into a ``list`` (equivalent to ``list(self)``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter(range(5))</span>
+<span class="sd">            &gt;&gt;&gt; it.to_list()</span>
+<span class="sd">            [0, 1, 2, 3, 4]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="XIterator.to_set"><a class="viewcode-back" href="../../_source/eve.html#eve.utils.XIterator.to_set">[docs]</a>    <span class="k">def</span> <span class="nf">to_set</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Expand iterator into a ``set`` (equivalent to ``set(self)``).</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; it = xiter([1, 2, 3, 1, 3, -1])</span>
+<span class="sd">            &gt;&gt;&gt; it.to_set()</span>
+<span class="sd">            {1, 2, 3, -1}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

@@ -189,7 +189,7 @@
 <span class="kn">import</span> <span class="nn">jinja2</span>
 <span class="kn">from</span> <span class="nn">mako</span> <span class="kn">import</span> <span class="n">template</span> <span class="k">as</span> <span class="n">mako_tpl</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span><span class="p">,</span> <span class="n">type_definitions</span><span class="p">,</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span><span class="p">,</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">.concepts</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">TreeNode</span>
 <span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
@@ -831,9 +831,9 @@
                         <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span>
                     <span class="p">)</span> <span class="kn">from</span> <span class="nn">e.__cause__</span>
 
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Set</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">node</span><span class="p">,</span> <span class="n">type_definitions</span><span class="o">.</span><span class="n">ATOMIC_COLLECTION_TYPES</span>
-        <span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">node</span><span class="p">,</span> <span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Set</span><span class="p">)</span>
+        <span class="p">)</span> <span class="ow">and</span> <span class="n">utils</span><span class="o">.</span><span class="n">is_collection</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
             <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="p">]</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
             <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
