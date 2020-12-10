@@ -215,6 +215,46 @@ def itemgetter_(key: Any, default: Any = NOTHING) -> Callable[[Any], Any]:
     return lambda obj: getitem_(obj, key, default=default)
 
 
+def optional_lru_cache(func=None, *, maxsize=128, typed=False):
+    """Wrapper around :func:`functools.lru_cache` calling the original function
+    when arguments are not hashable.
+
+    Examples:
+        >>> @optional_lru_cache(typed=True)
+        ... def func(a, b):
+        ...     print(f"Inside func({a}, {b})")
+        ...     return a + b
+        ...
+        >>> print(func(1, 3))
+        Inside func(1, 3)
+        4
+        >>> print(func(1, 3))
+        4
+        >>> print(func([1], [3]))
+        Inside func([1], [3])
+        [1, 3]
+        >>> print(func([1], [3]))
+        Inside func([1], [3])
+        [1, 3]
+
+    """
+
+    def _decorator(func):
+        cached = functools.lru_cache(maxsize=maxsize, typed=typed)(func)
+
+        @functools.wraps(func)
+        def inner(*args, **kwds):
+            try:
+                return cached(*args, **kwds)
+            except TypeError:
+                # Catch errors due to non-hashable arguments and fallback to original function
+                return func(*args, **kwds)
+
+        return inner
+
+    return _decorator(func) if func is not None else _decorator
+
+
 def register_subclasses(*subclasses: Type) -> Callable[[Type], Type]:
     """Class decorator to automatically register virtual subclasses.
 

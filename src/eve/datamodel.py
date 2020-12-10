@@ -27,6 +27,8 @@ import typing
 from typing import Any, Callable, ClassVar, Dict, Generic, List, Tuple, Type, get_origin
 
 import attr
+
+
 try:
     # For perfomance reasons, try to use cytoolz when possible (using cython)
     import cytoolz as toolz
@@ -48,10 +50,17 @@ def _valid_setattr(instance, attribute, value):
     print("SET", attribute, value)
 
 
-class DataModelMeta(abc.ABCMeta):
+try:
+    BasesMeta = (typing._ProtocolMeta, abc.ABCMeta)
+except Exception:
+    BasesMeta = (abc.ABCMeta,)
+
+
+class DataModelMeta(*BasesMeta):
 
     __ATTR_SETTINGS = dict(auto_attribs=True, slots=False, kw_only=True)
     __FIELD_VALIDATOR_TAG = "__field_validator_tag"
+    __FIELD_CONVERTER_TAG = "__field_converter_tag"
     __ROOT_VALIDATOR_TAG = "__root_validator_tag"
     __ROOT_VALIDATORS_NAME = "__datamodel_validators__"
     __TYPEVARS = "__datamodel_typevars__"
@@ -65,6 +74,7 @@ class DataModelMeta(abc.ABCMeta):
         **kwargs: Any,
     ):
         # Direct return path for bare DataModel class
+        print(f"{namespace.get('__qualname__')=}")
         if namespace.get("__qualname__") == "DataModel":
             return super().__new__(mcls, name, bases, namespace, **kwargs)
 
@@ -87,8 +97,10 @@ class DataModelMeta(abc.ABCMeta):
                 else:
                     assert False
 
-        root_validators = []
+        # Collect special methods (converters and validators)
+        field_converters = {}
         field_validators = {}
+        root_validators = []
 
         # Collect root validators from bases
         for base in reversed(tmp_plain_cls.__mro__[1:]):
@@ -96,15 +108,19 @@ class DataModelMeta(abc.ABCMeta):
                 if validator not in root_validators:
                     root_validators.append(validator)
 
-        # Collect root and field validators in namespace
+        # Collect converters and root and field validators in namespace
         for _, member in namespace.items():
-            if hasattr(member, mcls.__ROOT_VALIDATOR_TAG):
-                delattr(member, mcls.__ROOT_VALIDATOR_TAG)
-                root_validators.append(member)
+            if hasattr(member, mcls.__FIELD_CONVERTER_TAG):
+                field_name = getattr(member, mcls.__FIELD_CONVERTER_TAG)
+                delattr(member, mcls.__FIELD_CONVERTER_TAG)
+                field_converters[field_name] = member
             elif hasattr(member, mcls.__FIELD_VALIDATOR_TAG):
                 field_name = getattr(member, mcls.__FIELD_VALIDATOR_TAG)
                 delattr(member, mcls.__FIELD_VALIDATOR_TAG)
                 field_validators[field_name] = member
+            elif hasattr(member, mcls.__ROOT_VALIDATOR_TAG):
+                delattr(member, mcls.__ROOT_VALIDATOR_TAG)
+                root_validators.append(member)
 
         # Add collected fields validators to fields' attr.ibs
         for field_name, field_validator in field_validators.items():
@@ -154,7 +170,7 @@ class DataModelMeta(abc.ABCMeta):
 
         return cls
 
-    @functools.lru_cache(maxsize=None, typed=True)
+    @utils.optional_lru_cache(maxsize=None, typed=True)
     def __getitem__(cls, type_args):
         if not cls.is_generic():
             raise TypeError(f"'{cls.__name__}' is not a generic model class.")
@@ -184,9 +200,19 @@ class DataModelMeta(abc.ABCMeta):
                 concrete_annotations[f_name] = f_type[concrete_type_args]
 
         concrete_name = f"{cls.__name__}__{'_'.join(t.__name__ for t in type_args)}__"
-        print(concrete_name, concrete_annotations)
+        # print(concrete_name, concrete_annotations)
 
         return type(concrete_name, (cls,), dict(__annotations__=concrete_annotations),)
+
+    @staticmethod
+    def tag_field_converter(__name: str):
+        assert isinstance(__name, str)
+
+        def _field_converter_maker(func):
+            setattr(func, DataModelMeta.__FIELD_CONVERTER_TAG, __name)
+            return func
+
+        return _field_converter_maker
 
     @staticmethod
     def tag_field_validator(__name: str):
@@ -208,16 +234,16 @@ class DataModelMeta(abc.ABCMeta):
     def _make_attrs_post_init(has_custom_init=False):
         if has_custom_init:
 
-            def __attrs_post_init__(self, **kwargs):
+            def __attrs_post_init__(self):
                 if attr._config._run_validators is True:
                     cls = type(self)
                     for validator in cls.__datamodel_validators__:
                         validator.__get__(cls)(self)
-                    self.__post_init__(**kwargs)
+                    self.__post_init__()
 
         else:
 
-            def __attrs_post_init__(self, **kwargs):
+            def __attrs_post_init__(self):
                 if attr._config._run_validators is True:
                     cls = type(self)
                     for validator in cls.__datamodel_validators__:
@@ -278,6 +304,7 @@ class DataModelMeta(abc.ABCMeta):
         return dataclasses_field
 
 
+converter = DataModelMeta.tag_field_converter
 validator = DataModelMeta.tag_field_validator
 root_validator = DataModelMeta.tag_root_validator
 
@@ -290,7 +317,7 @@ def _make_strict_type_validator(type_hint):
     origin_type = typing.get_origin(type_hint)
     type_args = typing.get_args(type_hint)
 
-    print(f"_make_strict_type_validator({type_hint}):: {type_hint=}, {origin_type=}, {type_args=}")
+    print(f"_make_strict_type_validator({type_hint}): {type_hint=}, {origin_type=}, {type_args=}")
 
     if isinstance(type_hint, type) and not type_args:
         return attr.validators.instance_of(type_hint)
@@ -381,13 +408,13 @@ class _TupleValidator:
         if len(value) != len(self.validators):
             raise ValueError(f"Wrong number or tuple elements")
 
+        i = None
         try:
-            i = 0
             for i, (item_value, item_validator) in enumerate(zip(value, self.validators)):
                 item_validator(instance, attribute, item_value)
         except Exception as e:
             raise ValueError(
-                f"Invalid item {i} in the provided value '{value}' for {attribute.name} field."
+                f"Invalid item {f'at index[{i}] ' if i is not None else ''}in the provided value '{value}' for {attribute.name} field."
             ) from e
 
 
@@ -399,11 +426,11 @@ class _OrValidator:
 
     validators: Tuple[Callable]
 
-    def __call__(self, inst, attr, value):
+    def __call__(self, instance, attribute, value):
         passed = False
         for v in self.validators:
             try:
-                v(inst, attr, value)
+                v(instance, attribute, value)
                 passed = True
                 break
             except Exception:
@@ -411,7 +438,7 @@ class _OrValidator:
 
         if not passed:
             raise ValueError(
-                f"Provided value '{value}' for {attr.name} field does not verify any of the possible validators."
+                f"Provided value '{value}' for {attribute.name} field does not verify any of the possible validators."
             )
 
 
@@ -424,7 +451,7 @@ class _LiteralValidator:
     literal: Any
 
     def __call__(self, instance, attribute, value):
-        if not (value is self.literal or value == self.literal):
+        if not (value == self.literal or value is self.literal):
             raise ValueError(
                 f"Provided value '{value}' for {attribute.name} field does not match {self.literal}."
             )
@@ -432,3 +459,39 @@ class _LiteralValidator:
 
 # _ValidatorType = Callable[[Any, attr.att Attribute[_T], _T], Any]
 # _ConverterType = Callable[[Any], Any]
+
+
+#     @_tp_cache
+#     def __class_getitem__(cls, params):
+#         if not isinstance(params, tuple):
+#             params = (params,)
+#         if not params and cls is not Tuple:
+#             raise TypeError(
+#                 f"Parameter list to {cls.__qualname__}[...] cannot be empty")
+#         msg = "Parameters to generic types must be types."
+#         params = tuple(_type_check(p, msg) for p in params)
+#         if cls in (Generic, Protocol):
+#             # Generic and Protocol can only be subscripted with unique type variables.
+#             if not all(isinstance(p, TypeVar) for p in params):
+#                 raise TypeError(
+#                     f"Parameters to {cls.__name__}[...] must all be type variables")
+#             if len(set(params)) != len(params):
+#                 raise TypeError(
+#                     f"Parameters to {cls.__name__}[...] must all be unique")
+#         else:
+#             # Subscripting a regular Generic subclass.
+#             _check_generic(cls, params)
+#         return _GenericAlias(cls, params)
+
+
+# def _check_generic(cls, parameters):
+#     """Check correct count for parameters of a generic cls (internal helper).
+#     This gives a nice error message in case of count mismatch.
+#     """
+#     if not cls.__parameters__:
+#         raise TypeError(f"{cls} is not a generic class")
+#     alen = len(parameters)
+#     elen = len(cls.__parameters__)
+#     if alen != elen:
+#         raise TypeError(f"Too {'many' if alen > elen else 'few'} parameters for {cls};"
+#                         f" actual {alen}, expected {elen}")
