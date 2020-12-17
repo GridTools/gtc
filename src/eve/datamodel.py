@@ -117,18 +117,16 @@ class DataModelMeta(abc.ABCMeta):
         # Create attr.ibs for annotated fields (excluding ClassVars)
         annotations = namespace.setdefault("__annotations__", {})
         new_fields = set()
-        for key in annotations:
-            type_hint = resolved_annotations[key]
-            value = namespace.get(key, NOTHING)
+        for key, type_hint in resolved_annotations.items():
             if typing.get_origin(type_hint) is not ClassVar:
                 new_fields.add(key)
                 type_validator = _make_strict_type_validator(type_hint)
-                if name not in namespace:
+                if key not in namespace:
                     namespace[key] = attr.ib(validator=type_validator)
-                elif not isinstance(value, attr._make._CountingAttr):
+                elif not isinstance(namespace[key], attr._make._CountingAttr):
                     namespace[key] = attr.ib(default=namespace[key], validator=type_validator)
-                elif value.converter is AUTO_CONVERTER:
-                    value.converter = _make_type_coercer(type_hint)
+                elif namespace[key].converter is AUTO_CONVERTER:
+                    namespace[key].converter = _make_type_coercer(type_hint)
 
         # Verify that there are not fields without type annotation
         for key, value in namespace.items():
@@ -409,7 +407,7 @@ def _make_strict_type_validator(type_hint):
     origin_type = typing.get_origin(type_hint)
     type_args = typing.get_args(type_hint)
 
-    print(f"_make_strict_type_validator({type_hint}): {type_hint=}, {origin_type=}, {type_args=}")
+    # print(f"_make_strict_type_validator({type_hint}): {type_hint=}, {origin_type=}, {type_args=}")
 
     if isinstance(type_hint, type) and not type_args:
         return attr.validators.instance_of(type_hint)
