@@ -38,7 +38,8 @@ class _CollectSymbols(visitors.NodeVisitor):
                 self.collected[getattr(node, name)] = node
 
         # TODO hack
-        if not hasattr(node, "symtable_"):
+        if "symtable_" not in node.dict():
+            # if not hasattr(node, "symtable_"):
             self.generic_visit(node)
 
     @classmethod
