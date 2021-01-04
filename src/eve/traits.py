@@ -37,6 +37,7 @@ class _CollectSymbols(visitors.NodeVisitor):
             ):
                 self.collected[getattr(node, name)] = node
 
+            # recurse if not new scope (child is instance of SymbolTableTrait)
             if isinstance(metadata["definition"].type_, type) and not issubclass(
                 metadata["definition"].type_, SymbolTableTrait
             ):
