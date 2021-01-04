@@ -21,9 +21,29 @@ from __future__ import annotations
 
 import pydantic
 
-from . import concepts, iterators
+from . import concepts, visitors
 from .type_definitions import SymbolName
 from .typingx import Any, Dict, Type
+
+
+class _CollectSymbols(visitors.NodeVisitor):
+    def __init__(self) -> None:
+        self.collected: Dict[str, Any] = {}
+
+    def visit_Node(self, node: concepts.Node) -> None:
+        for name, metadata in node.__node_children__.items():
+            if isinstance(metadata["definition"].type_, type) and issubclass(
+                metadata["definition"].type_, SymbolName
+            ):
+                self.collected[getattr(node, name)] = node
+        if not isinstance(node, SymbolTableTrait):
+            self.generic_visit(node)
+
+    @classmethod
+    def apply(cls, node: concepts.TreeNode) -> Dict[str, Any]:
+        instance = cls()
+        instance.generic_visit(node)
+        return instance.collected
 
 
 class SymbolTableTrait(concepts.Model):
@@ -31,16 +51,7 @@ class SymbolTableTrait(concepts.Model):
 
     @staticmethod
     def _collect_symbols(root_node: concepts.TreeNode) -> Dict[str, Any]:
-        collected = {}
-        for node in iterators.iter_tree(root_node):
-            if isinstance(node, concepts.BaseNode):
-                for name, metadata in node.__node_children__.items():
-                    if isinstance(metadata["definition"].type_, type) and issubclass(
-                        metadata["definition"].type_, SymbolName
-                    ):
-                        collected[getattr(node, name)] = node
-
-        return collected
+        return _CollectSymbols.apply(root_node)
 
     @pydantic.root_validator(skip_on_failure=True)
     def _collect_symbols_validator(  # type: ignore  # validators are classmethods
