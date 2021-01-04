@@ -66,3 +66,7 @@ class SymbolTableTrait(concepts.Model):
 
     def collect_symbols(self) -> None:
         self.symtable_ = self._collect_symbols(self)
+
+
+class RootSymbolTableTrait(SymbolTableTrait):
+    root_scope_: bool = True
