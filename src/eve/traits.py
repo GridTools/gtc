@@ -36,7 +36,9 @@ class _CollectSymbols(visitors.NodeVisitor):
                 metadata["definition"].type_, SymbolName
             ):
                 self.collected[getattr(node, name)] = node
-        if not isinstance(node, SymbolTableTrait):
+
+        # TODO hack
+        if not hasattr(node, "symtable_"):
             self.generic_visit(node)
 
     @classmethod
