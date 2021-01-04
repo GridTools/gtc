@@ -37,10 +37,10 @@ class _CollectSymbols(visitors.NodeVisitor):
             ):
                 self.collected[getattr(node, name)] = node
 
-        # TODO hack
-        if "symtable_" not in node.dict():
-            # if not hasattr(node, "symtable_"):
-            self.generic_visit(node)
+            if isinstance(metadata["definition"].type_, type) and not issubclass(
+                metadata["definition"].type_, SymbolTableTrait
+            ):
+                self.visit(getattr(node, name))
 
     @classmethod
     def apply(cls, node: concepts.TreeNode) -> Dict[str, Any]:
