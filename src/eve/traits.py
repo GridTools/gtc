@@ -32,6 +32,7 @@ class _CollectSymbols(visitors.NodeVisitor):
 
     def visit_Node(self, node: concepts.Node) -> None:
         if isinstance(node, SymbolTableTrait):
+            # don't recurse into a new scope (i.e. node with SymbolTableTrait)
             return
         for name, metadata in node.__node_children__.items():
             if isinstance(metadata["definition"].type_, type) and issubclass(
