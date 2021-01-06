@@ -46,9 +46,14 @@ class _NodeWithSymbolTable(eve.Node, eve.SymbolTableTrait):
     symbols: List[_NodeWithSymbolName]
 
 
+class _NodeWithSymbolTableAndSymbol(eve.Node, eve.SymbolTableTrait):
+    name: eve.SymbolName = eve.SymbolName("symbol_name")
+    symbols: List[_NodeWithSymbolName]
+
+
 class _NodeWithChildSymbolTable(eve.Node, eve.SymbolTableTrait):
     symbols: List[_NodeWithSymbolName]
-    tbl: List[_NodeWithSymbolTable]
+    tbl: List[_NodeWithSymbolTableAndSymbol]
 
 
 @pytest.fixture
@@ -76,15 +81,17 @@ class TestSymbolTable:
         )
 
     def test_symble_table_collection_nested(self):
-        inner_symbol_table_node = _NodeWithSymbolTable(
-            symbols=[_NodeWithSymbolName(name="inner_symbol")]
+        inner_symbol_table_node = _NodeWithSymbolTableAndSymbol(
+            name="outer_symbol_for_inner_symbol_tbl",
+            symbols=[_NodeWithSymbolName(name="inner_symbol")],
         )
         outer_symbol_table_node = _NodeWithChildSymbolTable(
             tbl=[inner_symbol_table_node], symbols=[_NodeWithSymbolName(name="outer_symbol")]
         )
 
         expected_outer_symbols = {
-            outer_symbol_table_node.symbols[0].name: outer_symbol_table_node.symbols[0]
+            outer_symbol_table_node.symbols[0].name: outer_symbol_table_node.symbols[0],
+            inner_symbol_table_node.name: inner_symbol_table_node,
         }
         collected_outer_symbols = outer_symbol_table_node.symtable_
         assert collected_outer_symbols == expected_outer_symbols
