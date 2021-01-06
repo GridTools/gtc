@@ -46,6 +46,11 @@ class _NodeWithSymbolTable(eve.Node, eve.SymbolTableTrait):
     symbols: List[_NodeWithSymbolName]
 
 
+class _NodeWithChildSymbolTable(eve.Node, eve.SymbolTableTrait):
+    symbols: List[_NodeWithSymbolName]
+    tbl: List[_NodeWithSymbolTable]
+
+
 @pytest.fixture
 def node_with_duplicated_names_maker():
     def _maker():
@@ -69,3 +74,23 @@ class TestSymbolTable:
             collected_symtable[symbol_name] is symbol_node
             for symbol_name, symbol_node in expected_symbols.items()
         )
+
+    def test_symble_table_collection_nested(self):
+        inner_symbol_table_node = _NodeWithSymbolTable(
+            symbols=[_NodeWithSymbolName(name="inner_symbol")]
+        )
+        outer_symbol_table_node = _NodeWithChildSymbolTable(
+            tbl=[inner_symbol_table_node], symbols=[_NodeWithSymbolName(name="outer_symbol")]
+        )
+
+        expected_outer_symbols = {
+            outer_symbol_table_node.symbols[0].name: outer_symbol_table_node.symbols[0]
+        }
+        collected_outer_symbols = outer_symbol_table_node.symtable_
+        assert collected_outer_symbols == expected_outer_symbols
+
+        expected_inner_symbols = {
+            inner_symbol_table_node.symbols[0].name: inner_symbol_table_node.symbols[0]
+        }
+        collected_inner_symbols = inner_symbol_table_node.symtable_
+        assert collected_inner_symbols == expected_inner_symbols

@@ -31,17 +31,14 @@ class _CollectSymbols(visitors.NodeVisitor):
         self.collected: Dict[str, Any] = {}
 
     def visit_Node(self, node: concepts.Node) -> None:
+        if isinstance(node, SymbolTableTrait):
+            return
         for name, metadata in node.__node_children__.items():
             if isinstance(metadata["definition"].type_, type) and issubclass(
                 metadata["definition"].type_, SymbolName
             ):
                 self.collected[getattr(node, name)] = node
-
-            # recurse if not new scope (child is instance of SymbolTableTrait)
-            if isinstance(metadata["definition"].type_, type) and not issubclass(
-                metadata["definition"].type_, SymbolTableTrait
-            ):
-                self.visit(getattr(node, name))
+        self.generic_visit(node)
 
     @classmethod
     def apply(cls, node: concepts.TreeNode) -> Dict[str, Any]:
