@@ -108,7 +108,7 @@ class DataModelMeta(abc.ABCMeta):
             return super().__new__(mcls, name, bases, namespace, **kwargs)
 
         # Create a plain version of the Python class without magic and replace it later
-        # by the enhanced version. This is just a workaround to get the correct mro and
+        # by the enhanced version. This is just a workaround to get the correct MRO and
         # resolved type annotations, which is not possible before the creation of the class
         tmp_plain_cls = super().__new__(mcls, name, bases, namespace)
         mro_bases = tmp_plain_cls.__mro__[1:]
@@ -240,11 +240,7 @@ class DataModelMeta(abc.ABCMeta):
         concrete_name = f"{cls.__name__}__{'_'.join(t.__name__ for t in type_args)}__"
         # print(concrete_name, concrete_annotations)
 
-        return type(
-            concrete_name,
-            (cls,),
-            dict(__annotations__=concrete_annotations),
-        )
+        return type(concrete_name, (cls,), dict(__annotations__=concrete_annotations),)
 
     @staticmethod
     def tag_field_validator(__name: str):
@@ -337,7 +333,7 @@ class DataModelMeta(abc.ABCMeta):
         return None
 
     @staticmethod
-    def _make_counting_attr_from_attr(field_attr, include_type=False, **kwargs):
+    def _make_counting_attr_from_attr(field_attr, *, include_type=False, **kwargs):
         members = [
             "default",
             "validator",
@@ -454,7 +450,7 @@ def _make_strict_type_validator(type_hint):
 
 
 def _make_literal_validator(type_args):
-    return _make_or_validator([_LiteralValidator(t) for t in type_args])
+    return _make_or_validator([_LiteralValidator(t) for t in type_args], error_type=ValueError)
 
 
 def _make_union_validator(type_args):
@@ -462,7 +458,9 @@ def _make_union_validator(type_args):
         non_optional_validator = _make_strict_type_validator(type_args[0])
         return attr.validators.optional(non_optional_validator)
     else:
-        return _make_or_validator([_make_strict_type_validator(t) for t in type_args])
+        return _make_or_validator(
+            [_make_strict_type_validator(t) for t in type_args], error_type=TypeError
+        )
 
 
 def _make_tuple_validator(type_args):
@@ -476,12 +474,12 @@ def _make_tuple_validator(type_args):
         return _TupleValidator([_make_strict_type_validator(t) for t in type_args])
 
 
-def _make_or_validator(*validators):
+def _make_or_validator(*validators, error_type: Type[Exception]):
     vals = tuple(utils.flatten(validators))
     if len(vals) == 1:
         return vals[0]
     else:
-        return _OrValidator(vals)
+        return _OrValidator(vals, error_type)
 
 
 @attr.define
@@ -494,17 +492,22 @@ class _TupleValidator:
 
     def __call__(self, instance, attribute, value):
         if not isinstance(value, tuple):
-            raise ValueError(f"")
+            raise TypeError(
+                f"In '{attribute.name}' validation, got '{value}' that is a {type(value)} instead of {tuple}."
+            )
         if len(value) != len(self.validators):
-            raise ValueError(f"Wrong number or tuple elements")
+            raise TypeError(
+                f"In '{attribute.name}' validation, got '{value}' tuple which contains {len(value)} elements instead of {len(self.validators)}."
+            )
 
-        i = None
+        _i = None
+        item_value = ""
         try:
-            for i, (item_value, item_validator) in enumerate(zip(value, self.validators)):
+            for _i, (item_value, item_validator) in enumerate(zip(value, self.validators)):
                 item_validator(instance, attribute, item_value)
         except Exception as e:
-            raise ValueError(
-                f"Invalid item {f'at index[{i}] ' if i is not None else ''}in the provided value '{value}' for {attribute.name} field."
+            raise TypeError(
+                f"In '{attribute.name}' validation, tuple '{value}' contains invalid value '{item_value}' at position {_i}."
             ) from e
 
 
@@ -515,6 +518,7 @@ class _OrValidator:
     """
 
     validators: Tuple[Callable]
+    error_type: Type[Exception]
 
     def __call__(self, instance, attribute, value):
         passed = False
@@ -527,8 +531,8 @@ class _OrValidator:
                 pass
 
         if not passed:
-            raise ValueError(
-                f"Provided value '{value}' for {attribute.name} field does not verify any of the possible validators."
+            raise self.error_type(
+                f"In '{attribute.name}' validation, provided value '{value}' fails for all the possible validators."
             )
 
 
@@ -541,9 +545,13 @@ class _LiteralValidator:
     literal: Any
 
     def __call__(self, instance, attribute, value):
-        if not (value == self.literal or value is self.literal):
+        if isinstance(self.literal, bool):
+            valid = value is self.literal
+        else:
+            valid = value == self.literal
+        if not valid:
             raise ValueError(
-                f"Provided value '{value}' for {attribute.name} field does not match {self.literal}."
+                f"Provided value '{value}' field does not match {self.literal} during '{attribute.name}' validation."
             )
 
 
