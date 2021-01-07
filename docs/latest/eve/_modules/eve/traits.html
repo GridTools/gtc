@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>eve.traits &mdash; Eve 0.0.1.dev1 documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -49,7 +51,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> Eve
+            <a href="../../index.html" class="icon icon-home"> Eve
           
 
           
@@ -128,6 +130,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -175,9 +179,30 @@
 
 <span class="kn">import</span> <span class="nn">pydantic</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">concepts</span><span class="p">,</span> <span class="n">iterators</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">concepts</span><span class="p">,</span> <span class="n">visitors</span>
 <span class="kn">from</span> <span class="nn">.type_definitions</span> <span class="kn">import</span> <span class="n">SymbolName</span>
 <span class="kn">from</span> <span class="nn">.typingx</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Type</span>
+
+
+<span class="k">class</span> <span class="nc">_CollectSymbols</span><span class="p">(</span><span class="n">visitors</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collected</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">visit_Node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">__node_children__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;definition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span>
+                <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;definition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span><span class="p">,</span> <span class="n">SymbolName</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">collected</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">SymbolTableTrait</span><span class="p">):</span>
+            <span class="c1"># don&#39;t recurse into a new scope (i.e. node with SymbolTableTrait)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">TreeNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">collected</span>
 
 
 <div class="viewcode-block" id="SymbolTableTrait"><a class="viewcode-back" href="../../_source/eve.html#eve.traits.SymbolTableTrait">[docs]</a><span class="k">class</span> <span class="nc">SymbolTableTrait</span><span class="p">(</span><span class="n">concepts</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
@@ -185,16 +210,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_collect_symbols</span><span class="p">(</span><span class="n">root_node</span><span class="p">:</span> <span class="n">concepts</span><span class="o">.</span><span class="n">TreeNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="n">collected</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">iterators</span><span class="o">.</span><span class="n">iter_tree</span><span class="p">(</span><span class="n">root_node</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">concepts</span><span class="o">.</span><span class="n">BaseNode</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">__node_children__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;definition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span>
-                        <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;definition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span><span class="p">,</span> <span class="n">SymbolName</span>
-                    <span class="p">):</span>
-                        <span class="n">collected</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">node</span>
-
-        <span class="k">return</span> <span class="n">collected</span>
+        <span class="k">return</span> <span class="n">_CollectSymbols</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">root_node</span><span class="p">)</span>
 
     <span class="nd">@pydantic</span><span class="o">.</span><span class="n">root_validator</span><span class="p">(</span><span class="n">skip_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_collect_symbols_validator</span><span class="p">(</span>  <span class="c1"># type: ignore  # validators are classmethods</span>
@@ -211,28 +227,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, ETH Zurich
+        &#169; Copyright 2020, ETH Zurich.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

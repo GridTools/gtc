@@ -3,9 +3,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>eve package &mdash; Eve 0.0.1.dev1 documentation</title>
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -51,7 +53,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Eve
+            <a href="../index.html" class="icon icon-home"> Eve
           
 
           
@@ -150,6 +152,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -165,7 +169,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/_source/eve.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -375,7 +379,7 @@
 <dl class="py class">
 <dt id="eve.codegen.Template">
 <em class="property">class </em><code class="sig-prename descclassname">eve.codegen.</code><code class="sig-name descname">Template</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/codegen.html#Template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.codegen.Template" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Protocol</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
 <p>Protocol (abstract base class) defining the Template interface.</p>
 <p>Direct subclassess of this base class only need to implement the
 abstract methods to adapt different template engines to this
@@ -846,7 +850,8 @@ typically to cache derived, non-essential information on the node.</p>
 <dl class="py attribute">
 <dt id="eve.concepts.FrozenNode.id_">
 <code class="sig-name descname">id_</code><em class="property">: Optional<span class="p">[</span>pydantic.types.StrictStr<span class="p">]</span></em><a class="headerlink" href="#eve.concepts.FrozenNode.id_" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Unique node-id (implementation field)</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -856,8 +861,9 @@ typically to cache derived, non-essential information on the node.</p>
 <dd><p>Bases: <a class="reference internal" href="#eve.concepts.BaseNode" title="eve.concepts.BaseNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">eve.concepts.BaseNode</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">pydantic.generics.GenericModel</span></code></p>
 <dl class="py attribute">
 <dt id="eve.concepts.GenericNode.id_">
-<code class="sig-name descname">id_</code><em class="property">: Optional<span class="p">[</span>pydantic.types.StrictStr<span class="p">]</span></em><a class="headerlink" href="#eve.concepts.GenericNode.id_" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">id_</code><em class="property">: Optional<span class="p">[</span>Str<span class="p">]</span></em><a class="headerlink" href="#eve.concepts.GenericNode.id_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique node-id (implementation field)</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -892,7 +898,8 @@ typically to cache derived, non-essential information on the node.</p>
 <dl class="py attribute">
 <dt id="eve.concepts.Node.id_">
 <code class="sig-name descname">id_</code><em class="property">: Optional<span class="p">[</span>pydantic.types.StrictStr<span class="p">]</span></em><a class="headerlink" href="#eve.concepts.Node.id_" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Unique node-id (implementation field)</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -1135,7 +1142,7 @@ Defaults to <cite>False</cite>.</p>
 <dl class="py attribute">
 <dt id="eve.type_definitions.Bytes">
 <code class="sig-prename descclassname">eve.type_definitions.</code><code class="sig-name descname">Bytes</code><a class="headerlink" href="#eve.type_definitions.Bytes" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.bytes</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
 </dd></dl>
 
 <dl class="py class">
@@ -1431,7 +1438,7 @@ IDs are not longer guaranteed to be unique.</p>
 <dl class="py class">
 <dt id="eve.utils.XIterator">
 <em class="property">class </em><code class="sig-prename descclassname">eve.utils.</code><code class="sig-name descname">XIterator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">it</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>T<span class="p">]</span><span class="p">, </span>Iterator<span class="p">[</span>T<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eve/utils.html#XIterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eve.utils.XIterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.Iterator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.Iterable</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Generic</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.Iterator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">eve.utils.T</span></code>]</p>
 <p>Iterator wrapper supporting method chaining for extra functionality.</p>
 <dl class="py method">
 <dt id="eve.utils.XIterator.accumulate">
@@ -2427,37 +2434,29 @@ structural modifications of the visited tree.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../license.html" class="btn btn-neutral float-right" title="License" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="modules.html" class="btn btn-neutral float-left" title="eve" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="../license.html" class="btn btn-neutral float-right" title="License" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="modules.html" class="btn btn-neutral float-left" title="eve" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, ETH Zurich
+        &#169; Copyright 2020, ETH Zurich.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
