@@ -426,7 +426,7 @@ def _make_strict_type_validator(type_hint):
     elif isinstance(origin_type, type):
 
         if issubclass(origin_type, tuple):
-            return _make_tuple_validator(type_args)
+            return _make_tuple_validator(type_args, origin_type)
 
         elif issubclass(origin_type, (collections.abc.Sequence, collections.abc.Set)):
             assert len(type_args) == 1
@@ -463,15 +463,15 @@ def _make_union_validator(type_args):
         )
 
 
-def _make_tuple_validator(type_args):
+def _make_tuple_validator(type_args, tuple_type=tuple):
     if len(type_args) == 2 and (type_args[1] is Ellipsis):
         member_type_hint = type_args[0]
         return attr.validators.deep_iterable(
             member_validator=_make_strict_type_validator(member_type_hint),
-            iterable_validator=attr.validators.instance_of(tuple),
+            iterable_validator=attr.validators.instance_of(tuple_type),
         )
     else:
-        return _TupleValidator([_make_strict_type_validator(t) for t in type_args])
+        return _TupleValidator(tuple(_make_strict_type_validator(t) for t in type_args), tuple_type)
 
 
 def _make_or_validator(*validators, error_type: Type[Exception]):
@@ -489,11 +489,12 @@ class _TupleValidator:
     """
 
     validators: Tuple[Callable]
+    tuple_type: Type[Tuple]
 
     def __call__(self, instance, attribute, value):
-        if not isinstance(value, tuple):
+        if not isinstance(value, self.tuple_type):
             raise TypeError(
-                f"In '{attribute.name}' validation, got '{value}' that is a {type(value)} instead of {tuple}."
+                f"In '{attribute.name}' validation, got '{value}' that is a {type(value)} instead of {self.tuple_type}."
             )
         if len(value) != len(self.validators):
             raise TypeError(
