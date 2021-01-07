@@ -27,7 +27,6 @@ import factory
 import pytest
 import pytest_factoryboy as pytfboy
 
-import eve
 from eve import datamodel
 
 
@@ -386,3 +385,88 @@ def test_composite_type_validation(model_factory):
         model_factory(basic_model="WRONG TYPE")
     with pytest.raises(TypeError, match="basic_model_with_defaults"):
         model_factory(basic_model_with_defaults="WRONG TYPE")
+
+
+class TestFieldFunctions:
+    def test_missing_annotations(self):
+        with pytest.raises(TypeError, match="other_value"):
+
+            class Model(datamodel.DataModel):
+                other_value = datamodel.field(default=None)
+
+    def test_field_defaults(self):
+        class Model(datamodel.DataModel):
+            str_value: str = datamodel.field(default="DEFAULT")
+
+        assert Model().str_value == "DEFAULT"
+        assert Model(str_value="other").str_value == "other"
+
+        with pytest.raises(TypeError, match="int_value"):
+
+            class Model(datamodel.DataModel):
+                int_value: int = datamodel.field(default="DEFAULT")
+
+            Model()
+
+    def test_field_default_factory(self):
+        # Classic type factory
+        class Model(datamodel.DataModel):
+            list_value: List[int] = datamodel.field(default_factory=list)
+
+        list_value = Model().list_value
+        assert isinstance(list_value, list) and len(list_value) == 0
+
+        # Custom function factory
+        def list_factory():
+            return list(i for i in range(5))
+
+        class Model(datamodel.DataModel):
+            list_value: List[int] = datamodel.field(default_factory=list_factory)
+
+        list_value = Model().list_value
+        assert (
+            isinstance(list_value, list) and len(list_value) == 5 and list_value == list_factory()
+        )
+
+        # Invalid default and default_factory combination
+        with pytest.raises(ValueError, match="both default and default_factory"):
+
+            class Model(datamodel.DataModel):
+                list_value: Optional[List[int]] = datamodel.field(
+                    default=None, default_factory=list
+                )
+
+    @pytest.mark.parametrize("value", [5, "5", 1.1, "22"])
+    def test_field_converter(self, value):
+        class Model(datamodel.DataModel):
+            int_value: int = datamodel.field(converter=int)
+
+        assert Model(int_value=value).int_value == int(value)
+
+        with pytest.raises(ValueError, match="int()"):
+            assert Model(int_value="invalid")
+
+    def test_invalid_field_converter(self):
+        class OtherModel(datamodel.DataModel):
+            int_value: int = datamodel.field(converter=str)
+
+        with pytest.raises(TypeError, match="int_value"):
+            OtherModel(int_value=3)
+
+        with pytest.raises(TypeError, match="int_value"):
+            OtherModel(int_value="3")
+
+    @pytest.mark.parametrize("value", [1, 2.2, "3", "asdf"])
+    def test_auto_field_converter(self, value):
+        class Model(datamodel.DataModel):
+            int_value: int = datamodel.field(converter=True)
+
+        try:
+            expected_value = int(value)
+        except ValueError:
+            with pytest.raises(ValueError):
+                Model(int_value=value).int_value
+        else:
+            int_value = Model(int_value=value).int_value
+            assert isinstance(int_value, int)
+            assert int_value == expected_value

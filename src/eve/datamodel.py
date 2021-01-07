@@ -104,7 +104,7 @@ class DataModelMeta(abc.ABCMeta):
     ):
         # Direct return path for special subclasses
         if skip_datamodel_meta:
-            print(f"Skippping {name}")
+            # print(f"Skippping {name}")
             return super().__new__(mcls, name, bases, namespace, **kwargs)
 
         # Create a plain version of the Python class without magic and replace it later
@@ -113,6 +113,8 @@ class DataModelMeta(abc.ABCMeta):
         tmp_plain_cls = super().__new__(mcls, name, bases, namespace)
         mro_bases = tmp_plain_cls.__mro__[1:]
         resolved_annotations = typing.get_type_hints(tmp_plain_cls)
+
+        # print(f"NEW {name}-----\n{namespace=} \n{resolved_annotations=}\n-----\n")
 
         # Create attr.ibs for annotated fields (excluding ClassVars)
         annotations = namespace.setdefault("__annotations__", {})
@@ -125,11 +127,22 @@ class DataModelMeta(abc.ABCMeta):
                     namespace[key] = attr.ib(validator=type_validator)
                 elif not isinstance(namespace[key], attr._make._CountingAttr):
                     namespace[key] = attr.ib(default=namespace[key], validator=type_validator)
-                elif namespace[key].converter is AUTO_CONVERTER:
-                    namespace[key].converter = _make_type_coercer(type_hint)
+                else:
+                    # A field() function has been used to customize the definition:
+                    # prepend the type validator to the list of provided validators (if any)
+                    namespace[key]._validator = (
+                        type_validator
+                        if namespace[key]._validator is None
+                        else attr._make.and_(type_validator, namespace[key]._validator)
+                    )
+
+                    # If requested, add auto converter
+                    if namespace[key].converter is AUTO_CONVERTER:
+                        namespace[key].converter = _make_type_coercer(type_hint)
 
         # Verify that there are not fields without type annotation
         for key, value in namespace.items():
+            # print(key, type(value), value)
             if isinstance(value, attr._make._CountingAttr) and (
                 key not in annotations or typing.get_origin(annotations[key]) is ClassVar
             ):
@@ -396,7 +409,8 @@ class DataModel(metaclass=DataModelMeta, skip_datamodel_meta=True):
 
 
 def _make_type_coercer(type_hint):
-    pass
+    # TODO: implement this method
+    return type_hint if isinstance(type_hint, type) else lambda x: x
 
 
 def _make_strict_type_validator(type_hint):
