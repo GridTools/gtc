@@ -73,7 +73,7 @@ def invalid_model_factory(factory):
     return factory
 
 
-# --- Definitions ---
+# --- Models, factories and fixtures ---
 @enum.unique
 class Kind(enum.Enum):
     FOO = "foo"
@@ -89,14 +89,28 @@ class IntKind(enum.IntEnum):
     PLUS = 1
 
 
+# NonInstantiableModel
 class NonInstantiableModel(datamodel.DataModel, instantiable=False):
     pass
 
 
+@invalid_model_factory
+class NonInstantiableModelFactory(factory.Factory):
+    class Meta:
+        model = NonInstantiableModel
+
+
+# EmptyModel
 class EmptyModel(datamodel.DataModel):
     pass
 
 
+class EmptyModelFactory(factory.Factory):
+    class Meta:
+        model = EmptyModel
+
+
+# BasicFieldsModel
 class BasicFieldsModel(datamodel.DataModel):
     bool_value: bool
     int_value: int
@@ -111,6 +125,36 @@ class BasicFieldsModel(datamodel.DataModel):
     class_var: ClassVar[int] = 0
 
 
+class BasicFieldsModelFactory(factory.Factory):
+    class Meta:
+        model = BasicFieldsModel
+
+    bool_value = factory.Faker("pybool")
+    int_value = factory.Faker("pyint")
+    float_value = factory.Faker("pyfloat")
+    complex_value = factory.LazyFunction(lambda: complex(random.random(), random.random()))
+    str_value = factory.Faker("pystr")
+    bytes_value = factory.LazyFunction(lambda: f"asdf{repr(random.random())}".encode())
+    kind = factory.Faker("random_element", elements=Kind)
+    int_kind = factory.Faker("random_element", elements=IntKind)
+    any_value = factory.Faker(
+        "random_element", elements=[None, 1, 1.0, 1j, "one", [], {}, tuple(), set(), lambda x: x]
+    )
+
+
+class FixedBasicFieldsModelFactory(BasicFieldsModelFactory):
+    bool_value = True
+    int_value = 1
+    float_value = 1.0
+    complex_value = 1 + 2j
+    str_value = "a simple string"
+    bytes_value = b"sequence of bytes"
+    kind = Kind.FOO
+    int_kind = IntKind.PLUS
+    any_value = "Any"
+
+
+# BasicFieldsModelWithDefaults
 class BasicFieldsModelWithDefaults(datamodel.DataModel):
     bool_value: bool = True
     int_value: int = 1
@@ -125,6 +169,12 @@ class BasicFieldsModelWithDefaults(datamodel.DataModel):
     class_var: ClassVar[int] = 0
 
 
+class BasicFieldsModelWithDefaultsFactory(factory.Factory):
+    class Meta:
+        model = BasicFieldsModelWithDefaults
+
+
+# AdvancedFieldsModel
 class AdvancedFieldsModel(datamodel.DataModel):
     str_list: List[str]
     int_set: Set[int]
@@ -145,11 +195,64 @@ class AdvancedFieldsModel(datamodel.DataModel):
     class_var: ClassVar[Dict[str, int]] = {"a": 0}
 
 
+class AdvancedFieldsModelFactory(factory.Factory):
+    class Meta:
+        model = AdvancedFieldsModel
+
+    str_list = ["a", "b", "c", "d"]
+    int_set = {1, 2, 3, 4}
+    float_sequence = [1.1, 2.2, 3.3, 4.4]
+    int_float_dict = {1: 1.1, 2: 2.2}
+    str_float_map = {"pi": 3.14159}
+    int_float_tuple = (1, 1.1)
+    int_tuple = (1,)
+    int_float_str_union = 3
+    opt_float = 2.34
+    opt_int_kind = IntKind.PLUS
+    opt_int_str_union = "string"
+    tuple_with_opt_union = (1, 2)
+    five_literal = 5
+    true_literal = True
+    nested_dict = {"empty": [], 0: [], 1: [("a", "b", 10), None, None]}
+
+
+class OtherAdvancedFieldsModelFactory(AdvancedFieldsModelFactory):
+    str_list = []
+    float_sequence = tuple()
+    int_float_dict = {}
+    str_float_map = types.MappingProxyType({"pi": 3.14159})
+    int_tuple = tuple()
+    int_float_str_union = "three"
+    opt_float = None
+    opt_int_kind = None
+    opt_int_str_union = None
+    tuple_with_opt_union = (1, None)
+    nested_dict = {"empty": [None, None, ("a", "b", 3)]}
+
+
+# CompositeModel
 class CompositeModel(datamodel.DataModel):
     basic_model: BasicFieldsModel
     basic_model_with_defaults: BasicFieldsModelWithDefaults
 
 
+class CompositeModelFactory(factory.Factory):
+    class Meta:
+        model = CompositeModel
+
+    basic_model = factory.SubFactory(BasicFieldsModelFactory)
+    basic_model_with_defaults = factory.SubFactory(BasicFieldsModelWithDefaultsFactory)
+
+
+class FixedCompositeModelFactory(factory.Factory):
+    class Meta:
+        model = CompositeModel
+
+    basic_model = factory.SubFactory(FixedBasicFieldsModelFactory)
+    basic_model_with_defaults = factory.SubFactory(BasicFieldsModelWithDefaultsFactory)
+
+
+# ModelWithValidators
 class ModelWithValidators(datamodel.DataModel):
     bool_value: bool
     int_value: int
@@ -188,6 +291,19 @@ class ModelWithValidators(datamodel.DataModel):
             raise ValueError(f"'{attribute.name}' must be equivalent to False")
 
 
+class ModelWithValidatorsFactory(factory.Factory):
+    class Meta:
+        model = ModelWithValidators
+
+    bool_value = False
+    int_value = 0
+    even_int_value = 2
+    float_value = 0.0
+    str_value = ""
+    extra_value = False
+
+
+# InheritedModelWithValidators
 class InheritedModelWithValidators(ModelWithValidators):
     # bool_value, int_value, even_int_value -> no redefinition
     float_value: float  # redefined without decorator
@@ -214,6 +330,20 @@ class InheritedModelWithValidators(ModelWithValidators):
             raise ValueError(f"'{attribute.name}' value must be equal to 'extra_value'")
 
 
+class InheritedModelWithValidatorsFactory(factory.Factory):
+    class Meta:
+        model = InheritedModelWithValidators
+
+    bool_value = False
+    int_value = 0
+    even_int_value = 2
+    float_value = 0.0
+    str_value = ""
+    extra_value = False
+    new_int_value = 0
+
+
+# ModelWithRootValidators
 class ModelWithRootValidators(datamodel.DataModel):
     int_value: int
     float_value: float
@@ -242,6 +372,16 @@ class ModelWithRootValidators(datamodel.DataModel):
             raise ValueError("'int_value' and 'float_value' must be different")
 
 
+class ModelWithRootValidatorsFactory(factory.Factory):
+    class Meta:
+        model = ModelWithRootValidators
+
+    int_value = 0
+    float_value = 1.1
+    str_value = ""
+
+
+# InheritedModelWithRootValidators
 class InheritedModelWithRootValidators(ModelWithRootValidators):
     @datamodel.root_validator
     def _root_validator(cls, instance):
@@ -260,137 +400,6 @@ class InheritedModelWithRootValidators(ModelWithRootValidators):
             raise ValueError("'int_value' and 'str_value' must be different")
 
 
-# --- Factories ---
-class EmptyModelFactory(factory.Factory):
-    class Meta:
-        model = EmptyModel
-
-
-@invalid_model_factory
-class NonInstantiableModelFactory(factory.Factory):
-    class Meta:
-        model = NonInstantiableModel
-
-
-class BasicFieldsModelFactory(factory.Factory):
-    class Meta:
-        model = BasicFieldsModel
-
-    bool_value = factory.Faker("pybool")
-    int_value = factory.Faker("pyint")
-    float_value = factory.Faker("pyfloat")
-    complex_value = factory.LazyFunction(lambda: complex(random.random(), random.random()))
-    str_value = factory.Faker("pystr")
-    bytes_value = factory.LazyFunction(lambda: f"asdf{repr(random.random())}".encode())
-    kind = factory.Faker("random_element", elements=Kind)
-    int_kind = factory.Faker("random_element", elements=IntKind)
-    any_value = factory.Faker(
-        "random_element", elements=[None, 1, 1.0, 1j, "one", [], {}, tuple(), set(), lambda x: x]
-    )
-
-
-class FixedBasicFieldsModelFactory(BasicFieldsModelFactory):
-    bool_value = True
-    int_value = 1
-    float_value = 1.0
-    complex_value = 1 + 2j
-    str_value = "a simple string"
-    bytes_value = b"sequence of bytes"
-    kind = Kind.FOO
-    int_kind = IntKind.PLUS
-    any_value = "Any"
-
-
-class BasicFieldsModelWithDefaultsFactory(factory.Factory):
-    class Meta:
-        model = BasicFieldsModelWithDefaults
-
-
-class AdvancedFieldsModelFactory(factory.Factory):
-    class Meta:
-        model = AdvancedFieldsModel
-
-    str_list = ["a", "b", "c", "d"]
-    int_set = {1, 2, 3, 4}
-    float_sequence = [1.1, 2.2, 3.3, 4.4]
-    int_float_dict = {1: 1.1, 2: 2.2}
-    str_float_map = {"pi": 3.14159}
-    int_float_tuple = (1, 1.1)
-    int_tuple = (1,)
-    int_float_str_union = 3
-    opt_float = 2.34
-    opt_int_kind = IntKind.PLUS
-    opt_int_str_union = "string"
-    tuple_with_opt_union = (1, 2)
-    five_literal = 5
-    true_literal = True
-    nested_dict = {"empty": [], 0: [], 1: [("a", "b", 10), None, None]}
-
-
-class OtherAdvancedFieldsModelFactory(AdvancedFieldsModelFactory):
-    str_list = []
-    float_sequence = tuple()
-    int_float_dict = {}
-    str_float_map = types.MappingProxyType({"pi": 3.14159})
-    int_tuple = tuple()
-    int_float_str_union = "three"
-    opt_float = None
-    opt_int_kind = None
-    opt_int_str_union = None
-    tuple_with_opt_union = (1, None)
-    nested_dict = {"empty": [None, None, ("a", "b", 3)]}
-
-
-class CompositeModelFactory(factory.Factory):
-    class Meta:
-        model = CompositeModel
-
-    basic_model = factory.SubFactory(BasicFieldsModelFactory)
-    basic_model_with_defaults = factory.SubFactory(BasicFieldsModelWithDefaultsFactory)
-
-
-class FixedCompositeModelFactory(factory.Factory):
-    class Meta:
-        model = CompositeModel
-
-    basic_model = factory.SubFactory(FixedBasicFieldsModelFactory)
-    basic_model_with_defaults = factory.SubFactory(BasicFieldsModelWithDefaultsFactory)
-
-
-class ModelWithValidatorsFactory(factory.Factory):
-    class Meta:
-        model = ModelWithValidators
-
-    bool_value = False
-    int_value = 0
-    even_int_value = 2
-    float_value = 0.0
-    str_value = ""
-    extra_value = False
-
-
-class InheritedModelWithValidatorsFactory(factory.Factory):
-    class Meta:
-        model = InheritedModelWithValidators
-
-    bool_value = False
-    int_value = 0
-    even_int_value = 2
-    float_value = 0.0
-    str_value = ""
-    extra_value = False
-    new_int_value = 0
-
-
-class ModelWithRootValidatorsFactory(factory.Factory):
-    class Meta:
-        model = ModelWithRootValidators
-
-    int_value = 0
-    float_value = 1.1
-    str_value = ""
-
-
 class InheritedModelWithRootValidatorsFactory(factory.Factory):
     class Meta:
         model = InheritedModelWithRootValidators
@@ -400,7 +409,6 @@ class InheritedModelWithRootValidatorsFactory(factory.Factory):
     str_value = ""
 
 
-# --- Fixtures ---
 # Register factories as fixtures using pytest_factoryboy plugin
 register_factories()
 
@@ -617,7 +625,7 @@ class TestTypeValidation:
             model_factory(basic_model=alt_basic_model)
 
 
-class TestCustomFieldValidators:
+class TestFieldValidators:
     def test_field_validators(self, model_with_validators_factory):
         model_with_validators_factory(extra_value="")
         model_with_validators_factory(extra_value=0)
@@ -669,7 +677,7 @@ class TestCustomFieldValidators:
             inherited_model_with_validators_factory(int_value=1, new_int_value=2)
 
 
-class TestCustomRootValidators:
+class TestRootValidators:
     def test_root_validators(self, model_with_root_validators_factory):
         model_with_root_validators_factory()
 
