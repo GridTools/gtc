@@ -386,6 +386,31 @@ def test_composite_type_validation(model_factory):
     with pytest.raises(TypeError, match="basic_model_with_defaults"):
         model_factory(basic_model_with_defaults="WRONG TYPE")
 
+    # Test that equivalent (but different) classes are not accepted
+    class BasicFieldsModel(datamodel.DataModel):
+        bool_value: bool
+        int_value: int
+        float_value: float
+        complex_value: complex
+        str_value: str
+        bytes_value: bytes
+        kind: Kind
+        int_kind: IntKind
+
+    different_basic_model = BasicFieldsModel(
+        bool_value=True,
+        int_value=1,
+        float_value=1.0,
+        complex_value=1j,
+        str_value="a",
+        bytes_value=b"A",
+        kind=Kind.BLA,
+        int_kind=IntKind.ZERO,
+    )
+
+    with pytest.raises(TypeError, match="basic_model"):
+        model_factory(basic_model=different_basic_model)
+
 
 class TestFieldFunctions:
     def test_missing_annotations(self):
@@ -470,3 +495,15 @@ class TestFieldFunctions:
             int_value = Model(int_value=value).int_value
             assert isinstance(int_value, int)
             assert int_value == expected_value
+
+
+# def test_field_validators(self):
+#     pass
+# class OtherModel(datamodel.DataModel):
+#     int_value: int = datamodel.field(converter=str)
+
+# with pytest.raises(TypeError, match="int_value"):
+#     OtherModel(int_value=3)
+
+# with pytest.raises(TypeError, match="int_value"):
+#     OtherModel(int_value="3")
