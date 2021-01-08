@@ -290,18 +290,16 @@ class DataModelMeta(abc.ABCMeta):
 
             def __attrs_post_init__(self):
                 if attr._config._run_validators is True:
-                    cls = type(self)
-                    for validator in cls.__datamodel_validators__:
-                        validator.__get__(cls)(self)
+                    for validator in type(self).__datamodel_validators__:
+                        validator.__get__(self)(self)
                     self.__post_init__()
 
         else:
 
             def __attrs_post_init__(self):
                 if attr._config._run_validators is True:
-                    cls = type(self)
-                    for validator in cls.__datamodel_validators__:
-                        validator.__get__(cls)(self)
+                    for validator in type(self).__datamodel_validators__:
+                        validator.__get__(self)(self)
 
         return __attrs_post_init__
 

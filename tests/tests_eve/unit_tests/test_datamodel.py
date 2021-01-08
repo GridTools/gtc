@@ -21,7 +21,20 @@ import enum
 import inspect
 import random
 import types
-from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
+import typing
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import boltons
 import factory
@@ -95,6 +108,8 @@ class BasicFieldsModel(datamodel.DataModel):
     int_kind: IntKind
     any_value: Any
 
+    class_var: ClassVar[int] = 0
+
 
 class BasicFieldsModelWithDefaults(datamodel.DataModel):
     bool_value: bool = True
@@ -106,6 +121,8 @@ class BasicFieldsModelWithDefaults(datamodel.DataModel):
     kind: Kind = Kind.FOO
     int_kind: IntKind = IntKind.PLUS
     any_value: Any = None
+
+    class_var: ClassVar[int] = 0
 
 
 class AdvancedFieldsModel(datamodel.DataModel):
@@ -124,6 +141,8 @@ class AdvancedFieldsModel(datamodel.DataModel):
     five_literal: Literal[5]
     true_literal: Literal[True]
     nested_dict: Dict[Union[int, str], List[Optional[Tuple[str, str, int]]]]
+
+    class_var: ClassVar[Dict[str, int]] = {"a": 0}
 
 
 class CompositeModel(datamodel.DataModel):
@@ -193,6 +212,52 @@ class InheritedModelWithValidators(ModelWithValidators):
         # Using a name already existing in the superclass for the validator function
         if self.int_value != value:
             raise ValueError(f"'{attribute.name}' value must be equal to 'extra_value'")
+
+
+class ModelWithRootValidators(datamodel.DataModel):
+    int_value: int
+    float_value: float
+    str_value: str
+
+    class_counter: ClassVar[int] = 0
+
+    @datamodel.root_validator
+    def _root_validator(cls, instance):
+        assert cls is type(instance)
+        assert issubclass(cls, ModelWithRootValidators)
+        assert isinstance(instance, ModelWithRootValidators)
+        cls.class_counter = 0
+
+    @datamodel.root_validator
+    def _another_root_validator(cls, instance):
+        assert cls.class_counter == 0
+        cls.class_counter += 1
+
+    @datamodel.root_validator
+    def _final_root_validator(cls, instance):
+        assert cls.class_counter == 1
+        cls.class_counter += 1
+
+        if instance.int_value == instance.float_value:
+            raise ValueError("'int_value' and 'float_value' must be different")
+
+
+class InheritedModelWithRootValidators(ModelWithRootValidators):
+    @datamodel.root_validator
+    def _root_validator(cls, instance):
+        assert cls.class_counter == 2
+        cls.class_counter += 10
+
+    @datamodel.root_validator
+    def _another_root_validator(cls, instance):
+        assert cls.class_counter == 12
+        cls.class_counter += 10
+
+    @datamodel.root_validator
+    def _final_root_validator(cls, instance):
+        assert cls.class_counter == 22
+        if str(instance.int_value) == instance.str_value:
+            raise ValueError("'int_value' and 'str_value' must be different")
 
 
 # --- Factories ---
@@ -317,6 +382,24 @@ class InheritedModelWithValidatorsFactory(factory.Factory):
     new_int_value = 0
 
 
+class ModelWithRootValidatorsFactory(factory.Factory):
+    class Meta:
+        model = ModelWithRootValidators
+
+    int_value = 0
+    float_value = 1.1
+    str_value = ""
+
+
+class InheritedModelWithRootValidatorsFactory(factory.Factory):
+    class Meta:
+        model = InheritedModelWithRootValidators
+
+    int_value = 0
+    float_value = 1.1
+    str_value = ""
+
+
 # --- Fixtures ---
 # Register factories as fixtures using pytest_factoryboy plugin
 register_factories()
@@ -341,6 +424,14 @@ def test_datamodel_class_members(any_model):
     assert hasattr(model, "__datamodel_validators__") and isinstance(
         model.__datamodel_validators__, tuple
     )
+
+    field_names = [field.name for field in model.__dataclass_fields__]
+    type_hints = typing.get_type_hints(model.__class__)
+    for name, type_hint in type_hints.items():
+        if typing.get_origin(type_hint) is ClassVar:
+            assert hasattr(model, name)
+            assert hasattr(model.__class__, name)
+            assert name not in field_names
 
 
 def test_non_instantiable(non_instantiable_model_factory):
@@ -384,6 +475,7 @@ def test_default_values(basic_fields_model_with_defaults_factory):
     assert model.bytes_value == b"bytes"
     assert model.kind == Kind.FOO
     assert model.int_kind == IntKind.PLUS
+    assert model.any_value is None
 
 
 class TestTypeValidation:
@@ -575,6 +667,26 @@ class TestCustomFieldValidators:
             inherited_model_with_validators_factory(int_value=1, new_int_value=1.0)
         with pytest.raises(ValueError, match="new_int_value"):
             inherited_model_with_validators_factory(int_value=1, new_int_value=2)
+
+
+class TestCustomRootValidators:
+    def test_root_validators(self, model_with_root_validators_factory):
+        model_with_root_validators_factory()
+
+        model_with_root_validators_factory(int_value=1, str_value="1")
+        with pytest.raises(ValueError, match="float_value"):
+            model_with_root_validators_factory(int_value=1, float_value=1.0)
+
+    def test_inherited_root_validators(self, inherited_model_with_root_validators_factory):
+        inherited_model_with_root_validators_factory()
+
+        with pytest.raises(ValueError, match="str_value"):
+            inherited_model_with_root_validators_factory(int_value=1, str_value="1")
+        with pytest.raises(ValueError, match="float_value"):
+            inherited_model_with_root_validators_factory(int_value=1, float_value=1.0)
+            inherited_model_with_root_validators_factory(
+                int_value=1, float_value=1.0, str_value="1"
+            )
 
 
 class TestFieldFunctions:
