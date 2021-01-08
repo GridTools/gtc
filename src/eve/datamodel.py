@@ -22,9 +22,8 @@ from __future__ import annotations
 import abc
 import collections
 import dataclasses
-import functools
 import typing
-from typing import Any, Callable, ClassVar, Dict, Generic, List, Optional, Tuple, Type, get_origin
+from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type
 
 import attr
 
@@ -114,12 +113,15 @@ class DataModelMeta(abc.ABCMeta):
         mro_bases = tmp_plain_cls.__mro__[1:]
         resolved_annotations = typing.get_type_hints(tmp_plain_cls)
 
-        # print(f"NEW {name}-----\n{namespace=} \n{resolved_annotations=}\n-----\n")
+        # print(f"\nNEW {name}-----\n{namespace=} \n{resolved_annotations=}\n-----\n")
 
         # Create attr.ibs for annotated fields (excluding ClassVars)
         annotations = namespace.setdefault("__annotations__", {})
         new_fields = set()
-        for key, type_hint in resolved_annotations.items():
+
+        # Iterate original annotations since resolved annotations also contain superclasses' annotations
+        for key in annotations:
+            type_hint = resolved_annotations[key]
             if typing.get_origin(type_hint) is not ClassVar:
                 new_fields.add(key)
                 type_validator = _make_strict_type_validator(type_hint)
@@ -144,7 +146,7 @@ class DataModelMeta(abc.ABCMeta):
         for key, value in namespace.items():
             # print(key, type(value), value)
             if isinstance(value, attr._make._CountingAttr) and (
-                key not in annotations or typing.get_origin(annotations[key]) is ClassVar
+                key not in annotations or typing.get_origin(resolved_annotations[key]) is ClassVar
             ):
                 raise TypeError(f"Missing type annotation in '{key}' field.")
 
@@ -253,7 +255,11 @@ class DataModelMeta(abc.ABCMeta):
         concrete_name = f"{cls.__name__}__{'_'.join(t.__name__ for t in type_args)}__"
         # print(concrete_name, concrete_annotations)
 
-        return type(concrete_name, (cls,), dict(__annotations__=concrete_annotations),)
+        return type(
+            concrete_name,
+            (cls,),
+            dict(__annotations__=concrete_annotations),
+        )
 
     @staticmethod
     def tag_field_validator(__name: str):
@@ -426,10 +432,10 @@ def _make_strict_type_validator(type_hint):
         if type_hint.__bound__:
             return attr.validators.instance_of(type_hint.__bound__)
         else:
-            return lambda _: None
+            return lambda *_: None
 
     elif type_hint is Any:
-        return lambda _: None
+        return lambda *_: None
 
     elif origin_type is typing.Literal:
         return _make_literal_validator(type_args)

@@ -21,7 +21,7 @@ import enum
 import inspect
 import random
 import types
-from typing import Dict, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
 
 import boltons
 import factory
@@ -93,6 +93,7 @@ class BasicFieldsModel(datamodel.DataModel):
     bytes_value: bytes
     kind: Kind
     int_kind: IntKind
+    any_value: Any
 
 
 class BasicFieldsModelWithDefaults(datamodel.DataModel):
@@ -104,6 +105,7 @@ class BasicFieldsModelWithDefaults(datamodel.DataModel):
     bytes_value: bytes = b"bytes"
     kind: Kind = Kind.FOO
     int_kind: IntKind = IntKind.PLUS
+    any_value: Any = None
 
 
 class AdvancedFieldsModel(datamodel.DataModel):
@@ -127,6 +129,70 @@ class AdvancedFieldsModel(datamodel.DataModel):
 class CompositeModel(datamodel.DataModel):
     basic_model: BasicFieldsModel
     basic_model_with_defaults: BasicFieldsModelWithDefaults
+
+
+class ModelWithValidators(datamodel.DataModel):
+    bool_value: bool
+    int_value: int
+    even_int_value: int
+    float_value: float
+    str_value: str
+    extra_value: Optional[Any] = None
+
+    @datamodel.validator("bool_value")
+    def _bool_value_validator(self, attribute, value):
+        assert isinstance(self, ModelWithValidators)
+
+    @datamodel.validator("int_value")
+    def _int_value_validator(self, attribute, value):
+        if value < 0:
+            raise ValueError(f"'{attribute.name}' must be larger or equal to 0")
+
+    @datamodel.validator("even_int_value")
+    def _even_int_value_validator(self, attribute, value):
+        if value % 2:
+            raise ValueError(f"'{attribute.name}' must be an even number")
+
+    @datamodel.validator("float_value")
+    def _float_value_validator(self, attribute, value):
+        if value > 3.14159:
+            raise ValueError(f"'{attribute.name}' must be smaller or equal to 3.14159")
+
+    @datamodel.validator("str_value")
+    def _str_value_validator(self, attribute, value):
+        if value == str(self.float_value):
+            raise ValueError(f"'{attribute.name}' must be different to 'float_value'")
+
+    @datamodel.validator("extra_value")
+    def _extra_value_validator(self, attribute, value):
+        if bool(value):
+            raise ValueError(f"'{attribute.name}' must be equivalent to False")
+
+
+class InheritedModelWithValidators(ModelWithValidators):
+    # bool_value, int_value, even_int_value -> no redefinition
+    float_value: float  # redefined without decorator
+    str_value: str  # redefined with decorator
+    extra_value: bool  # redefined with decorator and a different type
+    new_int_value: int  # added field
+
+    @datamodel.validator("str_value")
+    def _str_value_validator(self, attribute, value):
+        # Redeclare using same validator function name
+        if len(value) > 5:
+            raise ValueError(f"'{attribute.name}' must contain 5 chars or less")
+
+    @datamodel.validator("extra_value")
+    def _another_extra_value_validator(self, attribute, value):
+        # Redeclare using a different validator function name
+        if value is True:
+            raise ValueError(f"'{attribute.name}' must be False")
+
+    @datamodel.validator("new_int_value")
+    def _int_value_validator(self, attribute, value):
+        # Using a name already existing in the superclass for the validator function
+        if self.int_value != value:
+            raise ValueError(f"'{attribute.name}' value must be equal to 'extra_value'")
 
 
 # --- Factories ---
@@ -153,6 +219,9 @@ class BasicFieldsModelFactory(factory.Factory):
     bytes_value = factory.LazyFunction(lambda: f"asdf{repr(random.random())}".encode())
     kind = factory.Faker("random_element", elements=Kind)
     int_kind = factory.Faker("random_element", elements=IntKind)
+    any_value = factory.Faker(
+        "random_element", elements=[None, 1, 1.0, 1j, "one", [], {}, tuple(), set(), lambda x: x]
+    )
 
 
 class FixedBasicFieldsModelFactory(BasicFieldsModelFactory):
@@ -164,6 +233,7 @@ class FixedBasicFieldsModelFactory(BasicFieldsModelFactory):
     bytes_value = b"sequence of bytes"
     kind = Kind.FOO
     int_kind = IntKind.PLUS
+    any_value = "Any"
 
 
 class BasicFieldsModelWithDefaultsFactory(factory.Factory):
@@ -222,6 +292,31 @@ class FixedCompositeModelFactory(factory.Factory):
     basic_model_with_defaults = factory.SubFactory(BasicFieldsModelWithDefaultsFactory)
 
 
+class ModelWithValidatorsFactory(factory.Factory):
+    class Meta:
+        model = ModelWithValidators
+
+    bool_value = False
+    int_value = 0
+    even_int_value = 2
+    float_value = 0.0
+    str_value = ""
+    extra_value = False
+
+
+class InheritedModelWithValidatorsFactory(factory.Factory):
+    class Meta:
+        model = InheritedModelWithValidators
+
+    bool_value = False
+    int_value = 0
+    even_int_value = 2
+    float_value = 0.0
+    str_value = ""
+    extra_value = False
+    new_int_value = 0
+
+
 # --- Fixtures ---
 # Register factories as fixtures using pytest_factoryboy plugin
 register_factories()
@@ -251,6 +346,31 @@ def test_datamodel_class_members(any_model):
 def test_non_instantiable(non_instantiable_model_factory):
     with pytest.raises(TypeError, match="Trying to instantiate"):
         non_instantiable_model_factory()
+
+
+def test_field_redefinition(basic_fields_model_factory):
+    base_model = basic_fields_model_factory()
+    field_values = {
+        field.name: getattr(base_model, field.name)
+        for field in BasicFieldsModel.__dataclass_fields__
+    }
+
+    # Redefinition with same type
+    class SubModel(BasicFieldsModel):
+        int_value: int
+
+    SubModel(**field_values)
+
+    # Redefinition with different type
+    class SubModel(BasicFieldsModel):
+        int_value: float
+
+    with pytest.raises(TypeError, match="int_value"):
+        SubModel(**field_values)
+
+    new_field_values = {**field_values}
+    new_field_values.pop("int_value")
+    SubModel(**new_field_values, int_value=1.0)
 
 
 def test_default_values(basic_fields_model_with_defaults_factory):
@@ -393,14 +513,68 @@ class TestTypeValidation:
             AltBasicFieldsModel is not BasicFieldsModel and AltBasicFieldsModel != BasicFieldsModel
         )
 
-        alt_basic_model = AltBasicFieldsModel(
-            **{
-                field.name: getattr(composite_model.basic_model, field.name)
-                for field in BasicFieldsModel.__dataclass_fields__
-            }
-        )
+        field_values = {
+            field.name: getattr(composite_model.basic_model, field.name)
+            for field in BasicFieldsModel.__dataclass_fields__
+        }
+        another_basic_model = BasicFieldsModel(**field_values)
+        model_factory(basic_model=another_basic_model)
+
+        alt_basic_model = AltBasicFieldsModel(**field_values)
         with pytest.raises(TypeError, match="basic_model"):
             model_factory(basic_model=alt_basic_model)
+
+
+class TestCustomFieldValidators:
+    def test_field_validators(self, model_with_validators_factory):
+        model_with_validators_factory(extra_value="")
+        model_with_validators_factory(extra_value=0)
+        model_with_validators_factory(extra_value=0.0)
+        model_with_validators_factory(extra_value=[])
+        model_with_validators_factory(extra_value={})
+
+        with pytest.raises(ValueError, match="extra_value"):
+            model_with_validators_factory(extra_value=1)
+
+        with pytest.raises(ValueError, match="float_value"):
+            model_with_validators_factory(float_value=100.0)
+
+        with pytest.raises(ValueError, match="str_value"):
+            model_with_validators_factory(float_value=1.0, str_value="1.0")
+
+    def test_inherited_field_validators(self, inherited_model_with_validators_factory):
+        inherited_model_with_validators_factory()
+
+        # Verify that validator from superclasss works just fine
+        with pytest.raises(ValueError, match="even_int_value"):
+            inherited_model_with_validators_factory(even_int_value=1)
+
+        # Verify that validator works even if the validator function name is
+        # reused in a subclass
+        with pytest.raises(ValueError, match="int_value"):
+            inherited_model_with_validators_factory(int_value=-1)
+
+        # Overwritten field definition does not reuse validator from superclass
+        inherited_model_with_validators_factory(float_value=100.0)
+        inherited_model_with_validators_factory(float_value=1.0, str_value="1.0")
+
+        # Overwritten field definition uses new validator from subclass
+        with pytest.raises(ValueError, match="str_value"):
+            inherited_model_with_validators_factory(str_value="this is too long")
+
+        # Overwritten field definition with new type uses validators from new definition
+        inherited_model_with_validators_factory(extra_value=False)
+        with pytest.raises(TypeError, match="extra_value"):
+            inherited_model_with_validators_factory(extra_value=0)
+        with pytest.raises(ValueError, match="extra_value"):
+            inherited_model_with_validators_factory(extra_value=True)
+
+        # Regular behavior for new field
+        inherited_model_with_validators_factory(int_value=1, new_int_value=1)
+        with pytest.raises(TypeError, match="new_int_value"):
+            inherited_model_with_validators_factory(int_value=1, new_int_value=1.0)
+        with pytest.raises(ValueError, match="new_int_value"):
+            inherited_model_with_validators_factory(int_value=1, new_int_value=2)
 
 
 class TestFieldFunctions:
@@ -486,17 +660,3 @@ class TestFieldFunctions:
             int_value = Model(int_value=value).int_value
             assert isinstance(int_value, int)
             assert int_value == expected_value
-
-
-class TestFieldValidators:
-    def test_field_validators(self):
-        pass
-
-    class OtherModel(datamodel.DataModel):
-        int_value: int = datamodel.field(converter=str)
-
-    with pytest.raises(TypeError, match="int_value"):
-        OtherModel(int_value=3)
-
-    with pytest.raises(TypeError, match="int_value"):
-        OtherModel(int_value="3")
