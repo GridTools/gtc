@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import enum
+import inspect
 import random
 import types
 from typing import Dict, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
@@ -265,151 +266,141 @@ def test_default_values(basic_fields_model_with_defaults_factory):
     assert model.int_kind == IntKind.PLUS
 
 
-@pytest.mark.parametrize(
-    "basic_fields_model_factory", [BasicFieldsModelFactory, FixedBasicFieldsModelFactory]
-)
-def test_basic_type_validation(basic_fields_model_factory):
-    basic_fields_model_factory()
-
-    with pytest.raises(TypeError, match="bool_value"):
-        basic_fields_model_factory(bool_value="WRONG TYPE")
-    with pytest.raises(TypeError, match="int_value"):
-        basic_fields_model_factory(int_value="WRONG TYPE")
-    with pytest.raises(TypeError, match="float_value"):
-        basic_fields_model_factory(float_value="WRONG TYPE")
-    with pytest.raises(TypeError, match="complex_value"):
-        basic_fields_model_factory(complex_value="WRONG TYPE")
-    with pytest.raises(TypeError, match="str_value"):
-        basic_fields_model_factory(str_value=1.0)
-    with pytest.raises(TypeError, match="bytes_value"):
-        basic_fields_model_factory(bytes_value=1.0)
-    with pytest.raises(TypeError, match="kind"):
-        basic_fields_model_factory(kind="WRONG TYPE")
-    with pytest.raises(TypeError, match="int_kind"):
-        basic_fields_model_factory(int_kind="WRONG TYPE")
-
-
-@pytest.mark.parametrize(
-    "sample_model_factory", [AdvancedFieldsModelFactory, OtherAdvancedFieldsModelFactory]
-)
-def test_advanced_type_validation(sample_model_factory):
-    sample_model_factory()
-
-
-def test_invalid_type_validation(advanced_fields_model_factory):
-    advanced_fields_model_factory()
-
-    with pytest.raises(TypeError, match="str_list"):
-        advanced_fields_model_factory(str_list=("a", "b"))
-    with pytest.raises(TypeError, match="str_list"):
-        advanced_fields_model_factory(str_list=["a", 2])
-
-    with pytest.raises(TypeError, match="int_set"):
-        advanced_fields_model_factory(int_set={"a", "b"})
-    with pytest.raises(TypeError, match="int_set"):
-        advanced_fields_model_factory(int_set=[1, "2"])
-
-    with pytest.raises(TypeError, match="float_sequence"):
-        advanced_fields_model_factory(float_sequence={1.1, 2.2})
-    with pytest.raises(TypeError, match="float_sequence"):
-        advanced_fields_model_factory(float_sequence=[1.1, 2])
-
-    with pytest.raises(TypeError, match="int_float_dict"):
-        advanced_fields_model_factory(int_float_dict=types.MappingProxyType({1: 2.2}))
-    with pytest.raises(TypeError, match="int_float_dict"):
-        advanced_fields_model_factory(int_float_dict={1.1: 2.2})
-
-    with pytest.raises(TypeError, match="str_float_map"):
-        advanced_fields_model_factory(str_float_map={"one": "2.2"})
-
-    with pytest.raises(TypeError, match="int_float_tuple"):
-        advanced_fields_model_factory(int_float_tuple=[1, 2.2])
-    with pytest.raises(TypeError, match="int_float_tuple"):
-        advanced_fields_model_factory(int_float_tuple=(1, 2.2, 3))
-    with pytest.raises(TypeError, match="int_float_tuple"):
-        advanced_fields_model_factory(int_float_tuple=(1, "2.2"))
-
-    with pytest.raises(TypeError, match="int_tuple"):
-        advanced_fields_model_factory(int_tuple=[1, 2])
-    with pytest.raises(TypeError, match="int_tuple"):
-        advanced_fields_model_factory(int_tuple=(1.1))
-
-    with pytest.raises(TypeError, match="int_float_str_union"):
-        advanced_fields_model_factory(int_float_str_union=(1, 2))
-    with pytest.raises(TypeError, match="int_float_str_union"):
-        advanced_fields_model_factory(int_float_str_union=None)
-
-    with pytest.raises(TypeError, match="opt_float"):
-        advanced_fields_model_factory(opt_float=1)
-    with pytest.raises(TypeError, match="opt_float"):
-        advanced_fields_model_factory(opt_float="1.1")
-
-    with pytest.raises(TypeError, match="opt_int_kind"):
-        advanced_fields_model_factory(opt_int_kind=Kind.FOO)
-    with pytest.raises(TypeError, match="opt_int_kind"):
-        advanced_fields_model_factory(opt_int_kind=1000)
-
-    with pytest.raises(TypeError, match="opt_int_str_union"):
-        advanced_fields_model_factory(opt_int_str_union=1.1)
-    with pytest.raises(TypeError, match="opt_int_str_union"):
-        advanced_fields_model_factory(opt_int_str_union=(1,))
-
-    with pytest.raises(TypeError, match="tuple_with_opt_union"):
-        advanced_fields_model_factory(tuple_with_opt_union=(1,))
-    with pytest.raises(TypeError, match="tuple_with_opt_union"):
-        advanced_fields_model_factory(tuple_with_opt_union=(1, 1.1))
-
-    advanced_fields_model_factory(five_literal=2 + 3)
-    with pytest.raises(ValueError, match="five_literal"):
-        advanced_fields_model_factory(five_literal=(5,))
-    with pytest.raises(ValueError, match="five_literal"):
-        advanced_fields_model_factory(five_literal="5")
-
-    advanced_fields_model_factory(true_literal=1 == 1)
-    with pytest.raises(ValueError, match="true_literal"):
-        advanced_fields_model_factory(true_literal=1)
-    with pytest.raises(ValueError, match="true_literal"):
-        advanced_fields_model_factory(true_literal="True")
-
-    with pytest.raises(TypeError, match="nested_dict"):
-        advanced_fields_model_factory(nested_dict=types.MappingProxyType({0: []}))
-    with pytest.raises(TypeError, match="nested_dict"):
-        advanced_fields_model_factory(nested_dict={None: None})
-
-
-@pytest.mark.parametrize("model_factory", [CompositeModelFactory, FixedCompositeModelFactory])
-def test_composite_type_validation(model_factory):
-    model_factory()
-
-    with pytest.raises(TypeError, match="basic_model"):
-        model_factory(basic_model="WRONG TYPE")
-    with pytest.raises(TypeError, match="basic_model_with_defaults"):
-        model_factory(basic_model_with_defaults="WRONG TYPE")
-
-    # Test that equivalent (but different) classes are not accepted
-    class BasicFieldsModel(datamodel.DataModel):
-        bool_value: bool
-        int_value: int
-        float_value: float
-        complex_value: complex
-        str_value: str
-        bytes_value: bytes
-        kind: Kind
-        int_kind: IntKind
-
-    different_basic_model = BasicFieldsModel(
-        bool_value=True,
-        int_value=1,
-        float_value=1.0,
-        complex_value=1j,
-        str_value="a",
-        bytes_value=b"A",
-        kind=Kind.BLA,
-        int_kind=IntKind.ZERO,
+class TestTypeValidation:
+    @pytest.mark.parametrize(
+        "basic_fields_model_factory", [BasicFieldsModelFactory, FixedBasicFieldsModelFactory]
     )
+    def test_basic_type_validation(self, basic_fields_model_factory):
+        basic_fields_model_factory()
 
-    with pytest.raises(TypeError, match="basic_model"):
-        model_factory(basic_model=different_basic_model)
+        with pytest.raises(TypeError, match="bool_value"):
+            basic_fields_model_factory(bool_value="WRONG TYPE")
+        with pytest.raises(TypeError, match="int_value"):
+            basic_fields_model_factory(int_value="WRONG TYPE")
+        with pytest.raises(TypeError, match="float_value"):
+            basic_fields_model_factory(float_value="WRONG TYPE")
+        with pytest.raises(TypeError, match="complex_value"):
+            basic_fields_model_factory(complex_value="WRONG TYPE")
+        with pytest.raises(TypeError, match="str_value"):
+            basic_fields_model_factory(str_value=1.0)
+        with pytest.raises(TypeError, match="bytes_value"):
+            basic_fields_model_factory(bytes_value=1.0)
+        with pytest.raises(TypeError, match="kind"):
+            basic_fields_model_factory(kind="WRONG TYPE")
+        with pytest.raises(TypeError, match="int_kind"):
+            basic_fields_model_factory(int_kind="WRONG TYPE")
+
+    @pytest.mark.parametrize(
+        "sample_model_factory", [AdvancedFieldsModelFactory, OtherAdvancedFieldsModelFactory]
+    )
+    def test_advanced_type_validation(self, sample_model_factory):
+        sample_model_factory()
+
+    def test_invalid_type_validation(self, advanced_fields_model_factory):
+        advanced_fields_model_factory()
+
+        with pytest.raises(TypeError, match="str_list"):
+            advanced_fields_model_factory(str_list=("a", "b"))
+        with pytest.raises(TypeError, match="str_list"):
+            advanced_fields_model_factory(str_list=["a", 2])
+
+        with pytest.raises(TypeError, match="int_set"):
+            advanced_fields_model_factory(int_set={"a", "b"})
+        with pytest.raises(TypeError, match="int_set"):
+            advanced_fields_model_factory(int_set=[1, "2"])
+
+        with pytest.raises(TypeError, match="float_sequence"):
+            advanced_fields_model_factory(float_sequence={1.1, 2.2})
+        with pytest.raises(TypeError, match="float_sequence"):
+            advanced_fields_model_factory(float_sequence=[1.1, 2])
+
+        with pytest.raises(TypeError, match="int_float_dict"):
+            advanced_fields_model_factory(int_float_dict=types.MappingProxyType({1: 2.2}))
+        with pytest.raises(TypeError, match="int_float_dict"):
+            advanced_fields_model_factory(int_float_dict={1.1: 2.2})
+
+        with pytest.raises(TypeError, match="str_float_map"):
+            advanced_fields_model_factory(str_float_map={"one": "2.2"})
+
+        with pytest.raises(TypeError, match="int_float_tuple"):
+            advanced_fields_model_factory(int_float_tuple=[1, 2.2])
+        with pytest.raises(TypeError, match="int_float_tuple"):
+            advanced_fields_model_factory(int_float_tuple=(1, 2.2, 3))
+        with pytest.raises(TypeError, match="int_float_tuple"):
+            advanced_fields_model_factory(int_float_tuple=(1, "2.2"))
+
+        with pytest.raises(TypeError, match="int_tuple"):
+            advanced_fields_model_factory(int_tuple=[1, 2])
+        with pytest.raises(TypeError, match="int_tuple"):
+            advanced_fields_model_factory(int_tuple=(1.1))
+
+        with pytest.raises(TypeError, match="int_float_str_union"):
+            advanced_fields_model_factory(int_float_str_union=(1, 2))
+        with pytest.raises(TypeError, match="int_float_str_union"):
+            advanced_fields_model_factory(int_float_str_union=None)
+
+        with pytest.raises(TypeError, match="opt_float"):
+            advanced_fields_model_factory(opt_float=1)
+        with pytest.raises(TypeError, match="opt_float"):
+            advanced_fields_model_factory(opt_float="1.1")
+
+        with pytest.raises(TypeError, match="opt_int_kind"):
+            advanced_fields_model_factory(opt_int_kind=Kind.FOO)
+        with pytest.raises(TypeError, match="opt_int_kind"):
+            advanced_fields_model_factory(opt_int_kind=1000)
+
+        with pytest.raises(TypeError, match="opt_int_str_union"):
+            advanced_fields_model_factory(opt_int_str_union=1.1)
+        with pytest.raises(TypeError, match="opt_int_str_union"):
+            advanced_fields_model_factory(opt_int_str_union=(1,))
+
+        with pytest.raises(TypeError, match="tuple_with_opt_union"):
+            advanced_fields_model_factory(tuple_with_opt_union=(1,))
+        with pytest.raises(TypeError, match="tuple_with_opt_union"):
+            advanced_fields_model_factory(tuple_with_opt_union=(1, 1.1))
+
+        advanced_fields_model_factory(five_literal=2 + 3)
+        with pytest.raises(ValueError, match="five_literal"):
+            advanced_fields_model_factory(five_literal=(5,))
+        with pytest.raises(ValueError, match="five_literal"):
+            advanced_fields_model_factory(five_literal="5")
+
+        advanced_fields_model_factory(true_literal=1 == 1)
+        with pytest.raises(ValueError, match="true_literal"):
+            advanced_fields_model_factory(true_literal=1)
+        with pytest.raises(ValueError, match="true_literal"):
+            advanced_fields_model_factory(true_literal="True")
+
+        with pytest.raises(TypeError, match="nested_dict"):
+            advanced_fields_model_factory(nested_dict=types.MappingProxyType({0: []}))
+        with pytest.raises(TypeError, match="nested_dict"):
+            advanced_fields_model_factory(nested_dict={None: None})
+
+    @pytest.mark.parametrize("model_factory", [CompositeModelFactory, FixedCompositeModelFactory])
+    def test_composite_type_validation(self, model_factory):
+        composite_model = model_factory()
+
+        with pytest.raises(TypeError, match="basic_model"):
+            model_factory(basic_model="WRONG TYPE")
+        with pytest.raises(TypeError, match="basic_model_with_defaults"):
+            model_factory(basic_model_with_defaults="WRONG TYPE")
+
+        # Test that equivalent (but different) classes are not accepted
+        exec_results = {}
+        exec(inspect.getsource(BasicFieldsModel), globals(), exec_results)
+        AltBasicFieldsModel = exec_results["BasicFieldsModel"]
+        assert (
+            AltBasicFieldsModel is not BasicFieldsModel and AltBasicFieldsModel != BasicFieldsModel
+        )
+
+        alt_basic_model = AltBasicFieldsModel(
+            **{
+                field.name: getattr(composite_model.basic_model, field.name)
+                for field in BasicFieldsModel.__dataclass_fields__
+            }
+        )
+        with pytest.raises(TypeError, match="basic_model"):
+            model_factory(basic_model=alt_basic_model)
 
 
 class TestFieldFunctions:
@@ -497,13 +488,15 @@ class TestFieldFunctions:
             assert int_value == expected_value
 
 
-# def test_field_validators(self):
-#     pass
-# class OtherModel(datamodel.DataModel):
-#     int_value: int = datamodel.field(converter=str)
+class TestFieldValidators:
+    def test_field_validators(self):
+        pass
 
-# with pytest.raises(TypeError, match="int_value"):
-#     OtherModel(int_value=3)
+    class OtherModel(datamodel.DataModel):
+        int_value: int = datamodel.field(converter=str)
 
-# with pytest.raises(TypeError, match="int_value"):
-#     OtherModel(int_value="3")
+    with pytest.raises(TypeError, match="int_value"):
+        OtherModel(int_value=3)
+
+    with pytest.raises(TypeError, match="int_value"):
+        OtherModel(int_value="3")
