@@ -224,7 +224,8 @@ class DataModelMeta(abc.ABCMeta):
         return cls
 
     @utils.optional_lru_cache(maxsize=None, typed=True)
-    def __getitem__(cls, type_args):
+    def __getitem__(cls, args):
+        type_args = args if isinstance(args, tuple) else (args,)
         if not cls.is_generic():
             raise TypeError(f"'{cls.__name__}' is not a generic model class.")
         if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
@@ -430,10 +431,10 @@ def _make_strict_type_validator(type_hint):
         if type_hint.__bound__:
             return attr.validators.instance_of(type_hint.__bound__)
         else:
-            return lambda *_: None
+            return _any_validator
 
     elif type_hint is Any:
-        return lambda *_: None
+        return _any_validator
 
     elif origin_type is typing.Literal:
         return _make_literal_validator(type_args)
@@ -498,6 +499,10 @@ def _make_or_validator(*validators, error_type: Type[Exception]):
         return vals[0]
     else:
         return _OrValidator(vals, error_type)
+
+
+def _any_validator(instance, attribute, value):
+    pass
 
 
 @attr.define

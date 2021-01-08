@@ -26,6 +26,7 @@ from typing import (
     Any,
     ClassVar,
     Dict,
+    Generic,
     List,
     Literal,
     Mapping,
@@ -33,6 +34,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypeVar,
     Union,
 )
 
@@ -47,7 +49,7 @@ from eve import datamodel
 # --- Utils ---
 invalid_model_factories = []
 model_factory_fixtures = []
-model_fixtures = []
+model_instance_fixtures = []
 
 
 def register_factories():
@@ -63,7 +65,7 @@ def register_factories():
             if factory_fixture_name.endswith(f"{model_fixture_name}_factory"):
                 model_fixture_name = factory_fixture_name.replace("_factory", "")
             if value not in invalid_model_factories:
-                model_fixtures.append(pytest.lazy_fixture(model_fixture_name))
+                model_instance_fixtures.append(pytest.lazy_fixture(model_fixture_name))
 
             pytfboy.register(value, model_fixture_name)
 
@@ -409,6 +411,28 @@ class InheritedModelWithRootValidatorsFactory(factory.Factory):
     str_value = ""
 
 
+# GenericModel
+T = TypeVar("T")
+
+
+class SimpleGenericModel(datamodel.DataModel, Generic[T]):
+    generic_value: T
+    int_value: int = 0
+
+
+class SimpleGenericModelFactory(factory.Factory):
+    class Meta:
+        model = SimpleGenericModel
+
+    generic_value = None
+    int_value = 1
+
+
+# @pytest.fixture(params=[int, float, str, complex])
+# def instantiated_simple_generic_model_class(request):
+#     return SimpleGenericModel[request.param]
+
+
 # Register factories as fixtures using pytest_factoryboy plugin
 register_factories()
 
@@ -418,27 +442,28 @@ def any_model_factory(request):
     return request.param
 
 
-@pytest.fixture(params=model_fixtures)
-def any_model(request):
+@pytest.fixture(params=model_instance_fixtures)
+def any_model_instance(request):
     return request.param
 
 
 # --- Tests ---
-def test_datamodel_class_members(any_model):
-    model = any_model
-    assert hasattr(model, "__init__")
-    assert hasattr(model, "is_generic") and callable(model.is_generic)
-    assert hasattr(model, "__dataclass_fields__") and isinstance(model.__dataclass_fields__, tuple)
-    assert hasattr(model, "__datamodel_validators__") and isinstance(
-        model.__datamodel_validators__, tuple
+def test_datamodel_class_members(any_model_instance):
+    assert hasattr(any_model_instance, "__init__")
+    assert hasattr(any_model_instance, "is_generic") and callable(any_model_instance.is_generic)
+    assert hasattr(any_model_instance, "__dataclass_fields__") and isinstance(
+        any_model_instance.__dataclass_fields__, tuple
+    )
+    assert hasattr(any_model_instance, "__datamodel_validators__") and isinstance(
+        any_model_instance.__datamodel_validators__, tuple
     )
 
-    field_names = [field.name for field in model.__dataclass_fields__]
-    type_hints = typing.get_type_hints(model.__class__)
+    field_names = [field.name for field in any_model_instance.__dataclass_fields__]
+    type_hints = typing.get_type_hints(any_model_instance.__class__)
     for name, type_hint in type_hints.items():
         if typing.get_origin(type_hint) is ClassVar:
-            assert hasattr(model, name)
-            assert hasattr(model.__class__, name)
+            assert hasattr(any_model_instance, name)
+            assert hasattr(any_model_instance.__class__, name)
             assert name not in field_names
 
 
@@ -695,6 +720,36 @@ class TestRootValidators:
             inherited_model_with_root_validators_factory(
                 int_value=1, float_value=1.0, str_value="1"
             )
+
+
+class TestGenericModels:
+    @pytest.mark.parametrize("concrete_type", [int, float, str])
+    def test_generic_model_instantiation_cache(self, concrete_type):
+        Model1 = SimpleGenericModel[concrete_type]
+        Model2 = SimpleGenericModel[concrete_type]
+        Model3 = SimpleGenericModel[concrete_type]
+
+        assert Model1 is Model2 and Model2 is Model3 and Model3 is SimpleGenericModel[concrete_type]
+
+    @pytest.mark.parametrize(
+        "value", [False, 1, 1.1, "string", [1], ("a", "b"), {1, 2, 3}, {"a": 1}]
+    )
+    def test_generic_field_type_validation(self, simple_generic_model_factory, value):
+        simple_generic_model_factory(generic_value="")
+
+    @pytest.mark.parametrize(
+        "value", [False, 1, 1.1, "string", [1], ("a", "b"), {1, 2, 3}, {"a": 1}]
+    )
+    @pytest.mark.parametrize("concrete_type", [int, float, str])
+    def test_concrete_field_type_validation(self, concrete_type, value):
+        Model = SimpleGenericModel[concrete_type]
+
+        if isinstance(value, concrete_type):  # concrete_type == type(value):
+            model = Model(generic_value=value)
+            assert model.int_value == 0
+        else:
+            with pytest.raises(TypeError, match="generic_value"):
+                model = Model(generic_value=value)
 
 
 class TestFieldFunctions:
