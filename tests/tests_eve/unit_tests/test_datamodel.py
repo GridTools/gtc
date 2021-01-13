@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import enum
 import inspect
 import random
@@ -413,6 +414,8 @@ class InheritedModelWithRootValidatorsFactory(factory.Factory):
 
 # GenericModel
 T = TypeVar("T")
+S = TypeVar("S")
+U = TypeVar("U", bound=int)
 
 
 class SimpleGenericModel(datamodel.DataModel, Generic[T]):
@@ -426,6 +429,11 @@ class SimpleGenericModelFactory(factory.Factory):
 
     generic_value = None
     int_value = 1
+
+
+class AdvancedGenericModel(SimpleGenericModel[T], Generic[S, U]):
+    generic_value: T
+    int_value: int = 0
 
 
 # @pytest.fixture(params=[int, float, str, complex])
@@ -450,13 +458,17 @@ def any_model_instance(request):
 # --- Tests ---
 def test_datamodel_class_members(any_model_instance):
     assert hasattr(any_model_instance, "__init__")
-    assert hasattr(any_model_instance, "is_generic") and callable(any_model_instance.is_generic)
+    assert hasattr(any_model_instance, "__is_generic__") and isinstance(
+        any_model_instance.__is_generic__, bool
+    )
     assert hasattr(any_model_instance, "__dataclass_fields__") and isinstance(
         any_model_instance.__dataclass_fields__, tuple
     )
     assert hasattr(any_model_instance, "__datamodel_validators__") and isinstance(
         any_model_instance.__datamodel_validators__, tuple
     )
+
+    assert dataclasses.is_dataclass(any_model_instance)
 
     field_names = [field.name for field in any_model_instance.__dataclass_fields__]
     type_hints = typing.get_type_hints(any_model_instance.__class__)
@@ -724,12 +736,20 @@ class TestRootValidators:
 
 class TestGenericModels:
     @pytest.mark.parametrize("concrete_type", [int, float, str])
-    def test_generic_model_instantiation_cache(self, concrete_type):
+    def test_generic_model_instantiation(self, concrete_type):
+        Model = SimpleGenericModel[concrete_type]
+        assert f"__{concrete_type.__name__}__" in Model.__name__
+
         Model1 = SimpleGenericModel[concrete_type]
         Model2 = SimpleGenericModel[concrete_type]
         Model3 = SimpleGenericModel[concrete_type]
 
-        assert Model1 is Model2 and Model2 is Model3 and Model3 is SimpleGenericModel[concrete_type]
+        assert (
+            Model is Model1
+            and Model1 is Model2
+            and Model2 is Model3
+            and Model3 is SimpleGenericModel[concrete_type]
+        )
 
     @pytest.mark.parametrize(
         "value", [False, 1, 1.1, "string", [1], ("a", "b"), {1, 2, 3}, {"a": 1}]

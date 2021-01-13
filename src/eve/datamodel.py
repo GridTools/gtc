@@ -22,6 +22,8 @@ from __future__ import annotations
 import abc
 import collections
 import dataclasses
+import inspect
+import sys
 import typing
 from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type
 
@@ -119,7 +121,9 @@ class DataModelMeta(abc.ABCMeta):
         annotations = namespace.setdefault("__annotations__", {})
         new_fields = set()
 
-        # Iterate original annotations since resolved annotations also contain superclasses' annotations
+        # Create attrib definitions with automatic type validators (and converters)
+        # for the annotated fields. The original annotations are used for iteration
+        # since the resolved annotations may also contain superclasses' annotations
         for key in annotations:
             type_hint = resolved_annotations[key]
             if typing.get_origin(type_hint) is not ClassVar:
@@ -209,7 +213,7 @@ class DataModelMeta(abc.ABCMeta):
             namespace["__attrs_post_init__"] = mcls._make_attrs_post_init(has_post_init)
 
         # Add extra custom methods
-        namespace["is_generic"] = mcls._make_is_generic()
+        namespace["__is_generic__"] = mcls._make_is_generic()
 
         # Create final Python class and convert it into an attrs class
         plain_cls = super().__new__(mcls, name, bases, namespace, **kwargs)
@@ -223,10 +227,21 @@ class DataModelMeta(abc.ABCMeta):
 
         return cls
 
-    @utils.optional_lru_cache(maxsize=None, typed=True)
     def __getitem__(cls, args):
         type_args = args if isinstance(args, tuple) else (args,)
-        if not cls.is_generic():
+        return cls.__concretize__(*type_args)
+
+    @utils.optional_lru_cache(maxsize=None, typed=True)
+    def __concretize__(
+        cls,
+        *type_args,
+        class_name=None,
+        module=None,
+        overwrite_definition=True,
+        support_pickling=True,
+    ):
+        # Validate generic specialization
+        if not cls.__is_generic__:
             raise TypeError(f"'{cls.__name__}' is not a generic model class.")
         if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
             raise TypeError(
@@ -239,9 +254,8 @@ class DataModelMeta(abc.ABCMeta):
                 f"({len(type_args)} used, {len(cls.__parameters__)} expected)."
             )
 
-        type_params_map = dict(zip(cls.__parameters__, type_args))
-
         # Get actual types for generic fields
+        type_params_map = dict(zip(cls.__parameters__, type_args))
         concrete_annotations = {}
         for f_name, f_type in typing.get_type_hints(cls).items():
             if isinstance(f_type, typing.TypeVar) and f_type in type_params_map:
@@ -253,14 +267,65 @@ class DataModelMeta(abc.ABCMeta):
                 concrete_type_args = tuple([type_params_map[p] for p in f_type.__parameters__])
                 concrete_annotations[f_name] = f_type[concrete_type_args]
 
-        concrete_name = f"{cls.__name__}__{'_'.join(t.__name__ for t in type_args)}__"
-        # print(concrete_name, concrete_annotations)
+        # Compute concrete class name and concrete module (for pickling)
+        if not class_name:
+            class_name = f"{cls.__name__}__{'_'.join(t.__name__ for t in type_args)}__"
+            # class_name = f"{cls.__name__}__{''.join(t.__name__.capitalize() for t in type_args)}__"
+            # TODO: add position of arg to the name encoding
 
-        return type(
-            concrete_name,
-            (cls,),
-            dict(__annotations__=concrete_annotations),
-        )
+        if module:
+            # If a module name has been explicitly provided, use it
+            is_module_global_def = True
+
+        else:
+            is_module_global_def = False
+
+            # For pickling to work, the __module__ variable needs to be set to the frame
+            # where the new class is created. The introspection will be skipped if the Python
+            # interpreter does not define properly the required 'sys._getframe' function
+            # (e.g. Jython, IronPython), or if the user has already specified a particular
+            # module name (partially based on 'namedtuple' and 'pydantic' sources)
+            frame = inspect.currentframe()
+            caller_frame = None
+            try:
+                if frame:
+                    caller_frame = frame.f_back.f_back  # .f_back -> utils.optional_lru_cache
+                    info = inspect.getframeinfo(caller_frame)
+                    if info.filename == __file__ and info.function == "__getitem__":
+                        # Called from generic model __getitem__, not directly (usual case)
+                        caller_frame = caller_frame.f_back
+                        info = inspect.getframeinfo(caller_frame)
+
+                    # Get module name
+                    module = str(caller_frame.f_globals.get("__name__"))
+
+                    # Check that new class is created at module global global scope
+                    is_module_global_def = caller_frame.f_locals is caller_frame.f_globals
+            finally:
+                del frame, caller_frame
+
+        # print("MOD=====", module, is_module_global_def)
+        namespace = {"__annotations__": concrete_annotations}
+        if module:
+            namespace["__module__"] = module
+
+        concrete_cls = type(class_name, (cls,), namespace)
+        assert concrete_cls.__module__ == module or not module
+
+        if support_pickling and is_module_global_def:
+            # Add reference to the new class in the module
+            reference_module_globals = sys.modules[concrete_cls.__module__].__dict__
+            if (
+                overwrite_definition is False
+                and reference_module_globals.get(class_name, concrete_cls) is not concrete_cls
+            ):
+                raise TypeError(
+                    f"Existing '{class_name}' symbol in module '{module}'"
+                    "contains a reference to a different object."
+                )
+            reference_module_globals[class_name] = concrete_cls
+
+        return concrete_cls
 
     @staticmethod
     def tag_field_validator(__name: str):
@@ -306,10 +371,10 @@ class DataModelMeta(abc.ABCMeta):
 
     @staticmethod
     def _make_is_generic():
-        def is_generic(cls):
+        def __is_generic__(cls):
             return len(cls.__parameters__) > 0 if hasattr(cls, "__parameters__") else False
 
-        return classmethod(is_generic)
+        return utils.classproperty(__is_generic__)
 
     @staticmethod
     def _make_dataclass_field_from_attr(field_attr):
