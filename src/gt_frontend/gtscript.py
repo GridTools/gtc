@@ -18,7 +18,7 @@ from typing import Callable
 
 import gtc.common as common
 
-from .built_in_types import Field, Local, Location, Mesh, TemporaryField
+from .built_in_types import Connectivity, Field, Local, Location, Mesh, SparseField, TemporaryField
 
 
 # built-in symbols
@@ -47,6 +47,8 @@ __all__ = _built_in_functions + [
     "Vertex",
     "Edge",
     "Cell",
+    "Connectivity",
+    "SparseField",
 ]
 
 

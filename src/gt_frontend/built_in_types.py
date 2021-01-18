@@ -76,6 +76,10 @@ class Field(BuiltInType):
     pass
 
 
+class SparseField(BuiltInType):
+    pass
+
+
 class TemporaryField(BuiltInType):  # TODO(tehrengruber): make this a subtype of Field
     pass
 
@@ -89,4 +93,8 @@ class Local(BuiltInType):
     Used as a type argument to :class:`.Field` representing a Local dimension.
     """
 
+    pass
+
+
+class Connectivity(BuiltInType):
     pass
