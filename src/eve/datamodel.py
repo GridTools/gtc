@@ -43,6 +43,13 @@ from . import utils  # isort:skip
 from .concepts import NOTHING  # isort:skip
 
 
+_ATTR_SETTINGS = types.MappingProxyType({"auto_attribs": True, "slots": False, "kw_only": True})
+_FIELD_VALIDATOR_TAG = "__field_validator_tag"
+_ROOT_VALIDATOR_TAG = "__root_validator_tag"
+_ROOT_VALIDATORS_NAME = "__datamodel_validators__"
+_TYPEVARS = "__datamodel_typevars__"
+
+
 class _SENTINEL:
     ...
 
@@ -61,7 +68,7 @@ def field(
     compare=True,
     metadata=None,
 ):
-    """Return an object to identify dataclass fields."""
+    """Return an object to define dataclass fields."""
 
     defaults_kwargs = {}
     if default is not NOTHING:
@@ -84,6 +91,223 @@ def field(
         order=compare,
         metadata=metadata,
     )
+
+
+def _get_attribute_from_bases(
+    name: str, mro: Tuple[Type], annotations: Optional[Dict[str, Any]] = None
+) -> Optional[attr.Attribute]:
+    for base in mro:
+        for base_field_attrib in getattr(base, "__attrs_attrs__", []):
+            if base_field_attrib.name == name:
+                if annotations is not None:
+                    annotations[name] = base.__annotations__[name]
+                return base_field_attrib
+
+    return None
+
+
+def _make_counting_attr_from_attr(field_attr, *, include_type=False, **kwargs):
+    members = [
+        "default",
+        "validator",
+        "repr",
+        "eq",
+        "order",
+        "hash",
+        "init",
+        "metadata",
+        "converter",
+        "kw_only",
+        "on_setattr",
+    ]
+    if include_type:
+        members.append("type")
+
+    return attr.ib(**{key: getattr(field_attr, key) for key in members}, **kwargs)
+
+
+def _make_dataclass_field_from_attr(field_attr):
+    MISSING = getattr(dataclasses, "MISSING", NOTHING)
+    default = MISSING
+    default_factory = MISSING
+    if isinstance(field_attr.default, attr.Factory):
+        default_factory = field_attr.default.factory
+    elif field_attr.default is not attr.NOTHING:
+        default = field_attr.default
+
+    assert field_attr.eq == field_attr.order  # dataclasses.compare == (attr.eq and attr.order)
+
+    dataclasses_field = dataclasses.Field(
+        default=default,
+        default_factory=default_factory,
+        init=field_attr.init,
+        repr=field_attr.repr if not callable(field_attr.repr) else None,
+        hash=field_attr.hash,
+        compare=field_attr.eq,
+        metadata=field_attr.metadata,
+    )
+    dataclasses_field.name = field_attr.name
+    dataclasses_field.type = field_attr.type
+
+    return dataclasses_field
+
+
+def _make_non_instantiable_init():
+    def __init__(self, *args, **kwargs):
+        raise TypeError(f"Trying to instantiate '{type(self).__name__}' abstract class.")
+
+    return __init__
+
+
+def _make_post_init(has_post_init):
+    if has_post_init:
+
+        def __attrs_post_init__(self):
+            if attr._config._run_validators is True:
+                for validator in type(self).__datamodel_validators__:
+                    validator.__get__(self)(self)
+                self.__post_init__()
+
+    else:
+
+        def __attrs_post_init__(self):
+            if attr._config._run_validators is True:
+                for validator in type(self).__datamodel_validators__:
+                    validator.__get__(self)(self)
+
+    return __attrs_post_init__
+
+
+def datamodel(
+    cls=None,
+    /,
+    *,
+    init=True,
+    repr=True,
+    eq=True,
+    order=False,
+    unsafe_hash=False,
+    frozen=False,
+    instantiable: bool = True,
+):
+    """Returns the same class as was passed in, with dunder methods
+    added based on the fields defined in the class.
+    Examines PEP 526 __annotations__ to determine fields.
+    If init is true, an __init__() method is added to the class. If
+    repr is true, a __repr__() method is added. If order is true, rich
+    comparison dunder methods are added. If unsafe_hash is true, a
+    __hash__() method function is added. If frozen is true, fields may
+    not be assigned to after instance creation.
+    """
+
+    mro_bases = cls.__mro__[1:]
+    resolved_annotations = typing.get_type_hints(cls)
+
+    # Create attr.ibs for annotated fields (excluding ClassVars)
+    if "__annotations__" not in cls.__dict__:
+        cls.__annotations__ = {}
+    annotations = cls.__dict__["__annotations__"]
+
+    # Create attrib definitions with automatic type validators (and converters)
+    # for the annotated fields. The original annotations are used for iteration
+    # since the resolved annotations may also contain superclasses' annotations
+    for key in annotations:
+        type_hint = resolved_annotations[key]
+        if typing.get_origin(type_hint) is not ClassVar:
+            type_validator = _make_strict_type_validator(type_hint)
+            if key not in cls.__dict__:
+                setattr(cls, key, attr.ib(validator=type_validator))
+            elif not isinstance(cls.__dict__[key], attr._make._CountingAttr):
+                setattr(cls, key, attr.ib(default=cls.__dict__[key], validator=type_validator))
+            else:
+                # A field() function has been used to customize the definition:
+                # prepend the type validator to the list of provided validators (if any)
+                cls.__dict__[key]._validator = (
+                    type_validator
+                    if cls.__dict__[key]._validator is None
+                    else attr._make.and_(type_validator, cls.__dict__[key]._validator)
+                )
+
+                # If requested, add auto converter
+                if cls.__dict__[key].converter is AUTO_CONVERTER:
+                    cls.__dict__[key].converter = _make_type_coercer(type_hint)
+
+    # Verify that there are not fields without type annotation
+    for key, value in cls.__dict__.items():
+        # print(key, type(value), value)
+        if isinstance(value, attr._make._CountingAttr) and (
+            key not in annotations or typing.get_origin(resolved_annotations[key]) is ClassVar
+        ):
+            raise TypeError(f"Missing type annotation in '{key}' field.")
+
+    # Collect validators: root validators from bases
+    root_validators = []
+    for base in reversed(mro_bases):
+        for validator in getattr(base, _ROOT_VALIDATORS_NAME, []):
+            if validator not in root_validators:
+                root_validators.append(validator)
+
+    # Collect validators: field and root validators in current class
+    field_validators = {}
+    for _, member in cls.__dict__.items():
+        if hasattr(member, _FIELD_VALIDATOR_TAG):
+            field_name = getattr(member, _FIELD_VALIDATOR_TAG)
+            delattr(member, _FIELD_VALIDATOR_TAG)
+            field_validators[field_name] = member
+        elif hasattr(member, _ROOT_VALIDATOR_TAG):
+            delattr(member, _ROOT_VALIDATOR_TAG)
+            root_validators.append(member)
+
+    # Add collected field validators
+    for field_name, field_validator in field_validators.items():
+        field_attrib = cls.__dict__.get(field_name, None)
+        if not field_attrib:
+            # Field has not been defined in the current class namespace,
+            # look for field definition in the base classes.
+            base_field_attr = _get_attribute_from_bases(field_name, mro_bases, annotations)
+            if base_field_attr:
+                # Create a new field in the current class cloning the existing
+                # definition and add the new validator (attrs recommendation)
+                field_attrib = _make_counting_attr_from_attr(
+                    base_field_attr,
+                )
+                setattr(cls, field_name, field_attrib)
+            else:
+                raise TypeError(f"Validator assigned to non existing '{field_name}' field.")
+
+        # Add field validator using field_attr.validator
+        assert isinstance(field_attrib, attr._make._CountingAttr)
+        field_attrib.validator(field_validator)
+
+    setattr(cls, _ROOT_VALIDATORS_NAME, tuple(root_validators))
+
+    # Create __init__
+    if "__init__" in cls.__dict__:
+        raise TypeError(
+            "DataModels do not support custom '__init__' methods, use '__post_init__' instead."
+        )
+
+    has_post_init = "__post_init__" in cls.__dict__
+    if not instantiable:
+        cls.__init__ = _make_non_instantiable_init()
+    else:
+        # For dataclasses emulation, __attrs_post_init__ calls __post_init__ (if it exists)
+        cls.__attrs_post_init__ = _make_post_init(has_post_init)
+
+    # Convert class into an attrs class
+    new_cls = attr.define(**_ATTR_SETTINGS)(cls)
+    assert new_cls is cls
+
+    # Add dataclasses compatibility
+    dataclass_fields = []
+    for field_attr in cls.__attrs_attrs__:
+        dataclass_fields.append(_make_dataclass_field_from_attr(field_attr))
+    cls.__dataclass_fields__ = tuple(dataclass_fields)
+
+    # Add extra members
+    cls.__is_generic__ = hasattr(cls, "__parameters__") and len(cls.__parameters__) > 0
+
+    return cls
 
 
 class DataModelMeta(abc.ABCMeta):
@@ -209,7 +433,7 @@ class DataModelMeta(abc.ABCMeta):
                 raise TypeError(
                     "DataModels do not support custom '__init__' methods, use '__post_init__(self)' instead."
                 )
-            namespace["__init__"] = mcls._make_invalid_init()
+            namespace["__init__"] = mcls._make_non_instantiable_init()
         else:
             # For dataclasses emulation, __attrs_post_init__ calls __post_init__ (if it exists)
             namespace["__attrs_post_init__"] = mcls._make_attrs_post_init(has_post_init)
@@ -334,7 +558,7 @@ class DataModelMeta(abc.ABCMeta):
         return cls_method
 
     @staticmethod
-    def _make_invalid_init():
+    def _make_non_instantiable_init():
         def __init__(self, *args, **kwargs):
             raise TypeError(f"Trying to instantiate '{type(self).__name__}' abstract class.")
 
