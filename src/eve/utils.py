@@ -237,6 +237,9 @@ def optional_lru_cache(func=None, *, maxsize=128, typed=False):
         Inside func([1], [3])
         [1, 3]
 
+    Notes:
+        Based on :func:`typing._tp_cache`.
+
     """
 
     def _decorator(func):

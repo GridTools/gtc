@@ -23,9 +23,11 @@ import abc
 import collections
 import dataclasses
 import inspect
+import itertools
 import sys
+import types
 import typing
-from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type
+from typing import Any, Callable, ClassVar, Dict, Generic, Optional, Tuple, Type
 
 import attr
 
@@ -225,9 +227,17 @@ class DataModelMeta(abc.ABCMeta):
             dataclass_fields.append(mcls._make_dataclass_field_from_attr(field_attr))
         setattr(cls, "__dataclass_fields__", tuple(dataclass_fields))
 
+        # print(f"\nNEW TMP CLASS {name}-----")
+        # print(f"{tmp_plain_cls.__parameters__=}, {tmp_plain_cls.__bases__=}, {tmp_plain_cls.__orig_bases__=}")
+        # assert tmp_plain_cls.__parameters__ == cls.__parameters__
+        # assert tmp_plain_cls.__bases__ == cls.__bases__
+        # assert tmp_plain_cls.__orig_bases__ == cls.__orig_bases__
+
         return cls
 
     def __getitem__(cls, args):
+        print(f"__getitem__: {cls}, {args=}")
+
         type_args = args if isinstance(args, tuple) else (args,)
         return cls.__concretize__(*type_args)
 
@@ -248,14 +258,15 @@ class DataModelMeta(abc.ABCMeta):
                 f"Only 'type' and 'typing.TypeVar' values can be passed as arguments "
                 f"to instantiate a generic model class (received: {type_args})."
             )
-        if len(type_args) > len(cls.__parameters__):
+        if len(type_args) != len(cls.__parameters__):
             raise TypeError(
-                f"Instantiating '{cls.__name__}' generic model with too many parameters "
+                f"Instantiating '{cls.__name__}' generic model with a wrong number of parameters "
                 f"({len(type_args)} used, {len(cls.__parameters__)} expected)."
             )
 
         # Get actual types for generic fields
         type_params_map = dict(zip(cls.__parameters__, type_args))
+        print(f"CONCRETIZE: {cls.__parameters__=}, {type_args=}, {type_params_map=}")
         concrete_annotations = {}
         for f_name, f_type in typing.get_type_hints(cls).items():
             if isinstance(f_type, typing.TypeVar) and f_type in type_params_map:
@@ -267,53 +278,32 @@ class DataModelMeta(abc.ABCMeta):
                 concrete_type_args = tuple([type_params_map[p] for p in f_type.__parameters__])
                 concrete_annotations[f_name] = f_type[concrete_type_args]
 
-        # Compute concrete class name and concrete module (for pickling)
+        # Create new concrete class
+        namespace = {
+            "__annotations__": concrete_annotations,
+            "__module__": module if module else cls.__module__,
+        }
+
         if not class_name:
-            class_name = f"{cls.__name__}__{'_'.join(t.__name__ for t in type_args)}__"
-            # class_name = f"{cls.__name__}__{''.join(t.__name__.capitalize() for t in type_args)}__"
-            # TODO: add position of arg to the name encoding
+            arg_names = [
+                type_params_map[tp_var].__name__ if tp_var in type_params_map else tp_var.__name__
+                for tp_var in cls.__parameters__
+            ]
+            class_name = f"{cls.__name__}__{'_'.join(arg_names)}"
 
-        if module:
-            # If a module name has been explicitly provided, use it
-            is_module_global_def = True
+        # Fix Generic typing variables
+        alias = typing._GenericAlias(cls, type_args)
+        bases = (cls, Generic[alias.__parameters__]) if alias.__parameters__ else (cls,)
 
-        else:
-            is_module_global_def = False
-
-            # For pickling to work, the __module__ variable needs to be set to the frame
-            # where the new class is created. The introspection will be skipped if the Python
-            # interpreter does not define properly the required 'sys._getframe' function
-            # (e.g. Jython, IronPython), or if the user has already specified a particular
-            # module name (partially based on 'namedtuple' and 'pydantic' sources)
-            frame = inspect.currentframe()
-            caller_frame = None
-            try:
-                if frame:
-                    caller_frame = frame.f_back.f_back  # .f_back -> utils.optional_lru_cache
-                    info = inspect.getframeinfo(caller_frame)
-                    if info.filename == __file__ and info.function == "__getitem__":
-                        # Called from generic model __getitem__, not directly (usual case)
-                        caller_frame = caller_frame.f_back
-                        info = inspect.getframeinfo(caller_frame)
-
-                    # Get module name
-                    module = str(caller_frame.f_globals.get("__name__"))
-
-                    # Check that new class is created at module global global scope
-                    is_module_global_def = caller_frame.f_locals is caller_frame.f_globals
-            finally:
-                del frame, caller_frame
-
-        # print("MOD=====", module, is_module_global_def)
-        namespace = {"__annotations__": concrete_annotations}
-        if module:
-            namespace["__module__"] = module
-
-        concrete_cls = type(class_name, (cls,), namespace)
+        # concrete_cls = type(class_name, bases, namespace)
+        concrete_cls = types.new_class(class_name, bases, exec_body=lambda ns: ns.update(namespace))
+        for attribute in ("__origin__", "__args__"):
+            setattr(concrete_cls, attribute, getattr(alias, attribute))
+        # concrete_cls.__orig_bases__ = cls
         assert concrete_cls.__module__ == module or not module
 
-        if support_pickling and is_module_global_def:
-            # Add reference to the new class in the module
+        # For pickling to work, the new class has to be added to the proper module
+        if support_pickling:
             reference_module_globals = sys.modules[concrete_cls.__module__].__dict__
             if (
                 overwrite_definition is False
@@ -372,7 +362,7 @@ class DataModelMeta(abc.ABCMeta):
     @staticmethod
     def _make_is_generic():
         def __is_generic__(cls):
-            return len(cls.__parameters__) > 0 if hasattr(cls, "__parameters__") else False
+            return hasattr(cls, "__parameters__") and len(cls.__parameters__) > 0
 
         return utils.classproperty(__is_generic__)
 

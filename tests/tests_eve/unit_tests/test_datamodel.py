@@ -738,7 +738,7 @@ class TestGenericModels:
     @pytest.mark.parametrize("concrete_type", [int, float, str])
     def test_generic_model_instantiation(self, concrete_type):
         Model = SimpleGenericModel[concrete_type]
-        assert f"__{concrete_type.__name__}__" in Model.__name__
+        assert concrete_type.__name__ in Model.__name__
 
         Model1 = SimpleGenericModel[concrete_type]
         Model2 = SimpleGenericModel[concrete_type]
