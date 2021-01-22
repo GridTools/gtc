@@ -149,7 +149,7 @@ def tuple_type_attrs_validator(type_args, tuple_type=tuple):
 
 
 def union_type_attrs_validator(type_args):
-    if len(type_args) == 2 and (type_args[1] is type(None)):
+    if len(type_args) == 2 and (type_args[1] is type(None)):  # noqa: E721  # use isinstance()
         non_optional_validator = strict_type_attrs_validator(type_args[0])
         return attr.validators.optional(non_optional_validator)
     else:
@@ -209,6 +209,35 @@ def strict_type_attrs_validator(type_hint):
 
 
 # --- DataModel ---
+def _collect_field_validators(cls, *, delete_tag=True):
+    """ Collect field validators from class."""
+    result = {}
+    for _, member in cls.__dict__.items():
+        if hasattr(member, _FIELD_VALIDATOR_TAG):
+            field_name = getattr(member, _FIELD_VALIDATOR_TAG)
+            delattr(member, _FIELD_VALIDATOR_TAG)
+            result[field_name] = member
+
+    return result
+
+
+def _collect_root_validators(cls, *, delete_tag=True):
+    """ Collect root validators from class (including bases)."""
+    result = []
+    for base in reversed(cls.__mro__[1:]):
+        for validator in getattr(base, _ROOT_VALIDATORS_NAME, []):
+            if validator not in result:
+                result.append(validator)
+
+    for _, member in cls.__dict__.items():
+        if hasattr(member, _ROOT_VALIDATOR_TAG):
+            if delete_tag:
+                delattr(member, _ROOT_VALIDATOR_TAG)
+            result.append(member)
+
+    return result
+
+
 def _get_attribute_from_bases(
     name: str, mro: Tuple[Type], annotations: Optional[Dict[str, Any]] = None
 ) -> Optional[attr.Attribute]:
@@ -388,8 +417,8 @@ def field(
     default_factory=NOTHING,
     converter=None,
     init=True,
-    repr=True,
-    hash=None,
+    repr=True,  # noqa: A002   # shadowing 'repr' python builtin
+    hash=None,  # noqa: A002   # shadowing 'hash' python builtin
     compare=True,
     metadata=None,
 ):
@@ -438,8 +467,8 @@ def datamodel(
     cls=None,
     /,
     *,
-    init=True,
-    repr=True,
+    init=True,  # noqa: A002   # shadowing 'repr' python builtin
+    repr=True,  # noqa: A002   # shadowing 'repr' python builtin
     eq=True,
     order=False,
     unsafe_hash=False,
@@ -456,13 +485,11 @@ def datamodel(
     not be assigned to after instance creation.
     """
 
-    mro_bases = cls.__mro__[1:]
-    resolved_annotations = typing.get_type_hints(cls)
-
-    # Create attr.ibs for annotated fields (excluding ClassVars)
     if "__annotations__" not in cls.__dict__:
         cls.__annotations__ = {}
     annotations = cls.__dict__["__annotations__"]
+    mro_bases = cls.__mro__[1:]
+    resolved_annotations = typing.get_type_hints(cls)
 
     # Create attrib definitions with automatic type validators (and converters)
     # for the annotated fields. The original annotations are used for iteration
@@ -484,34 +511,18 @@ def datamodel(
                     else attr._make.and_(type_validator, cls.__dict__[key]._validator)
                 )
 
-                # If requested, add auto converter
                 if cls.__dict__[key].converter is AUTO_CONVERTER:
                     cls.__dict__[key].converter = _make_type_coercer(type_hint)
 
-    # Verify that there are not fields without type annotation
+    # All fields should be annotated with type hints
     for key, value in cls.__dict__.items():
         if isinstance(value, attr._make._CountingAttr) and (
             key not in annotations or typing.get_origin(resolved_annotations[key]) is ClassVar
         ):
             raise TypeError(f"Missing type annotation in '{key}' field.")
 
-    # Collect validators: root validators from bases
-    root_validators = []
-    for base in reversed(mro_bases):
-        for validator in getattr(base, _ROOT_VALIDATORS_NAME, []):
-            if validator not in root_validators:
-                root_validators.append(validator)
-
-    # Collect validators: field and root validators in current class
-    field_validators = {}
-    for _, member in cls.__dict__.items():
-        if hasattr(member, _FIELD_VALIDATOR_TAG):
-            field_name = getattr(member, _FIELD_VALIDATOR_TAG)
-            delattr(member, _FIELD_VALIDATOR_TAG)
-            field_validators[field_name] = member
-        elif hasattr(member, _ROOT_VALIDATOR_TAG):
-            delattr(member, _ROOT_VALIDATOR_TAG)
-            root_validators.append(member)
+    root_validators = _collect_root_validators(cls)
+    field_validators = _collect_field_validators(cls)
 
     # Add collected field validators
     for field_name, field_validator in field_validators.items():
@@ -523,7 +534,9 @@ def datamodel(
             if base_field_attr:
                 # Create a new field in the current class cloning the existing
                 # definition and add the new validator (attrs recommendation)
-                field_attrib = _make_counting_attr_from_attr(base_field_attr,)
+                field_attrib = _make_counting_attr_from_attr(
+                    base_field_attr,
+                )
                 setattr(cls, field_name, field_attrib)
             else:
                 raise TypeError(f"Validator assigned to non existing '{field_name}' field.")
@@ -534,7 +547,7 @@ def datamodel(
 
     setattr(cls, _ROOT_VALIDATORS_NAME, tuple(root_validators))
 
-    # Create __init__
+    # Update class with attr.s features
     if "__init__" in cls.__dict__:
         raise TypeError(
             "DataModels do not support custom '__init__' methods, use '__post_init__' instead."
@@ -547,19 +560,15 @@ def datamodel(
         # For dataclasses emulation, __attrs_post_init__ calls __post_init__ (if it exists)
         cls.__attrs_post_init__ = _make_post_init(has_post_init)
 
-    # Add concrete instantiation methods
     cls.__class_getitem__ = _make_data_model_class_getitem()
     cls.__concretize__ = _make_data_model_concretize()
-
-    # Add other extra members
     cls.__is_generic__ = hasattr(cls, "__parameters__") and len(cls.__parameters__) > 0
     cls.__is_instantiable__ = bool(instantiable)
 
-    # Convert class into an attrs class
     new_cls = attr.define(**_ATTR_SETTINGS)(cls)
     assert new_cls is cls
 
-    # Add dataclasses compatibility
+    # For dataclasses compatibility
     dataclass_fields = []
     for field_attr in cls.__attrs_attrs__:
         dataclass_fields.append(_make_dataclass_field_from_attr(field_attr))
@@ -575,7 +584,7 @@ class DataModel:
         /,
         *,
         init=True,
-        repr=True,
+        repr=True,  # noqa: A002   # shadowing 'repr' python builtin
         eq=True,
         order=False,
         unsafe_hash=False,
