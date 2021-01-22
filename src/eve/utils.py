@@ -215,7 +215,9 @@ def itemgetter_(key: Any, default: Any = NOTHING) -> Callable[[Any], Any]:
     return lambda obj: getitem_(obj, key, default=default)
 
 
-def optional_lru_cache(func=None, *, maxsize=128, typed=False):
+def optional_lru_cache(
+    func: Callable = None, *, maxsize: int = 128, typed: bool = False
+) -> Union[Callable, Callable[[Callable], Callable]]:
     """Wrapper around :func:`functools.lru_cache` calling the original function
     when arguments are not hashable.
 
@@ -242,16 +244,16 @@ def optional_lru_cache(func=None, *, maxsize=128, typed=False):
 
     """
 
-    def _decorator(func):
+    def _decorator(func: Callable) -> Callable:
         cached = functools.lru_cache(maxsize=maxsize, typed=typed)(func)
 
         @functools.wraps(func)
-        def inner(*args, **kwds):
+        def inner(*args: Any, **kwargs: Any) -> Any:
             try:
-                return cached(*args, **kwds)
+                return cached(*args, **kwargs)
             except TypeError:
                 # Catch errors due to non-hashable arguments and fallback to original function
-                return func(*args, **kwds)
+                return func(*args, **kwargs)
 
         return inner
 
@@ -780,7 +782,10 @@ class XIterator(collections.abc.Iterator, Iterable[T]):
         return XIterator(itertools.chain(self.iterator, *iterators))
 
     def diff(
-        self, *others: Iterable, default: Any = NOTHING, key: Union[NOTHING, Callable] = NOTHING,
+        self,
+        *others: Iterable,
+        default: Any = NOTHING,
+        key: Union[NOTHING, Callable] = NOTHING,
     ) -> XIterator[Tuple[T, S]]:
         """Diff iterators (equivalent to ``toolz.itertoolz.diff(self, *others)``).
 
