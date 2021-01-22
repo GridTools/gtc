@@ -213,7 +213,6 @@ def literal_type_attrs_validator(*type_args: Type) -> attr._ValidatorType:
 
 
 def tuple_type_attrs_validator(*type_args: Type, tuple_type: Type = tuple) -> attr._ValidatorType:
-    print("TUUUUU", type_args, len(type_args), type_args[1])
     if len(type_args) == 2 and (type_args[1] is Ellipsis):
         member_type_hint = type_args[0]
         return attr.validators.deep_iterable(
@@ -238,8 +237,8 @@ def strict_type_attrs_validator(type_hint: Type) -> attr._ValidatorType:
     origin_type = typing.get_origin(type_hint)
     type_args = typing.get_args(type_hint)
 
-    # print(f"strict_type_attrs_validator({type_hint}): {type_hint=}, {origin_type=}, {type_args=}")
-    if isinstance(type_hint, type) and not type_args:
+    if isinstance(type_hint, type):
+        assert not type_args
         return attr.validators.instance_of(type_hint)
     elif isinstance(type_hint, typing.TypeVar):
         if type_hint.__bound__:
@@ -318,6 +317,19 @@ def _get_attribute_from_bases(
                 return typing.cast(attr.Attribute, base_field_attrib)
 
     return None
+
+
+def _replace_typevars(type_hint: Type, type_params_map: Mapping[TypeVar, Type]) -> Type:
+    if isinstance(type_hint, typing.TypeVar):
+        assert type_hint in type_params_map
+        return type_params_map[type_hint]
+    elif getattr(type_hint, "__parameters__", []):
+        new_type_args = tuple(
+            _replace_typevars(t, type_params_map) for t in typing.get_args(type_hint)
+        )
+        return type_hint[new_type_args]
+    else:
+        return type_hint
 
 
 def _make_counting_attr_from_attr(
@@ -415,8 +427,7 @@ def _make_data_model_concretize() -> classmethod:
         overwrite_definition: bool = True,
         support_pickling: bool = True,
     ) -> Type[DataModelType]:
-        # Validate generic specialization
-        if not cls.__is_generic__:
+        if "__datamodel_fields__" not in cls.__dict__ or not cls.__is_generic__:
             raise TypeError(f"'{cls.__name__}' is not a generic model class.")
         if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
             raise TypeError(
@@ -431,17 +442,13 @@ def _make_data_model_concretize() -> classmethod:
 
         # Get actual types for generic fields
         type_params_map = dict(zip(cls.__parameters__, type_args))
-        print(f"CONCRETIZE: {cls.__parameters__=}, {type_args=}, {type_params_map=}")
-        concrete_annotations = {}
-        for f_name, f_type in typing.get_type_hints(cls).items():
-            if isinstance(f_type, typing.TypeVar) and f_type in type_params_map:
-                concrete_annotations[f_name] = type_params_map[f_type]
-                continue
-
-            origin = typing.get_origin(f_type)
-            if origin not in (None, ClassVar) and getattr(f_type, "__parameters__", None):
-                concrete_type_args = tuple([type_params_map[p] for p in f_type.__parameters__])
-                concrete_annotations[f_name] = f_type[concrete_type_args]
+        concrete_annotations = {
+            f_name: _replace_typevars(f_type, type_params_map)
+            for f_name, f_type in typing.get_type_hints(cls).items()
+        }
+        print(
+            f"CONCRETIZE: {cls.__parameters__=}, {type_args=}, {type_params_map=}, {concrete_annotations=}"
+        )
 
         # Create new concrete class
         namespace = {
@@ -480,7 +487,11 @@ def _make_data_model_concretize() -> classmethod:
                 )
             reference_module_globals[class_name] = concrete_cls
 
-        return concrete_cls
+        return (
+            concrete_cls
+            if "__datamodel_fields__" in concrete_cls.__dict__
+            else _make_datamodel(concrete_cls)
+        )
 
     return classmethod(__concretize__)
 
@@ -579,11 +590,13 @@ def _make_datamodel(
     new_cls = attr.define(**_ATTR_SETTINGS)(cls)  # type: ignore  # attr.define is not visible for mypy
     assert new_cls is cls
 
-    # For dataclasses compatibility
+    # For dataclasses emulation
     dataclass_fields = []
     for field_attr in cls.__attrs_attrs__:
         dataclass_fields.append(_make_dataclass_field_from_attr(field_attr))
     cls.__dataclass_fields__ = tuple(dataclass_fields)
+
+    cls.__datamodel_fields__ = cls.__dataclass_fields__
 
     return cls
 
@@ -664,7 +677,7 @@ def datamodel(
             instantiable=instantiable,
         )
 
-    # This works for both @datamodel or @datamodel() calls
+    # This works for both @datamodel or @datamodel() decorations
     return _decorator(cls) if cls is not None else _decorator
 
 
@@ -683,7 +696,7 @@ class DataModel:
         instantiable: bool = True,
         **kwargs: Any,
     ) -> None:
-        super().__init_subclass__(**kwargs)  # type: ignore  # super() might be different than object
+        super().__init_subclass__(**kwargs)  # type: ignore  # super() does not need to be object
         _make_datamodel(
             cls,
             init=init,
