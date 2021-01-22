@@ -216,7 +216,7 @@ def itemgetter_(key: Any, default: Any = NOTHING) -> Callable[[Any], Any]:
 
 
 def optional_lru_cache(
-    func: Callable = None, *, maxsize: int = 128, typed: bool = False
+    func: Callable = None, *, maxsize: Optional[int] = 128, typed: bool = False
 ) -> Union[Callable, Callable[[Callable], Callable]]:
     """Wrapper around :func:`functools.lru_cache` calling the original function
     when arguments are not hashable.

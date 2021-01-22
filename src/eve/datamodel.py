@@ -32,13 +32,12 @@ from typing import (
     Generic,
     List,
     Mapping,
-    NewType,
     Optional,
     Protocol,
     Tuple,
-    Union,
     Type,
     TypeVar,
+    Union,
 )
 
 import attr
@@ -63,33 +62,6 @@ AUTO_CONVERTER = _SENTINEL()
 # -- Typing definitions --
 T = TypeVar("T")
 
-# Copied from attrs
-# class _AttrsAttribute(Protocol[T]):
-#     name: str
-#     default: Optional[T]
-#     validator: Optional[_AttrsValidatorType[T]]
-#     repr: _AttrsReprArgType
-#     cmp: bool
-#     eq: bool
-#     order: bool
-#     hash: Optional[bool]
-#     init: bool
-#     converter: Optional[_AttrsConverterType]
-#     metadata: Dict[Any, Any]
-#     _type: Optional[Type[T]]
-#     kw_only: bool
-#     on_setattr: _AttrsOnSetAttrType
-
-
-# _AttrsConverterType = Callable[[Any], Any]
-# _AttrsOnSetAttrType = Callable[[Any, _AttrsAttribute[Any], Any], Any]
-# _AttrsReprType = Callable[[Any], str]
-# _AttrsReprArgType = Union[bool, _AttrsReprType]
-# _AttrsValidatorType = Callable[[Any, _AttrsAttribute[T], T], Any]
-# # _FilterType = Callable[[_AttrsAttribute[T], T], bool]
-# # _NoOpType = NewType("_NoOpType", object)
-# # _OnSetAttrArgType = Union[_AttrsOnSetAttrType, List[_AttrsOnSetAttrType], _NoOpType]
-
 
 class _AttrClass(Protocol):
     __attrs_attrs__: ClassVar[Tuple[attr.Attribute, ...]]
@@ -111,7 +83,9 @@ class BaseDataModelType(_AttrClass, _DataClassType, Protocol):
     ) -> Type[DataModelType]:
         ...
 
-    __datamodel_validators__: ClassVar[Tuple[RootValidatorType, ...]]
+    __datamodel_validators__: ClassVar[
+        Tuple[classmethod, ...]
+    ]  # ClassVar[Tuple[classmethod[RootValidatorType], ...]]
     __is_generic__: ClassVar[bool]
     __is_instantiable__: ClassVar[bool]
 
@@ -299,7 +273,7 @@ def strict_type_attrs_validator(type_hint: Type) -> attr._ValidatorType:
     else:
         raise TypeError(f"Type description '{type_hint}' is not supported.")
 
-    assert False
+    assert False  # noqa
 
 
 # -- DataModel --
