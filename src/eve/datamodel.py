@@ -24,13 +24,27 @@ import dataclasses
 import sys
 import types
 import typing
-from typing import Any, Callable, ClassVar, Dict, Generic, Optional, Tuple, Type
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Generic,
+    List,
+    NewType,
+    Optional,
+    Protocol,
+    Tuple,
+    Union,
+    Type,
+    TypeVar,
+)
 
 import attr
 
 
-from . import utils  # isort:skip
-from .concepts import NOTHING  # isort:skip
+from . import utils
+from .concepts import NOTHING
 
 
 _ATTR_SETTINGS = types.MappingProxyType({"auto_attribs": True, "slots": False, "kw_only": True})
@@ -46,17 +60,75 @@ class _SENTINEL:
 AUTO_CONVERTER = _SENTINEL()
 
 
-# --- Validators ---
-@attr.define
+# -- Typing definitions --
+T = TypeVar("T")
+
+# Copied from attrs
+class _AttrsAttribute(Protocol[T]):
+    name: str
+    default: Optional[T]
+    validator: Optional[_AttrsValidatorType[T]]
+    repr: _AttrsReprArgType
+    cmp: bool
+    eq: bool
+    order: bool
+    hash: Optional[bool]
+    init: bool
+    converter: Optional[_AttrsConverterType]
+    metadata: Dict[Any, Any]
+    type: Optional[Type[T]]
+    kw_only: bool
+    on_setattr: _AttrsOnSetAttrType
+
+
+_AttrsConverterType = Callable[[Any], Any]
+_AttrsOnSetAttrType = Callable[[Any, _AttrsAttribute[Any], Any], Any]
+_AttrsReprType = Callable[[Any], str]
+_AttrsReprArgType = Union[bool, _AttrsReprType]
+_AttrsValidatorType = Callable[[Any, _AttrsAttribute[T], T], Any]
+# _FilterType = Callable[[_AttrsAttribute[T], T], bool]
+# _NoOpType = NewType("_NoOpType", object)
+# _OnSetAttrArgType = Union[_AttrsOnSetAttrType, List[_AttrsOnSetAttrType], _NoOpType]
+
+
+class _AttrClass(Protocol):
+    __attrs_attrs__: ClassVar[Tuple[_AttrsAttribute, ...]]
+
+
+class _DataClassType(Protocol):
+    __dataclass_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
+
+
+class AttributeDefinition(_AttrsAttribute[T]):
+    ...
+
+
+class DataModelType(_AttrClass, _DataClassType, Protocol):
+    __datamodel_validators__: ClassVar[Tuple[RootValidatorType, ...]]
+    __is_generic__: ClassVar[bool]
+    __is_instantiable__: ClassVar[bool]
+
+
+ValidatorType = Callable[[DataModelType, _AttrsAttribute[T], T], None]
+RootValidatorType = Callable[[Type[DataModelType], DataModelType], None]
+
+
+# -- Validators --
 class _TupleValidator:
     """
     Compose many validators to a single one.
     """
 
-    validators: Tuple[Callable]
+    validators: Tuple[_AttrsValidatorType, ...]
     tuple_type: Type[Tuple]
 
-    def __call__(self, instance, attribute, value):
+    def __init__(
+        self, validators: Tuple[_AttrsValidatorType, ...], tuple_type: Type[Tuple]
+    ) -> None:
+        self.validators
+        self.tuple_type = tuple_type
+
+    def __call__(self, instance: _AttrClass, attribute: _AttrsAttribute, value: Any) -> None:
         if not isinstance(value, self.tuple_type):
             raise TypeError(
                 f"In '{attribute.name}' validation, got '{value}' that is a {type(value)} instead of {self.tuple_type}."
@@ -77,16 +149,21 @@ class _TupleValidator:
             ) from e
 
 
-@attr.define
 class _OrValidator:
     """
     Compose many validators to a single one.
     """
 
-    validators: Tuple[Callable]
+    validators: Tuple[_AttrsValidatorType, ...]
     error_type: Type[Exception]
 
-    def __call__(self, instance, attribute, value):
+    def __init__(
+        self, validators: Tuple[_AttrsValidatorType, ...], error_type: Type[Exception]
+    ) -> None:
+        self.validators
+        self.error_type = error_type
+
+    def __call__(self, instance: _AttrClass, attribute: _AttrsAttribute, value: Any) -> None:
         passed = False
         for v in self.validators:
             try:
@@ -102,7 +179,6 @@ class _OrValidator:
             )
 
 
-@attr.define
 class _LiteralValidator:
     """
     Literal validator.
@@ -110,7 +186,10 @@ class _LiteralValidator:
 
     literal: Any
 
-    def __call__(self, instance, attribute, value):
+    def __init__(self, literal: Any) -> None:
+        self.literal = literal
+
+    def __call__(self, instance: _AttrClass, attribute: _AttrsAttribute, value: Any) -> None:
         if isinstance(self.literal, bool):
             valid = value is self.literal
         else:
@@ -121,23 +200,28 @@ class _LiteralValidator:
             )
 
 
-def empty_attrs_validator(instance, attribute, value):
-    pass
+def empty_attrs_validator() -> _AttrsValidatorType:
+    def _empty_validator(instance: _AttrClass, attribute: _AttrsAttribute, value: Any) -> None:
+        pass
+
+    return _empty_validator
 
 
-def or_attrs_validator(*validators, error_type: Type[Exception]):
-    vals = tuple(utils.flatten(validators))
-    if len(vals) == 1:
-        return vals[0]
+def or_attrs_validator(
+    *validators: _AttrsValidatorType, error_type: Type[Exception]
+) -> _AttrsValidatorType:
+    # vals: Tuple[_AttrsValidatorType] = tuple(utils.flatten(validators))
+    if len(validators) == 1:
+        return validators[0]
     else:
-        return _OrValidator(vals, error_type)
+        return _OrValidator(validators, error_type=error_type)
 
 
-def literal_type_attrs_validator(type_args):
+def literal_type_attrs_validator(*type_args: Type) -> _AttrsValidatorType:
     return or_attrs_validator([_LiteralValidator(t) for t in type_args], error_type=ValueError)
 
 
-def tuple_type_attrs_validator(type_args, tuple_type=tuple):
+def tuple_type_attrs_validator(*type_args: Type, tuple_type: Type = tuple) -> _AttrsValidatorType:
     if len(type_args) == 2 and (type_args[1] is Ellipsis):
         member_type_hint = type_args[0]
         return attr.validators.deep_iterable(
@@ -148,45 +232,37 @@ def tuple_type_attrs_validator(type_args, tuple_type=tuple):
         return _TupleValidator(tuple(strict_type_attrs_validator(t) for t in type_args), tuple_type)
 
 
-def union_type_attrs_validator(type_args):
+def union_type_attrs_validator(*type_args: Type) -> _AttrsValidatorType:
     if len(type_args) == 2 and (type_args[1] is type(None)):  # noqa: E721  # use isinstance()
         non_optional_validator = strict_type_attrs_validator(type_args[0])
         return attr.validators.optional(non_optional_validator)
     else:
         return or_attrs_validator(
-            [strict_type_attrs_validator(t) for t in type_args], error_type=TypeError
+            *(strict_type_attrs_validator(t) for t in type_args), error_type=TypeError
         )
 
 
-def strict_type_attrs_validator(type_hint):
+def strict_type_attrs_validator(type_hint: Type) -> _AttrsValidatorType:
     origin_type = typing.get_origin(type_hint)
     type_args = typing.get_args(type_hint)
-
     # print(f"strict_type_attrs_validator({type_hint}): {type_hint=}, {origin_type=}, {type_args=}")
 
     if isinstance(type_hint, type) and not type_args:
         return attr.validators.instance_of(type_hint)
-
     elif isinstance(type_hint, typing.TypeVar):
         if type_hint.__bound__:
             return attr.validators.instance_of(type_hint.__bound__)
         else:
-            return empty_attrs_validator
-
+            return empty_attrs_validator()
     elif type_hint is Any:
-        return empty_attrs_validator
-
+        return empty_attrs_validator()
     elif origin_type is typing.Literal:
         return literal_type_attrs_validator(type_args)
-
     elif origin_type is typing.Union:
         return union_type_attrs_validator(type_args)
-
     elif isinstance(origin_type, type):
-
         if issubclass(origin_type, tuple):
             return tuple_type_attrs_validator(type_args, origin_type)
-
         elif issubclass(origin_type, (collections.abc.Sequence, collections.abc.Set)):
             assert len(type_args) == 1
             member_type_hint = type_args[0]
@@ -194,7 +270,6 @@ def strict_type_attrs_validator(type_hint):
                 member_validator=strict_type_attrs_validator(member_type_hint),
                 iterable_validator=attr.validators.instance_of(origin_type),
             )
-
         elif issubclass(origin_type, collections.abc.Mapping):
             assert len(type_args) == 2
             key_type_hint, value_type_hint = type_args
@@ -203,20 +278,20 @@ def strict_type_attrs_validator(type_hint):
                 value_validator=strict_type_attrs_validator(value_type_hint),
                 mapping_validator=attr.validators.instance_of(origin_type),
             )
-
     else:
         raise TypeError(f"Type description '{type_hint}' is not supported.")
 
 
-# --- DataModel ---
+# -- DataModel --
 def _collect_field_validators(cls, *, delete_tag=True):
     """ Collect field validators from class."""
     result = {}
     for _, member in cls.__dict__.items():
         if hasattr(member, _FIELD_VALIDATOR_TAG):
             field_name = getattr(member, _FIELD_VALIDATOR_TAG)
-            delattr(member, _FIELD_VALIDATOR_TAG)
             result[field_name] = member
+            if delete_tag:
+                delattr(member, _FIELD_VALIDATOR_TAG)
 
     return result
 
@@ -231,9 +306,9 @@ def _collect_root_validators(cls, *, delete_tag=True):
 
     for _, member in cls.__dict__.items():
         if hasattr(member, _ROOT_VALIDATOR_TAG):
+            result.append(member)
             if delete_tag:
                 delattr(member, _ROOT_VALIDATOR_TAG)
-            result.append(member)
 
     return result
 
@@ -621,4 +696,4 @@ def _valid_setattr(instance, attribute, value):
 
 
 # _ValidatorType = Callable[[Any, attr.att Attribute[_T], _T], Any]
-# _ConverterType = Callable[[Any], Any]
+# _AttrsConverterType = Callable[[Any], Any]
