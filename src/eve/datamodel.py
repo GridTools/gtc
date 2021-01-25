@@ -47,9 +47,11 @@ from .concepts import NOTHING
 
 
 _ATTR_SETTINGS = types.MappingProxyType({"auto_attribs": True, "slots": False, "kw_only": True})
-_FIELD_VALIDATOR_TAG = "__field_validator_tag"
-_ROOT_VALIDATOR_TAG = "__root_validator_tag"
-_ROOT_VALIDATORS_NAME = "__datamodel_validators__"
+_FIELD_VALIDATOR_TAG = "_FIELD_VALIDATOR_TAG"
+_MODEL_FIELDS_VAR = "__datamodel_fields__"
+_MODEL_PARAMS = "__datamodel_params__"
+_ROOT_VALIDATOR_TAG = "__ROOT_VALIDATOR_TAG"
+_ROOT_VALIDATORS_VAR = "__datamodel_validators__"
 
 
 class _SENTINEL:
@@ -72,22 +74,11 @@ class _DataClassType(Protocol):
 
 
 class BaseDataModelType(_AttrClass, _DataClassType, Protocol):
-    @classmethod
-    def __concretize__(
-        cls: Type[BaseDataModelType],
-        *type_args: Type,
-        class_name: Optional[str] = None,
-        module: Optional[str] = None,
-        overwrite_definition: bool = True,
-        support_pickling: bool = True,
-    ) -> Type[DataModelType]:
-        ...
-
+    __datamodel_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
+    __datamodel_params__: ClassVar[utils.FrozenNamespace]
     __datamodel_validators__: ClassVar[
         Tuple[classmethod, ...]
     ]  # ClassVar[Tuple[classmethod[RootValidatorType], ...]]
-    __is_generic__: ClassVar[bool]
-    __is_instantiable__: ClassVar[bool]
 
     def __post_init__(self: BaseDataModelType) -> None:
         pass
@@ -293,7 +284,7 @@ def _collect_root_validators(cls: Type, *, delete_tag: bool = True) -> List[Root
     """ Collect root validators from class (including bases)."""
     result = []
     for base in reversed(cls.__mro__[1:]):
-        for validator in getattr(base, _ROOT_VALIDATORS_NAME, []):
+        for validator in getattr(base, _ROOT_VALIDATORS_VAR, []):
             if validator not in result:
                 result.append(validator)
 
@@ -319,14 +310,12 @@ def _get_attribute_from_bases(
     return None
 
 
-def _replace_typevars(type_hint: Type, type_params_map: Mapping[TypeVar, Type]) -> Type:
+def _substitute_typevars(type_hint: Type, type_params_map: Mapping[TypeVar, Type]) -> Type:
     if isinstance(type_hint, typing.TypeVar):
         assert type_hint in type_params_map
         return type_params_map[type_hint]
     elif getattr(type_hint, "__parameters__", []):
-        new_type_args = tuple(
-            _replace_typevars(t, type_params_map) for t in typing.get_args(type_hint)
-        )
+        new_type_args = tuple(type_params_map[t] for t in type_hint.__parameters__)
         return type_hint[new_type_args]
     else:
         return type_hint
@@ -412,91 +401,34 @@ def _make_data_model_class_getitem() -> classmethod:
         cls: DataModelType, args: Union[Type, Tuple[Type]]
     ) -> Type[DataModelType]:
         type_args = args if isinstance(args, tuple) else (args,)
-        return cls.__concretize__(*type_args)
+        return concretize(cls, *type_args)
 
     return classmethod(__class_getitem__)
 
 
-def _make_data_model_concretize() -> classmethod:
-    @utils.optional_lru_cache(maxsize=None, typed=True)
-    def __concretize__(
-        cls: Type[GenericeDataModelType],
-        *type_args: Type,
-        class_name: Optional[str] = None,
-        module: Optional[str] = None,
-        overwrite_definition: bool = True,
-        support_pickling: bool = True,
-    ) -> Type[DataModelType]:
-        if "__datamodel_fields__" not in cls.__dict__ or not cls.__is_generic__:
-            raise TypeError(f"'{cls.__name__}' is not a generic model class.")
-        if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
-            raise TypeError(
-                f"Only 'type' and 'typing.TypeVar' values can be passed as arguments "
-                f"to instantiate a generic model class (received: {type_args})."
-            )
-        if len(type_args) != len(cls.__parameters__):
-            raise TypeError(
-                f"Instantiating '{cls.__name__}' generic model with a wrong number of parameters "
-                f"({len(type_args)} used, {len(cls.__parameters__)} expected)."
-            )
-
-        # Get actual types for generic fields
-        type_params_map = dict(zip(cls.__parameters__, type_args))
-        concrete_annotations = {
-            f_name: _replace_typevars(f_type, type_params_map)
-            for f_name, f_type in typing.get_type_hints(cls).items()
-        }
-        print(
-            f"CONCRETIZE: {cls.__parameters__=}, {type_args=}, {type_params_map=}, {concrete_annotations=}"
-        )
-
-        # Create new concrete class
-        namespace = {
-            "__annotations__": concrete_annotations,
-            "__module__": module if module else cls.__module__,
-        }
-
-        if not class_name:
-            arg_names = [
-                type_params_map[tp_var].__name__ if tp_var in type_params_map else tp_var.__name__
-                for tp_var in cls.__parameters__
-            ]
-            class_name = f"{cls.__name__}__{'_'.join(arg_names)}"
-
-        # Fix Generic typing variables
-        alias = typing._GenericAlias(cls, type_args)  # type: ignore  # typing._Generic is not visible for mypy
-        bases = (cls, Generic[alias.__parameters__]) if alias.__parameters__ else (cls,)
-
-        # concrete_cls = type(class_name, bases, namespace)
-        concrete_cls = types.new_class(class_name, bases, exec_body=lambda ns: ns.update(namespace))
-        for attribute in ("__origin__", "__args__"):
-            setattr(concrete_cls, attribute, getattr(alias, attribute))
-        # concrete_cls.__orig_bases__ = cls
-        assert concrete_cls.__module__ == module or not module
-
-        # For pickling to work, the new class has to be added to the proper module
-        if support_pickling:
-            reference_module_globals = sys.modules[concrete_cls.__module__].__dict__
-            if (
-                overwrite_definition is False
-                and reference_module_globals.get(class_name, concrete_cls) is not concrete_cls
-            ):
-                raise TypeError(
-                    f"Existing '{class_name}' symbol in module '{module}'"
-                    "contains a reference to a different object."
-                )
-            reference_module_globals[class_name] = concrete_cls
-
-        return (
-            concrete_cls
-            if "__datamodel_fields__" in concrete_cls.__dict__
-            else _make_datamodel(concrete_cls)
-        )
-
-    return classmethod(__concretize__)
+def is_datamodel(obj: Any) -> bool:
+    """Returns True if obj is a datamodel or an instance of a datamodel."""
+    cls = obj if isinstance(obj, type) else type(obj)
+    return hasattr(cls, _MODEL_FIELDS_VAR)
 
 
-def _make_datamodel(
+def is_generic(datamodel: Union[DataModel, Type[DataModel]]) -> bool:
+    if not is_datamodel(datamodel):
+        raise ValueError(f"Invalid DataModel instance or class: '{datamodel}'.")
+
+    return is_datamodel(datamodel) and len(getattr(datamodel, "__parameters__", [])) > 0
+
+
+def is_instantiable(datamodel: Union[DataModel, Type[DataModel]]) -> bool:
+    if not is_datamodel(datamodel):
+        raise ValueError(f"Invalid DataModel instance or class: '{datamodel}'.")
+
+    params = getattr(datamodel, _MODEL_PARAMS)
+    assert hasattr(params, "instantiable") and isinstance(params.instantiable, bool)
+    return params.instantiable
+
+
+def make_datamodel(
     cls: Type,
     *,
     init: bool,  # noqa: A002   # shadowing 'repr' python builtin
@@ -567,7 +499,7 @@ def _make_datamodel(
         assert isinstance(field_attrib, attr._make._CountingAttr)  # type: ignore  # attr._make is not visible for mypy
         field_attrib.validator(field_validator)
 
-    setattr(cls, _ROOT_VALIDATORS_NAME, tuple(root_validators))
+    setattr(cls, _ROOT_VALIDATORS_VAR, tuple(root_validators))
 
     # Update class with attr.s features
     if "__init__" in cls.__dict__:
@@ -583,22 +515,129 @@ def _make_datamodel(
         cls.__attrs_post_init__ = _make_post_init(has_post_init)
 
     cls.__class_getitem__ = _make_data_model_class_getitem()
-    cls.__concretize__ = _make_data_model_concretize()
-    cls.__is_generic__ = hasattr(cls, "__parameters__") and len(cls.__parameters__) > 0
-    cls.__is_instantiable__ = bool(instantiable)
 
     new_cls = attr.define(**_ATTR_SETTINGS)(cls)  # type: ignore  # attr.define is not visible for mypy
     assert new_cls is cls
 
-    # For dataclasses emulation
-    dataclass_fields = []
-    for field_attr in cls.__attrs_attrs__:
-        dataclass_fields.append(_make_dataclass_field_from_attr(field_attr))
-    cls.__dataclass_fields__ = tuple(dataclass_fields)
-
-    cls.__datamodel_fields__ = cls.__dataclass_fields__
+    # Final postprocessing
+    setattr(
+        cls,
+        _MODEL_PARAMS,
+        utils.FrozenNamespace(
+            init=init,
+            repr=repr,
+            eq=eq,
+            order=order,
+            unsafe_hash=unsafe_hash,
+            frozen=frozen,
+            instantiable=instantiable,
+        ),
+    )
+    setattr(
+        cls,
+        _MODEL_FIELDS_VAR,
+        tuple(_make_dataclass_field_from_attr(field_attr) for field_attr in cls.__attrs_attrs__),
+    )
+    cls.__dataclass_fields__ = getattr(cls, _MODEL_FIELDS_VAR)  # For dataclasses emulation
 
     return cls
+
+
+@utils.optional_lru_cache(maxsize=None, typed=True)
+def concretize(
+    cls: Type[GenericeDataModelType],
+    *type_args: Type,
+    class_name: Optional[str] = None,
+    module: Optional[str] = None,
+    overwrite_definition: bool = True,
+    support_pickling: bool = True,
+) -> Type[DataModelType]:
+    if not is_generic(cls):
+        raise TypeError(f"'{cls.__name__}' is not a generic model class.")
+    if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
+        raise TypeError(
+            f"Only 'type' and 'typing.TypeVar' values can be passed as arguments "
+            f"to instantiate a generic model class (received: {type_args})."
+        )
+    if len(type_args) != len(cls.__parameters__):
+        raise TypeError(
+            f"Instantiating '{cls.__name__}' generic model with a wrong number of parameters "
+            f"({len(type_args)} used, {len(cls.__parameters__)} expected)."
+        )
+
+    # Get actual types for generic fields
+    type_params_map = dict(zip(cls.__parameters__, type_args))
+    concrete_annotations = {
+        f_name: _substitute_typevars(f_type, type_params_map)
+        for f_name, f_type in typing.get_type_hints(cls).items()
+    }
+
+    # print(
+    #     f"CONCRETIZE: {cls.__parameters__=}, {type_args=}, {type_params_map=}, {concrete_annotations=}"
+    # )
+
+    # Create new concrete class
+    namespace = {
+        "__annotations__": concrete_annotations,
+        "__module__": module if module else cls.__module__,
+    }
+
+    if not class_name:
+        arg_names = [
+            type_params_map[tp_var].__name__ if tp_var in type_params_map else tp_var.__name__
+            for tp_var in cls.__parameters__
+        ]
+        class_name = f"{cls.__name__}__{'_'.join(arg_names)}"
+
+    # Generic typing emulation using values from _GenericAlias
+    # and `types.new_class` instead of type: https://www.python.org/dev/peps/pep-0560/#id21
+    generic_alias = typing._GenericAlias(cls, type_args)  # type: ignore  # typing._Generic is not visible for mypy
+    bases = (cls, Generic[generic_alias.__parameters__]) if generic_alias.__parameters__ else (cls,)
+
+    concrete_cls = types.new_class(class_name, bases, exec_body=lambda ns: ns.update(namespace))
+    assert concrete_cls.__module__ == module or not module
+
+    # For pickling to work, the new class has to be added to the proper module
+    if support_pickling:
+        reference_module_globals = sys.modules[concrete_cls.__module__].__dict__
+        if (
+            overwrite_definition is False
+            and reference_module_globals.get(class_name, concrete_cls) is not concrete_cls
+        ):
+            raise TypeError(
+                f"Existing '{class_name}' symbol in module '{module}'"
+                "contains a reference to a different object."
+            )
+        reference_module_globals[class_name] = concrete_cls
+
+    params = getattr(cls, _MODEL_PARAMS)
+    return (
+        concrete_cls
+        if _MODEL_FIELDS_VAR in concrete_cls.__dict__
+        else make_datamodel(
+            concrete_cls,
+            **{
+                name: getattr(params, name)
+                for name in ("init", "repr", "eq", "order", "unsafe_hash", "frozen", "instantiable")
+            },
+        )
+    )
+
+
+def validator(__name: str) -> Callable[[Callable], Callable]:
+    assert isinstance(__name, str)
+
+    def _field_validator_maker(func: Callable) -> Callable:
+        setattr(func, _FIELD_VALIDATOR_TAG, __name)
+        return func
+
+    return _field_validator_maker
+
+
+def root_validator(func: Callable) -> classmethod:
+    cls_method = classmethod(func)
+    setattr(cls_method, _ROOT_VALIDATOR_TAG, None)
+    return cls_method
 
 
 def field(
@@ -637,22 +676,6 @@ def field(
     )
 
 
-def validator(__name: str) -> Callable[[Callable], Callable]:
-    assert isinstance(__name, str)
-
-    def _field_validator_maker(func: Callable) -> Callable:
-        setattr(func, _FIELD_VALIDATOR_TAG, __name)
-        return func
-
-    return _field_validator_maker
-
-
-def root_validator(func: Callable) -> classmethod:
-    cls_method = classmethod(func)
-    setattr(cls_method, _ROOT_VALIDATOR_TAG, None)
-    return cls_method
-
-
 def datamodel(
     cls: Type = None,
     /,
@@ -666,7 +689,7 @@ def datamodel(
     instantiable: bool = True,
 ) -> Union[Type, Callable[[Type], Type]]:
     def _decorator(cls: Type) -> Type:
-        return _make_datamodel(
+        return make_datamodel(
             cls,
             init=init,
             repr=repr,
@@ -697,7 +720,7 @@ class DataModel:
         **kwargs: Any,
     ) -> None:
         super().__init_subclass__(**kwargs)  # type: ignore  # super() does not need to be object
-        _make_datamodel(
+        make_datamodel(
             cls,
             init=init,
             repr=repr,
@@ -709,6 +732,7 @@ class DataModel:
         )
 
 
+# -- WIP --
 def _make_type_coercer(type_hint: Type[T]) -> Callable[[Any], T]:
     # TODO: implement this method
     return type_hint if isinstance(type_hint, type) else lambda x: x  # type: ignore

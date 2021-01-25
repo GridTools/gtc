@@ -28,6 +28,7 @@ import operator
 import pickle
 import re
 import typing
+import types
 import uuid
 import warnings
 
@@ -419,6 +420,11 @@ class CaseStyleConverter:
     @staticmethod
     def split_kebab_case(name: str) -> List[str]:
         return name.split("-")
+
+
+class FrozenNamespace(types.SimpleNamespace):
+    def __setattr__(self, _name: str, _value: Any) -> None:
+        raise TypeError(f"Trying to modify immutable '{self.__class_.__name__}' instance.")
 
 
 class UIDGenerator:

@@ -44,7 +44,7 @@ import factory
 import pytest
 import pytest_factoryboy as pytfboy
 
-from eve import datamodel
+from eve import datamodel, utils
 
 
 # --- Utils ---
@@ -458,14 +458,17 @@ def any_model_instance(request):
 # --- Tests ---
 def test_datamodel_class_members(any_model_instance):
     assert hasattr(any_model_instance, "__init__")
-    assert hasattr(any_model_instance, "__is_generic__") and isinstance(
-        any_model_instance.__is_generic__, bool
+    assert hasattr(any_model_instance, "__datamodel_fields__") and isinstance(
+        any_model_instance.__datamodel_fields__, tuple
     )
-    assert hasattr(any_model_instance, "__dataclass_fields__") and isinstance(
-        any_model_instance.__dataclass_fields__, tuple
+    assert hasattr(any_model_instance, "__datamodel_params__") and isinstance(
+        any_model_instance.__datamodel_params__, utils.FrozenNamespace
     )
     assert hasattr(any_model_instance, "__datamodel_validators__") and isinstance(
         any_model_instance.__datamodel_validators__, tuple
+    )
+    assert hasattr(any_model_instance, "__dataclass_fields__") and isinstance(
+        any_model_instance.__dataclass_fields__, tuple
     )
 
     assert dataclasses.is_dataclass(any_model_instance)
