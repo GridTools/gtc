@@ -29,7 +29,6 @@ from typing import (
     Callable,
     ClassVar,
     Dict,
-    Generic,
     List,
     Mapping,
     Optional,
@@ -46,22 +45,7 @@ from . import utils
 from .concepts import NOTHING
 
 
-_ATTR_SETTINGS = types.MappingProxyType({"auto_attribs": True, "slots": False, "kw_only": True})
-_FIELD_VALIDATOR_TAG = "_FIELD_VALIDATOR_TAG"
-_MODEL_FIELDS_VAR = "__datamodel_fields__"
-_MODEL_PARAMS = "__datamodel_params__"
-_ROOT_VALIDATOR_TAG = "__ROOT_VALIDATOR_TAG"
-_ROOT_VALIDATORS_VAR = "__datamodel_validators__"
-
-
-class _SENTINEL:
-    ...
-
-
-AUTO_CONVERTER = _SENTINEL()
-
-
-# -- Typing definitions --
+# Typing
 T = TypeVar("T")
 
 
@@ -93,6 +77,22 @@ DataModelType = Union[BaseDataModelType, GenericeDataModelType]
 
 ValidatorType = Callable[[DataModelType, attr.Attribute, Any], None]
 RootValidatorType = Callable[[Type[DataModelType], DataModelType], None]
+
+
+# Implementation
+_ATTR_SETTINGS = types.MappingProxyType({"auto_attribs": True, "slots": False, "kw_only": True})
+_FIELD_VALIDATOR_TAG = "_FIELD_VALIDATOR_TAG"
+_MODEL_FIELDS_VAR = "__datamodel_fields__"
+_MODEL_PARAMS = "__datamodel_params__"
+_ROOT_VALIDATOR_TAG = "__ROOT_VALIDATOR_TAG"
+_ROOT_VALIDATORS_VAR = "__datamodel_validators__"
+
+
+class _SENTINEL:
+    ...
+
+
+AUTO_CONVERTER = _SENTINEL()
 
 
 # -- Validators --
@@ -243,6 +243,7 @@ def strict_type_attrs_validator(type_hint: Type) -> attr._ValidatorType:
     elif origin_type is typing.Union:
         return union_type_attrs_validator(*type_args)
     elif isinstance(origin_type, type):
+        # Deal with generic collections
         if issubclass(origin_type, tuple):
             return tuple_type_attrs_validator(*type_args, tuple_type=origin_type)
         elif issubclass(origin_type, (collections.abc.Sequence, collections.abc.Set)):
@@ -315,8 +316,7 @@ def _substitute_typevars(type_hint: Type, type_params_map: Mapping[TypeVar, Type
         assert type_hint in type_params_map
         return type_params_map[type_hint]
     elif getattr(type_hint, "__parameters__", []):
-        new_type_args = tuple(type_params_map[t] for t in type_hint.__parameters__)
-        return type_hint[new_type_args]
+        return type_hint[tuple(type_params_map[tp] for tp in type_hint.__parameters__)]
     else:
         return type_hint
 
@@ -401,14 +401,14 @@ def _make_data_model_class_getitem() -> classmethod:
         cls: DataModelType, args: Union[Type, Tuple[Type]]
     ) -> Type[DataModelType]:
         type_args = args if isinstance(args, tuple) else (args,)
-        return concretize(cls, *type_args)
+        return concretize(cls, *type_args, as_generic_alias=True)
 
     return classmethod(__class_getitem__)
 
 
 def is_datamodel(obj: Any) -> bool:
     """Returns True if obj is a datamodel or an instance of a datamodel."""
-    cls = obj if isinstance(obj, type) else type(obj)
+    cls = obj if isinstance(obj, type) else obj.__class__
     return hasattr(cls, _MODEL_FIELDS_VAR)
 
 
@@ -416,14 +416,15 @@ def is_generic(datamodel: Union[DataModel, Type[DataModel]]) -> bool:
     if not is_datamodel(datamodel):
         raise ValueError(f"Invalid DataModel instance or class: '{datamodel}'.")
 
-    return is_datamodel(datamodel) and len(getattr(datamodel, "__parameters__", [])) > 0
+    return len(getattr(datamodel, "__parameters__", [])) > 0
 
 
 def is_instantiable(datamodel: Union[DataModel, Type[DataModel]]) -> bool:
     if not is_datamodel(datamodel):
         raise ValueError(f"Invalid DataModel instance or class: '{datamodel}'.")
 
-    params = getattr(datamodel, _MODEL_PARAMS)
+    datamodel_cls = datamodel if isinstance(datamodel, type) else datamodel.__class__
+    params = getattr(datamodel_cls, _MODEL_PARAMS)
     assert hasattr(params, "instantiable") and isinstance(params.instantiable, bool)
     return params.instantiable
 
@@ -431,7 +432,7 @@ def is_instantiable(datamodel: Union[DataModel, Type[DataModel]]) -> bool:
 def make_datamodel(
     cls: Type,
     *,
-    init: bool,  # noqa: A002   # shadowing 'repr' python builtin
+    init: bool,  # noqa: A002   # shadowing 'init' python builtin
     repr: bool,  # noqa: A002   # shadowing 'repr' python builtin
     eq: bool,
     order: bool,
@@ -551,6 +552,7 @@ def concretize(
     module: Optional[str] = None,
     overwrite_definition: bool = True,
     support_pickling: bool = True,
+    as_generic_alias: bool = False,
 ) -> Type[DataModelType]:
     if not is_generic(cls):
         raise TypeError(f"'{cls.__name__}' is not a generic model class.")
@@ -572,16 +574,7 @@ def concretize(
         for f_name, f_type in typing.get_type_hints(cls).items()
     }
 
-    # print(
-    #     f"CONCRETIZE: {cls.__parameters__=}, {type_args=}, {type_params_map=}, {concrete_annotations=}"
-    # )
-
     # Create new concrete class
-    namespace = {
-        "__annotations__": concrete_annotations,
-        "__module__": module if module else cls.__module__,
-    }
-
     if not class_name:
         arg_names = [
             type_params_map[tp_var].__name__ if tp_var in type_params_map else tp_var.__name__
@@ -589,12 +582,12 @@ def concretize(
         ]
         class_name = f"{cls.__name__}__{'_'.join(arg_names)}"
 
-    # Generic typing emulation using values from _GenericAlias
-    # and `types.new_class` instead of type: https://www.python.org/dev/peps/pep-0560/#id21
-    generic_alias = typing._GenericAlias(cls, type_args)  # type: ignore  # typing._Generic is not visible for mypy
-    bases = (cls, Generic[generic_alias.__parameters__]) if generic_alias.__parameters__ else (cls,)
+    namespace = {
+        "__annotations__": concrete_annotations,
+        "__module__": module if module else cls.__module__,
+    }
 
-    concrete_cls = types.new_class(class_name, bases, exec_body=lambda ns: ns.update(namespace))
+    concrete_cls = type(class_name, (cls,), namespace)
     assert concrete_cls.__module__ == module or not module
 
     # For pickling to work, the new class has to be added to the proper module
@@ -610,18 +603,27 @@ def concretize(
             )
         reference_module_globals[class_name] = concrete_cls
 
-    params = getattr(cls, _MODEL_PARAMS)
-    return (
-        concrete_cls
-        if _MODEL_FIELDS_VAR in concrete_cls.__dict__
-        else make_datamodel(
+    if _MODEL_FIELDS_VAR not in concrete_cls.__dict__:
+        # If original model does not inherit from GenericModel,
+        # make_datamodel() hasn't been called yet
+        params = getattr(cls, _MODEL_PARAMS)
+        concrete_cls = make_datamodel(
             concrete_cls,
             **{
                 name: getattr(params, name)
                 for name in ("init", "repr", "eq", "order", "unsafe_hash", "frozen", "instantiable")
             },
         )
-    )
+
+    if as_generic_alias:
+        # To emulate the typing._GenericAlias mechanism, an object compatible
+        # with `typing._GenericAlias` is returned, but using the new concrete
+        # class as type 'origin'. See also:
+        #     https://www.python.org/dev/peps/pep-0526/
+        #     https://www.python.org/dev/peps/pep-0560/)
+        return GenericTypeAlias(concrete_cls, type_args)
+    else:
+        return concrete_cls
 
 
 def validator(__name: str) -> Callable[[Callable], Callable]:
@@ -719,7 +721,18 @@ class DataModel:
         instantiable: bool = True,
         **kwargs: Any,
     ) -> None:
+        print()
         super().__init_subclass__(**kwargs)  # type: ignore  # super() does not need to be object
+        print(
+            f"\n__init_subclass__({cls.__name__}): {cls.__bases__=} [{getattr(cls, '__orig_bases__', '-')}]"
+            f" DICT: {cls.__dict__.keys()}, {super().__init_subclass__}"
+        )
+        # orig_bases = list(cls.__dict__.get("__orig_bases__", []))
+        # for base in cls.__bases__:
+        #     if hasattr(base, "__generic_alias__"):
+        #         orig_bases.append(typing._GenericAlias(base, base.__parameters__))
+        # if orig_bases:
+        #     setattr(cls, "__orig_bases__", tuple(orig_bases))
         make_datamodel(
             cls,
             init=init,
@@ -730,6 +743,18 @@ class DataModel:
             frozen=frozen,
             instantiable=instantiable,
         )
+
+
+class GenericTypeAlias(typing._GenericAlias, _root=True):
+    """Custom GenericAlias to abstract :class:`typing._GenericAlias` implementation details."""
+
+    def __getitem__(self, args: Union[Type, Tuple[Type]]):
+        type_args = args if isinstance(args, tuple) else (args,)
+        return concretize(self.__origin__, *type_args, as_generic_alias=True)
+
+    @property
+    def __class__(self):
+        return self.__origin__
 
 
 # -- WIP --

@@ -431,7 +431,7 @@ class SimpleGenericModelFactory(factory.Factory):
     int_value = 1
 
 
-class AdvancedGenericModel(SimpleGenericModel[T], Generic[S, U]):
+class AdvancedGenericModel(SimpleGenericModel[T], Generic[U, S, T]):
     generic_value: T
     int_value: int = 0
 
