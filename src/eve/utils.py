@@ -425,6 +425,7 @@ class CaseStyleConverter:
 class FrozenNamespace(types.SimpleNamespace):
     """An immutable `types.SimpleNamespace`-like class.
 
+    Examples:
         >>> ns = FrozenNamespace(a=10, b="hello")
         >>> ns.a
         10

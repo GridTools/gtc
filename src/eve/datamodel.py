@@ -85,10 +85,10 @@ RootValidatorFunc = Callable[[Type[DataModelProto], DataModelProto], None]
 # Implementation
 _ATTR_SETTINGS = types.MappingProxyType({"auto_attribs": True, "slots": False, "kw_only": True})
 _FIELD_VALIDATOR_TAG = "_FIELD_VALIDATOR_TAG"
-_MODEL_FIELDS_MEMBER = "__datamodel_fields__"
+_MODEL_FIELDS = "__datamodel_fields__"
 _MODEL_PARAMS = "__datamodel_params__"
 _ROOT_VALIDATOR_TAG = "__ROOT_VALIDATOR_TAG"
-_ROOT_VALIDATORS_MEMBER = "__datamodel_validators__"
+_ROOT_VALIDATORS = "__datamodel_validators__"
 
 
 class _SENTINEL:
@@ -287,7 +287,7 @@ def _collect_field_validators(cls: Type, *, delete_tag: bool = True) -> Dict[str
 def _collect_root_validators(cls: Type, *, delete_tag: bool = True) -> List[RootValidatorFunc]:
     result = []
     for base in reversed(cls.__mro__[1:]):
-        for validator in getattr(base, _ROOT_VALIDATORS_MEMBER, []):
+        for validator in getattr(base, _ROOT_VALIDATORS, []):
             if validator not in result:
                 result.append(validator)
 
@@ -485,7 +485,7 @@ def _make_datamodel(
         assert isinstance(field_attrib, attr._make._CountingAttr)  # type: ignore  # attr._make is not visible for mypy
         field_attrib.validator(field_validator)
 
-    setattr(cls, _ROOT_VALIDATORS_MEMBER, tuple(root_validators))
+    setattr(cls, _ROOT_VALIDATORS, tuple(root_validators))
 
     # Update class with attr.s features
     if init:
@@ -525,7 +525,7 @@ def _make_datamodel(
     )
     setattr(
         cls,
-        _MODEL_FIELDS_MEMBER,
+        _MODEL_FIELDS,
         utils.FrozenNamespace(
             **{field_attr.name: field_attr for field_attr in cls.__attrs_attrs__}
         ),
@@ -540,7 +540,7 @@ def _make_datamodel(
 def is_datamodel(obj: Any) -> bool:
     """Returns True if `obj` is a Data Model class or an instance of a Data Model."""
     cls = obj if isinstance(obj, type) else obj.__class__
-    return hasattr(cls, _MODEL_FIELDS_MEMBER)
+    return hasattr(cls, _MODEL_FIELDS)
 
 
 def is_generic(datamodel: Union[DataModelProto, Type[DataModelProto]]) -> bool:
@@ -566,7 +566,7 @@ def get_fields(
 ) -> Tuple[dataclasses.Field, ...]:
     """Return a tuple describing the fields of this Data Model."""
     if is_datamodel():
-        return tuple(getattr(datamodel, _MODEL_FIELDS_MEMBER))
+        return tuple(getattr(datamodel, _MODEL_FIELDS))
     else:
         raise TypeError(f"Invalid dataclass type or instance: '{datamodel}'.")
 
@@ -653,7 +653,7 @@ def concretize(
             )
         reference_module_globals[class_name] = concrete_cls
 
-    if _MODEL_FIELDS_MEMBER not in concrete_cls.__dict__:
+    if _MODEL_FIELDS not in concrete_cls.__dict__:
         # If original model does not inherit from GenericModel,
         # _make_datamodel() hasn't been called yet
         params = getattr(datamodel_cls, _MODEL_PARAMS)
@@ -707,26 +707,41 @@ def root_validator(func: Callable, /) -> classmethod:
 
 
 def fields(
-    datamodel: Union[DataModelProto, Type[DataModelProto]], *, as_attrs: bool = False
+    datamodel: Union[DataModelProto, Type[DataModelProto]], *, as_dataclass: bool = False
 ) -> utils.FrozenNamespace:
-    """Return
+    """Return the field meta-information of a Data Model.
 
     Arguments:
-        asdf:
+        datamodel: A Data Model class or instance.
 
     Keyword Arguments:
-        as_attrs: If ``True`` (the default is ``False``), field information is returned
-            as :class:`attr.Attribute` instances instance of :class:`attr.Attribute`
+        as_dataclass: If ``True`` (the default is ``False``), field information is returned
+            as :class:`dataclass.Field` instances instead of :class:`attr.Attribute`.
+
+    Examples:
+        >>> from typing import List
+        >>> @datamodel
+        ... class Model:
+        ...     amount: int = 1
+        ...     name: str
+        ...     numbers: List[float]
+        >>> fields(Model)  # doctest:+ELLIPSIS
+        FrozenNamespace(amount=Attribute(name='amount', default=1, ...),\
+ name=Attribute(name='name', default=NOTHING, ...),\
+ numbers=Attribute(name='numbers', default=NOTHING, ...))
+        >>> fields(Model, as_dataclass=True)  # doctest:+ELLIPSIS
+        FrozenNamespace(amount=Field(name='amount',type='int',default=1,...),\
+ name=Field(name='name',type='str',default=<dataclasses._MISSING_TYPE object ...),\
+ numbers=Field(name='numbers',type='List[float]',default=<dataclasses._MISSING_TYPE object ...))
+
     """
     if not is_datamodel(datamodel):
         raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
 
-    if as_attrs:
-        field_data = {f.name: f for f in datamodel.__attrs_attrs__}
+    if as_dataclass:
+        return utils.FrozenNamespace(**{f.name: f for f in datamodel.__dataclass_fields__})
     else:
-        field_data = {f.name: f for f in datamodel.__datamodel_fields__}
-
-    return utils.FrozenNamespace(**field_data)
+        return getattr(datamodel, _MODEL_FIELDS)
 
 
 def field(
