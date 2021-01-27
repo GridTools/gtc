@@ -436,9 +436,9 @@ class AdvancedGenericModel(SimpleGenericModel[T], Generic[U, S, T]):
     int_value: int = 0
 
 
-# @pytest.fixture(params=[int, float, str, complex])
-# def instantiated_simple_generic_model_class(request):
-#     return SimpleGenericModel[request.param]
+@pytest.fixture(params=[int, float, str, complex])
+def instantiated_simple_generic_model_class(request):
+    return SimpleGenericModel[request.param]
 
 
 # Register factories as fixtures using pytest_factoryboy plugin

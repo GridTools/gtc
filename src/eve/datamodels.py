@@ -207,6 +207,8 @@ def literal_type_attrs_validator(*type_args: Type) -> attr._ValidatorType:
 def tuple_type_attrs_validator(*type_args: Type, tuple_type: Type = tuple) -> attr._ValidatorType:
     """Create an attr.s strict type validator for Tuple typings."""
     if len(type_args) == 2 and (type_args[1] is Ellipsis):
+        if not issubclass(tuple_type, tuple):
+            raise TypeError(f"Invalid 'tuple' subclass '{tuple_type}'.")
         member_type_hint = type_args[0]
         return attr.validators.deep_iterable(
             member_validator=strict_type_attrs_validator(member_type_hint),
@@ -505,7 +507,13 @@ def _make_datamodel(
 
     hash_arg = None if not unsafe_hash else True
     new_cls = attr.define(  # type: ignore  # attr.define is not visible for mypy
-        **_ATTR_SETTINGS, init=init, repr=repr, eq=eq, order=order, frozen=frozen, hash=hash_arg
+        **_ATTR_SETTINGS,
+        init=init and instantiable,
+        repr=repr,
+        eq=eq,
+        order=order,
+        frozen=frozen,
+        hash=hash_arg,
     )(cls)
     assert new_cls is cls
 
