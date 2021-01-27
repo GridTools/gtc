@@ -24,12 +24,14 @@ import dataclasses
 import sys
 import types
 import typing
+import warnings
 from typing import (
     Any,
     Callable,
     ClassVar,
     Dict,
     List,
+    Literal,
     Mapping,
     Optional,
     Protocol,
@@ -80,6 +82,25 @@ DataModelProto = Union[BaseDataModelProto, GenericDataModelProto]
 
 ValidatorFunc = Callable[[DataModelProto, attr.Attribute, Any], None]
 RootValidatorFunc = Callable[[Type[DataModelProto], DataModelProto], None]
+
+
+class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  # typing._GenericAlias is not visible for mypy
+    """Custom generic alias class instantiating new concrete classes.
+
+    This class is compatible with :class:`typing._GenericAlias`.
+
+    """
+
+    __origin__: Type[GenericDataModelProto]
+
+    def __getitem__(self, args: Union[Type, Tuple[Type]]) -> GenericDataModelAlias:
+        type_args = args if isinstance(args, tuple) else (args,)
+        return concretize(self.__origin__, *type_args, as_generic_alias=True)
+
+    @property  # type: ignore  # Read-only property cannot override read-write property
+    def __class__(self) -> Type:
+        assert isinstance(self.__origin__, type)
+        return self.__origin__
 
 
 # Implementation
@@ -404,9 +425,9 @@ def _make_post_init(has_post_init: bool) -> Callable[[DataModelProto], None]:
 
 def _make_data_model_class_getitem() -> classmethod:
     def __class_getitem__(
-        cls: DataModelProto, args: Union[Type, Tuple[Type]]
-    ) -> Type[DataModelProto]:
-        type_args = args if isinstance(args, tuple) else (args,)
+        cls: Type[GenericDataModelProto], args: Union[Type, Tuple[Type]]
+    ) -> GenericDataModelAlias:
+        type_args: Tuple[Type] = args if isinstance(args, tuple) else (args,)
         return concretize(cls, *type_args, as_generic_alias=True)
 
     return classmethod(__class_getitem__)
@@ -545,73 +566,14 @@ def _make_datamodel(
     return cls
 
 
-def is_datamodel(obj: Any) -> bool:
-    """Returns True if `obj` is a Data Model class or an instance of a Data Model."""
-    cls = obj if isinstance(obj, type) else obj.__class__
-    return hasattr(cls, _MODEL_FIELDS)
-
-
-def is_generic(datamodel: Union[DataModelProto, Type[DataModelProto]]) -> bool:
-    """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
-    if not is_datamodel(datamodel):
-        raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
-
-    return len(getattr(datamodel, "__parameters__", [])) > 0
-
-
-def is_instantiable(datamodel: Type[DataModelProto]) -> bool:
-    """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
-    if not (isinstance(type) and is_datamodel(datamodel)):
-        raise ValueError(f"Invalid datamodel class: '{datamodel}'.")
-
-    params = getattr(datamodel, _MODEL_PARAMS)
-    assert hasattr(params, "instantiable") and isinstance(params.instantiable, bool)
-    return params.instantiable
-
-
-def get_fields(
-    datamodel: Union[DataModelProto, Type[DataModelProto]]
-) -> Tuple[dataclasses.Field, ...]:
-    """Return a tuple describing the fields of this Data Model."""
-    if is_datamodel():
-        return tuple(getattr(datamodel, _MODEL_FIELDS))
-    else:
-        raise TypeError(f"Invalid dataclass type or instance: '{datamodel}'.")
-
-
 @utils.optional_lru_cache(maxsize=None, typed=True)
-def concretize(
+def _make_concrete(
     datamodel_cls: Type[GenericDataModelProto],
     /,
     *type_args: Type,
     class_name: Optional[str] = None,
     module: Optional[str] = None,
-    overwrite_definition: bool = True,
-    support_pickling: bool = True,
-    as_generic_alias: bool = False,
-) -> Type[DataModelProto]:
-    """Generate a new concrete subclass of a generic Data Model.
-
-    Arguments:
-        datamodel_cls: Generic Data Model to be subclassed.
-        type_args: Type defintitions replacing the `TypeVars` in
-            ``datamodel_cls.__parameters__``.
-
-    Keyword Arguments:
-        class_name: Name of the new concrete class. The default value is the
-            same of the generic Data Model replacing the `TypeVars` by the provided
-            `type_args` in the name.
-        module: Value of the ``__module__`` attribute of the new class.
-            The default value is the name of the module containing the generic Data Model.
-        overwrite_definition: If ``True`` (the default) a previous
-            definition of the class in the target module will be overwritten.
-        support_pickling: If ``True`` (the default) support for pickling will be added
-            by actually inserting the new class into the target `module`.
-        as_generic_alias: If ``True`` (the default is ``False``), it will return an
-            instance compatible with the class aliases returned by the `typing` module
-            machinery for normal classes annotated with :class:``typing.Generic``.
-    """
-
+) -> Tuple[Type[DataModelProto], GenericDataModelAlias]:
     if not is_generic(datamodel_cls):
         raise TypeError(f"'{datamodel_cls.__name__}' is not a generic model class.")
     if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
@@ -648,19 +610,6 @@ def concretize(
     concrete_cls = type(class_name, (datamodel_cls,), namespace)
     assert concrete_cls.__module__ == module or not module
 
-    # For pickling to work, the new class has to be added to the proper module
-    if support_pickling:
-        reference_module_globals = sys.modules[concrete_cls.__module__].__dict__
-        if (
-            overwrite_definition is False
-            and reference_module_globals.get(class_name, concrete_cls) is not concrete_cls
-        ):
-            raise TypeError(
-                f"Existing '{class_name}' symbol in module '{module}'"
-                "contains a reference to a different object."
-            )
-        reference_module_globals[class_name] = concrete_cls
-
     if _MODEL_FIELDS not in concrete_cls.__dict__:
         # If original model does not inherit from GenericModel,
         # _make_datamodel() hasn't been called yet
@@ -673,20 +622,137 @@ def concretize(
             },
         )
 
+    # To emulate the typing._GenericAlias mechanism, an object compatible
+    # with `typing._GenericAlias` is returned. Basically, a `typing._GenericAlias`
+    # instance is a class proxy which stores the concrete types passed at
+    # creation (`__args__`) and keeps a reference to the original class (`__origin__`).
+    # Since this proxy implements a `__mro__entries` method (PEP 560), when this
+    # object is found in the list of bases of a new class, it is substituted by the
+    # actual class and thus the new type is created as usual.
+    # The `GenericDataModelAlias` object returned here works exactly in the same way,
+    # but stores the new concrete class in `__origin__`, instead the original
+    # generic one. For the full picture check also:
+    #     https://www.python.org/dev/peps/pep-0526/
+    #     https://www.python.org/dev/peps/pep-0560/)
+    alias = GenericDataModelAlias(concrete_cls, type_args)
+
+    return concrete_cls, alias
+
+
+def is_datamodel(obj: Any) -> bool:
+    """Returns True if `obj` is a Data Model class or an instance of a Data Model."""
+    cls = obj if isinstance(obj, type) else obj.__class__
+    return hasattr(cls, _MODEL_FIELDS)
+
+
+def is_generic(datamodel: Union[DataModelProto, Type[DataModelProto]]) -> bool:
+    """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
+    if not is_datamodel(datamodel):
+        raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
+
+    return len(getattr(datamodel, "__parameters__", [])) > 0
+
+
+def is_instantiable(datamodel: Type[DataModelProto]) -> bool:
+    """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
+    if not (isinstance(type) and is_datamodel(datamodel)):
+        raise ValueError(f"Invalid datamodel class: '{datamodel}'.")
+
+    params = getattr(datamodel, _MODEL_PARAMS)
+    assert hasattr(params, "instantiable") and isinstance(params.instantiable, bool)
+    return params.instantiable
+
+
+def get_fields(
+    datamodel: Union[DataModelProto, Type[DataModelProto]]
+) -> Tuple[dataclasses.Field, ...]:
+    """Return a tuple describing the fields of this Data Model."""
+    if is_datamodel():
+        return tuple(getattr(datamodel, _MODEL_FIELDS))
+    else:
+        raise TypeError(f"Invalid dataclass type or instance: '{datamodel}'.")
+
+
+@typing.overload
+def concretize(
+    datamodel_cls: Type[GenericDataModelProto],
+    /,
+    *type_args: Type,
+    class_name: Optional[str] = None,
+    module: Optional[str] = None,
+    overwrite_definition: bool = True,
+    support_pickling: bool = True,
+    as_generic_alias: Literal[False],
+) -> Type[DataModelProto]:
+    ...
+
+
+@typing.overload
+def concretize(
+    datamodel_cls: Type[GenericDataModelProto],
+    /,
+    *type_args: Type,
+    class_name: Optional[str] = None,
+    module: Optional[str] = None,
+    overwrite_definition: bool = True,
+    support_pickling: bool = True,
+    as_generic_alias: Literal[True],
+) -> GenericDataModelAlias:
+    ...
+
+
+def concretize(
+    datamodel_cls: Type[GenericDataModelProto],
+    /,
+    *type_args: Type,
+    class_name: Optional[str] = None,
+    module: Optional[str] = None,
+    overwrite_definition: bool = True,
+    support_pickling: bool = True,
+    as_generic_alias: bool = False,
+) -> Union[Type[DataModelProto], GenericDataModelAlias]:
+    """Generate a new concrete subclass of a generic Data Model.
+
+    Arguments:
+        datamodel_cls: Generic Data Model to be subclassed.
+        type_args: Type defintitions replacing the `TypeVars` in
+            ``datamodel_cls.__parameters__``.
+
+    Keyword Arguments:
+        class_name: Name of the new concrete class. The default value is the
+            same of the generic Data Model replacing the `TypeVars` by the provided
+            `type_args` in the name.
+        module: Value of the ``__module__`` attribute of the new class.
+            The default value is the name of the module containing the generic Data Model.
+        overwrite_definition: If ``True`` (the default) a previous
+            definition of the class in the target module will be overwritten.
+        support_pickling: If ``True`` (the default) support for pickling will be added
+            by actually inserting the new class into the target `module`.
+        as_generic_alias: If ``True`` (the default is ``False``), it will return an
+            instance compatible with the class aliases returned by the `typing` module
+            machinery for normal classes annotated with :class:``typing.Generic``.
+    """
+    concrete_cls, alias = _make_concrete(
+        datamodel_cls, *type_args, class_name=class_name, module=module
+    )
+    assert is_datamodel(concrete_cls)
+
+    # For pickling to work, the new class has to be added to the proper module
+    if support_pickling:
+        class_name = concrete_cls.__name__
+        reference_module_globals = sys.modules[concrete_cls.__module__].__dict__
+        if reference_module_globals.get(class_name, None) is not concrete_cls:
+            if class_name in reference_module_globals and not overwrite_definition:
+                warnings.warn(
+                    f"Existing '{class_name}' symbol in module '{module}' contains a reference"
+                    "to a different object.",
+                    RuntimeWarning,
+                )
+            else:
+                reference_module_globals[class_name] = concrete_cls
+
     if as_generic_alias:
-        # To emulate the typing._GenericAlias mechanism, an object compatible
-        # with `typing._GenericAlias` is returned. Basically, a `typing._GenericAlias`
-        # instance is a class proxy which stores the concrete types passed at
-        # creation (`__args__`) and keeps a reference to the original class (`__origin__`).
-        # Since this proxy implements a `__mro__entries` method (PEP 560), when this
-        # object is found in the list of bases of a new class, it is substituted by the
-        # actual class and thus the new type is created as usual.
-        # The `GenericTypeAlias` object returned here works exactly in the same way,
-        # but stores the new concrete class in `__origin__`, instead the original
-        # generic one. For the full picture check also:
-        #     https://www.python.org/dev/peps/pep-0526/
-        #     https://www.python.org/dev/peps/pep-0560/)
-        return GenericTypeAlias(concrete_cls, type_args)
+        return alias
     else:
         return concrete_cls
 
@@ -914,19 +980,6 @@ class DataModel:
             frozen=frozen,
             instantiable=instantiable,
         )
-
-
-class GenericTypeAlias(typing._GenericAlias, _root=True):  # type: ignore  # typing._GenericAlias is not visible for mypy
-    """Custom GenericAlias to abstract :class:`typing._GenericAlias` implementation details."""
-
-    def __getitem__(self, args: Union[Type, Tuple[Type]]) -> Type[DataModelProto]:
-        type_args = args if isinstance(args, tuple) else (args,)
-        return concretize(self.__origin__, *type_args, as_generic_alias=True)
-
-    @property  # type: ignore  # Read-only property cannot override read-write property
-    def __class__(self) -> Type:
-        assert isinstance(self.__origin__, type)
-        return self.__origin__
 
 
 # -- WIP --

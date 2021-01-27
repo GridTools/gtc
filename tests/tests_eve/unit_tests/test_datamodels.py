@@ -739,20 +739,27 @@ class TestRootValidators:
 
 class TestGenericModels:
     @pytest.mark.parametrize("concrete_type", [int, float, str])
-    def test_generic_model_instantiation(self, concrete_type):
-        Model = SimpleGenericModel[concrete_type]
+    def test_generic_model_instantiation_name(self, concrete_type):
+        Model = datamodels.concretize(SimpleGenericModel, concrete_type)
         assert concrete_type.__name__ in Model.__name__
 
-        Model1 = SimpleGenericModel[concrete_type]
-        Model2 = SimpleGenericModel[concrete_type]
-        Model3 = SimpleGenericModel[concrete_type]
+    @pytest.mark.parametrize("concrete_type", [int, float, str])
+    def test_generic_model_instantiation_cache(self, concrete_type):
+        Model1 = datamodels.concretize(SimpleGenericModel, concrete_type)
+        Model2 = datamodels.concretize(SimpleGenericModel, concrete_type)
+        Model3 = datamodels.concretize(SimpleGenericModel, concrete_type)
 
         assert (
-            Model is Model1
-            and Model1 is Model2
+            Model1 is Model2
             and Model2 is Model3
-            and Model3 is SimpleGenericModel[concrete_type]
+            and Model3 is datamodels.concretize(SimpleGenericModel, concrete_type)
         )
+
+        class SubModel(SimpleGenericModel[concrete_type]):
+            ...
+
+        base = SubModel.__base__
+        assert SubModel.__bases__[0] is Model
 
     @pytest.mark.parametrize(
         "value", [False, 1, 1.1, "string", [1], ("a", "b"), {1, 2, 3}, {"a": 1}]
