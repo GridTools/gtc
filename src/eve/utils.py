@@ -423,8 +423,18 @@ class CaseStyleConverter:
 
 
 class FrozenNamespace(types.SimpleNamespace):
+    """An immutable `types.SimpleNamespace`-like class.
+
+        >>> ns = FrozenNamespace(a=10, b="hello")
+        >>> ns.a
+        10
+        >>> ns.a = 20
+        Traceback (most recent call last):
+           ...
+        TypeError: Trying to modify immutable 'FrozenNamespace' instance.
+    """
     def __setattr__(self, _name: str, _value: Any) -> None:
-        raise TypeError(f"Trying to modify immutable '{self.__class_.__name__}' instance.")
+        raise TypeError(f"Trying to modify immutable '{self.__class__.__name__}' instance.")
 
 
 class UIDGenerator:

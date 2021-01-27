@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""DataModel class and utils."""
+"""Data Model class and related utils."""
 
 
 from __future__ import annotations
@@ -76,10 +76,10 @@ class GenericDataModelProto(BaseDataModelProto):
     __parameters__: ClassVar[Tuple[TypeVar]]
 
 
-DataModelCls = Union[BaseDataModelProto, GenericDataModelProto]
+DataModelProto = Union[BaseDataModelProto, GenericDataModelProto]
 
-ValidatorFunc = Callable[[DataModelCls, attr.Attribute, Any], None]
-RootValidatorFunc = Callable[[Type[DataModelCls], DataModelCls], None]
+ValidatorFunc = Callable[[DataModelProto, attr.Attribute, Any], None]
+RootValidatorFunc = Callable[[Type[DataModelProto], DataModelProto], None]
 
 
 # Implementation
@@ -375,16 +375,16 @@ def _make_dataclass_field_from_attr(field_attr: attr.Attribute) -> dataclasses.F
 
 
 def _make_non_instantiable_init() -> Callable[..., None]:
-    def __init__(self: DataModelCls, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: DataModelProto, *args: Any, **kwargs: Any) -> None:
         raise TypeError(f"Trying to instantiate '{type(self).__name__}' abstract class.")
 
     return __init__
 
 
-def _make_post_init(has_post_init: bool) -> Callable[[DataModelCls], None]:
+def _make_post_init(has_post_init: bool) -> Callable[[DataModelProto], None]:
     if has_post_init:
 
-        def __attrs_post_init__(self: DataModelCls) -> None:
+        def __attrs_post_init__(self: DataModelProto) -> None:
             if attr._config._run_validators is True:  # type: ignore  # attr._config is not visible for mypy
                 for validator in type(self).__datamodel_validators__:
                     validator.__get__(self)(self)
@@ -392,7 +392,7 @@ def _make_post_init(has_post_init: bool) -> Callable[[DataModelCls], None]:
 
     else:
 
-        def __attrs_post_init__(self: DataModelCls) -> None:
+        def __attrs_post_init__(self: DataModelProto) -> None:
             if attr._config._run_validators is True:  # type: ignore  # attr._config is not visible for mypy
                 for validator in type(self).__datamodel_validators__:
                     validator.__get__(self)(self)
@@ -401,7 +401,9 @@ def _make_post_init(has_post_init: bool) -> Callable[[DataModelCls], None]:
 
 
 def _make_data_model_class_getitem() -> classmethod:
-    def __class_getitem__(cls: DataModelCls, args: Union[Type, Tuple[Type]]) -> Type[DataModelCls]:
+    def __class_getitem__(
+        cls: DataModelProto, args: Union[Type, Tuple[Type]]
+    ) -> Type[DataModelProto]:
         type_args = args if isinstance(args, tuple) else (args,)
         return concretize(cls, *type_args, as_generic_alias=True)
 
@@ -419,7 +421,7 @@ def _make_datamodel(
     frozen: bool,
     instantiable: bool,
 ) -> Type:
-    """Actual implementation of the datamodel creation.
+    """Actual implementation of the Data Model creation.
 
     See :func:`datamodel` for the description of the parameters.
     """
@@ -524,29 +526,33 @@ def _make_datamodel(
     setattr(
         cls,
         _MODEL_FIELDS_MEMBER,
-        tuple(_make_dataclass_field_from_attr(field_attr) for field_attr in cls.__attrs_attrs__),
+        utils.FrozenNamespace(
+            **{field_attr.name: field_attr for field_attr in cls.__attrs_attrs__}
+        ),
     )
-    cls.__dataclass_fields__ = getattr(cls, _MODEL_FIELDS_MEMBER)  # For dataclasses emulation
+    cls.__dataclass_fields__ = tuple(  # dataclasses emulation
+        _make_dataclass_field_from_attr(field_attr) for field_attr in cls.__attrs_attrs__
+    )
 
     return cls
 
 
 def is_datamodel(obj: Any) -> bool:
-    """Returns True if `obj` is a datamodel class or an instance of a datamodel."""
+    """Returns True if `obj` is a Data Model class or an instance of a Data Model."""
     cls = obj if isinstance(obj, type) else obj.__class__
     return hasattr(cls, _MODEL_FIELDS_MEMBER)
 
 
-def is_generic(datamodel: Union[DataModelCls, Type[DataModelCls]]) -> bool:
-    """Returns True if `obj` is a generic datamodel class or an instance of a generic datamodel."""
+def is_generic(datamodel: Union[DataModelProto, Type[DataModelProto]]) -> bool:
+    """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
     if not is_datamodel(datamodel):
         raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
 
     return len(getattr(datamodel, "__parameters__", [])) > 0
 
 
-def is_instantiable(datamodel: Type[DataModelCls]) -> bool:
-    """Returns True if `obj` is a generic datamodel class or an instance of a generic datamodel."""
+def is_instantiable(datamodel: Type[DataModelProto]) -> bool:
+    """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
     if not (isinstance(type) and is_datamodel(datamodel)):
         raise ValueError(f"Invalid datamodel class: '{datamodel}'.")
 
@@ -555,8 +561,10 @@ def is_instantiable(datamodel: Type[DataModelCls]) -> bool:
     return params.instantiable
 
 
-def get_fields(datamodel: Union[DataModelCls, Type[DataModelCls]]) -> Tuple[dataclasses.Field, ...]:
-    """Return a tuple describing the fields of this datamodel."""
+def get_fields(
+    datamodel: Union[DataModelProto, Type[DataModelProto]]
+) -> Tuple[dataclasses.Field, ...]:
+    """Return a tuple describing the fields of this Data Model."""
     if is_datamodel():
         return tuple(getattr(datamodel, _MODEL_FIELDS_MEMBER))
     else:
@@ -565,48 +573,71 @@ def get_fields(datamodel: Union[DataModelCls, Type[DataModelCls]]) -> Tuple[data
 
 @utils.optional_lru_cache(maxsize=None, typed=True)
 def concretize(
-    cls: Type[GenericDataModelProto],
+    datamodel_cls: Type[GenericDataModelProto],
+    /,
     *type_args: Type,
     class_name: Optional[str] = None,
     module: Optional[str] = None,
     overwrite_definition: bool = True,
     support_pickling: bool = True,
     as_generic_alias: bool = False,
-) -> Type[DataModelCls]:
-    if not is_generic(cls):
-        raise TypeError(f"'{cls.__name__}' is not a generic model class.")
+) -> Type[DataModelProto]:
+    """Generate a new concrete subclass of a generic Data Model.
+
+    Arguments:
+        datamodel_cls: Generic Data Model to be subclassed.
+        type_args: Type defintitions replacing the `TypeVars` in
+            ``datamodel_cls.__parameters__``.
+
+    Keyword Arguments:
+        class_name: Name of the new concrete class. The default value is the
+            same of the generic Data Model replacing the `TypeVars` by the provided
+            `type_args` in the name.
+        module: Value of the ``__module__`` attribute of the new class.
+            The default value is the name of the module containing the generic Data Model.
+        overwrite_definition: If ``True`` (the default) a previous
+            definition of the class in the target module will be overwritten.
+        support_pickling: If ``True`` (the default) support for pickling will be added
+            by actually inserting the new class into the target `module`.
+        as_generic_alias: If ``True`` (the default is ``False``), it will return an
+            instance compatible with the class aliases returned by the `typing` module
+            machinery for normal classes annotated with :class:``typing.Generic``.
+    """
+
+    if not is_generic(datamodel_cls):
+        raise TypeError(f"'{datamodel_cls.__name__}' is not a generic model class.")
     if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
         raise TypeError(
             f"Only 'type' and 'typing.TypeVar' values can be passed as arguments "
             f"to instantiate a generic model class (received: {type_args})."
         )
-    if len(type_args) != len(cls.__parameters__):
+    if len(type_args) != len(datamodel_cls.__parameters__):
         raise TypeError(
-            f"Instantiating '{cls.__name__}' generic model with a wrong number of parameters "
-            f"({len(type_args)} used, {len(cls.__parameters__)} expected)."
+            f"Instantiating '{datamodel_cls.__name__}' generic model with a wrong number of parameters "
+            f"({len(type_args)} used, {len(datamodel_cls.__parameters__)} expected)."
         )
 
     # Get actual types for generic fields
-    type_params_map = dict(zip(cls.__parameters__, type_args))
+    type_params_map = dict(zip(datamodel_cls.__parameters__, type_args))
     concrete_annotations = {
         f_name: _substitute_typevars(f_type, type_params_map)
-        for f_name, f_type in typing.get_type_hints(cls).items()
+        for f_name, f_type in typing.get_type_hints(datamodel_cls).items()
     }
 
     # Create new concrete class
     if not class_name:
         arg_names = [
             type_params_map[tp_var].__name__ if tp_var in type_params_map else tp_var.__name__
-            for tp_var in cls.__parameters__
+            for tp_var in datamodel_cls.__parameters__
         ]
-        class_name = f"{cls.__name__}__{'_'.join(arg_names)}"
+        class_name = f"{datamodel_cls.__name__}__{'_'.join(arg_names)}"
 
     namespace = {
         "__annotations__": concrete_annotations,
-        "__module__": module if module else cls.__module__,
+        "__module__": module if module else datamodel_cls.__module__,
     }
 
-    concrete_cls = type(class_name, (cls,), namespace)
+    concrete_cls = type(class_name, (datamodel_cls,), namespace)
     assert concrete_cls.__module__ == module or not module
 
     # For pickling to work, the new class has to be added to the proper module
@@ -625,7 +656,7 @@ def concretize(
     if _MODEL_FIELDS_MEMBER not in concrete_cls.__dict__:
         # If original model does not inherit from GenericModel,
         # _make_datamodel() hasn't been called yet
-        params = getattr(cls, _MODEL_PARAMS)
+        params = getattr(datamodel_cls, _MODEL_PARAMS)
         concrete_cls = _make_datamodel(
             concrete_cls,
             **{
@@ -636,8 +667,15 @@ def concretize(
 
     if as_generic_alias:
         # To emulate the typing._GenericAlias mechanism, an object compatible
-        # with `typing._GenericAlias` is returned, but using the new concrete
-        # class as type 'origin'. See also:
+        # with `typing._GenericAlias` is returned. Basically, a `typing._GenericAlias`
+        # instance is a class proxy which stores the concrete types passed at
+        # creation (`__args__`) and keeps a reference to the original class (`__origin__`).
+        # Since this proxy implements a `__mro__entries` method (PEP 560), when this
+        # object is found in the list of bases of a new class, it is substituted by the
+        # actual class and thus the new type is created as usual.
+        # The `GenericTypeAlias` object returned here works exactly in the same way,
+        # but stores the new concrete class in `__origin__`, instead the original
+        # generic one. For the full picture check also:
         #     https://www.python.org/dev/peps/pep-0526/
         #     https://www.python.org/dev/peps/pep-0560/)
         return GenericTypeAlias(concrete_cls, type_args)
@@ -645,11 +683,11 @@ def concretize(
         return concrete_cls
 
 
-def validator(name: str, /) -> Callable[[Callable], Callable]:
+def validator(name: str) -> Callable[[Callable], Callable]:
     """Decorator to define a custom field validator for a specific field.
 
-    Args:
-        name: Name of the field to be validated by this.
+    Arguments:
+        name: Name of the field to be validated by the decorated function.
     """
     assert isinstance(name, str)
 
@@ -660,12 +698,35 @@ def validator(name: str, /) -> Callable[[Callable], Callable]:
     return _field_validator_maker
 
 
-def root_validator(func: Callable) -> classmethod:
+def root_validator(func: Callable, /) -> classmethod:
     """Decorator to define a custom root validator."""
 
     cls_method = classmethod(func)
     setattr(cls_method, _ROOT_VALIDATOR_TAG, None)
     return cls_method
+
+
+def fields(
+    datamodel: Union[DataModelProto, Type[DataModelProto]], *, as_attrs: bool = False
+) -> utils.FrozenNamespace:
+    """Return
+
+    Arguments:
+        asdf:
+
+    Keyword Arguments:
+        as_attrs: If ``True`` (the default is ``False``), field information is returned
+            as :class:`attr.Attribute` instances instance of :class:`attr.Attribute`
+    """
+    if not is_datamodel(datamodel):
+        raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
+
+    if as_attrs:
+        field_data = {f.name: f for f in datamodel.__attrs_attrs__}
+    else:
+        field_data = {f.name: f for f in datamodel.__datamodel_fields__}
+
+    return utils.FrozenNamespace(**field_data)
 
 
 def field(
@@ -679,7 +740,34 @@ def field(
     compare: bool = True,
     metadata: Optional[Mapping[Any, Any]] = None,
 ) -> Any:  # attr.s lies on purpose in some typings
-    """Return an object to define dataclass fields."""
+    """Return an object to identify dataclass fields.
+
+    Keyword Arguments:
+        default: If provided, this will be the default value for this field.
+            This is needed because the ``field()`` call itself replaces the
+            normal position of the default value.
+        default_factory: If provided, it must be a zero-argument callable that will
+            be called when a default value is needed for this field. Among other
+            purposes, this can be used to specify fields with mutable default values.
+            It is an error to specify both `default` and `default_factory`.
+        init: If ``True`` (the default), this field is included as a parameter to the
+            generated ``__init__()`` method.
+        repr: If ``True`` (the default), this field is included in the string returned
+            by the generated ``__repr__()`` method.
+        hash: This can be a ``bool`` or ``None``. If ``True``, this field is included
+            in the generated ``__hash__()`` method. If ``None`` (the default), use the
+            value of `compare`, which would normally be the expected behavior: a field
+            should be considered in the `hash` if it’s used for comparisons.
+            Setting this value to anything other than ``None`` is `discouraged`.
+        compare: If ``True`` (the default), this field is included in the
+            generated equality and comparison methods (__eq__(), __gt__(), et al.).
+        metadata: An arbitrary mapping, not used at all by Data Models, and provided
+            only as a third-party extension mechanism. Multiple third-parties can each
+            have their own key, to use as a namespace in the metadata.
+
+    Note:
+        Currently implemented using `attr.ib` (https://www.attrs.org/).
+    """
 
     defaults_kwargs = {}
     if default is not NOTHING:
@@ -768,6 +856,16 @@ def datamodel(
 
 
 class DataModel:
+    """Base class to automatically convert any subclass into a Data Model.
+
+    Inheriting from this class is equivalent to apply the :func:`datamodel`
+    decorator to a class, except that all descendants will be also converted
+    automatically in Data Models (which does not happen when explicitly
+    applying the decorator).
+
+    See :func:`datamodel` for the description of the parameters.
+    """
+
     @classmethod
     def __init_subclass__(
         cls,
@@ -798,7 +896,7 @@ class DataModel:
 class GenericTypeAlias(typing._GenericAlias, _root=True):  # type: ignore  # typing._GenericAlias is not visible for mypy
     """Custom GenericAlias to abstract :class:`typing._GenericAlias` implementation details."""
 
-    def __getitem__(self, args: Union[Type, Tuple[Type]]) -> Type[DataModelCls]:
+    def __getitem__(self, args: Union[Type, Tuple[Type]]) -> Type[DataModelProto]:
         type_args = args if isinstance(args, tuple) else (args,)
         return concretize(self.__origin__, *type_args, as_generic_alias=True)
 
