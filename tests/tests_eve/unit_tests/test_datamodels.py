@@ -44,7 +44,7 @@ import factory
 import pytest
 import pytest_factoryboy as pytfboy
 
-from eve import datamodel, utils
+from eve import datamodels, utils
 
 
 # --- Utils ---
@@ -93,7 +93,7 @@ class IntKind(enum.IntEnum):
 
 
 # NonInstantiableModel
-class NonInstantiableModel(datamodel.DataModel, instantiable=False):
+class NonInstantiableModel(datamodels.DataModel, instantiable=False):
     pass
 
 
@@ -104,7 +104,7 @@ class NonInstantiableModelFactory(factory.Factory):
 
 
 # EmptyModel
-class EmptyModel(datamodel.DataModel):
+class EmptyModel(datamodels.DataModel):
     pass
 
 
@@ -114,7 +114,7 @@ class EmptyModelFactory(factory.Factory):
 
 
 # BasicFieldsModel
-class BasicFieldsModel(datamodel.DataModel):
+class BasicFieldsModel(datamodels.DataModel):
     bool_value: bool
     int_value: int
     float_value: float
@@ -158,7 +158,7 @@ class FixedBasicFieldsModelFactory(BasicFieldsModelFactory):
 
 
 # BasicFieldsModelWithDefaults
-class BasicFieldsModelWithDefaults(datamodel.DataModel):
+class BasicFieldsModelWithDefaults(datamodels.DataModel):
     bool_value: bool = True
     int_value: int = 1
     float_value: float = 2.0
@@ -178,7 +178,7 @@ class BasicFieldsModelWithDefaultsFactory(factory.Factory):
 
 
 # AdvancedFieldsModel
-class AdvancedFieldsModel(datamodel.DataModel):
+class AdvancedFieldsModel(datamodels.DataModel):
     str_list: List[str]
     int_set: Set[int]
     float_sequence: Sequence[float]
@@ -234,7 +234,7 @@ class OtherAdvancedFieldsModelFactory(AdvancedFieldsModelFactory):
 
 
 # CompositeModel
-class CompositeModel(datamodel.DataModel):
+class CompositeModel(datamodels.DataModel):
     basic_model: BasicFieldsModel
     basic_model_with_defaults: BasicFieldsModelWithDefaults
 
@@ -256,7 +256,7 @@ class FixedCompositeModelFactory(factory.Factory):
 
 
 # ModelWithValidators
-class ModelWithValidators(datamodel.DataModel):
+class ModelWithValidators(datamodels.DataModel):
     bool_value: bool
     int_value: int
     even_int_value: int
@@ -264,31 +264,31 @@ class ModelWithValidators(datamodel.DataModel):
     str_value: str
     extra_value: Optional[Any] = None
 
-    @datamodel.validator("bool_value")
+    @datamodels.validator("bool_value")
     def _bool_value_validator(self, attribute, value):
         assert isinstance(self, ModelWithValidators)
 
-    @datamodel.validator("int_value")
+    @datamodels.validator("int_value")
     def _int_value_validator(self, attribute, value):
         if value < 0:
             raise ValueError(f"'{attribute.name}' must be larger or equal to 0")
 
-    @datamodel.validator("even_int_value")
+    @datamodels.validator("even_int_value")
     def _even_int_value_validator(self, attribute, value):
         if value % 2:
             raise ValueError(f"'{attribute.name}' must be an even number")
 
-    @datamodel.validator("float_value")
+    @datamodels.validator("float_value")
     def _float_value_validator(self, attribute, value):
         if value > 3.14159:
             raise ValueError(f"'{attribute.name}' must be smaller or equal to 3.14159")
 
-    @datamodel.validator("str_value")
+    @datamodels.validator("str_value")
     def _str_value_validator(self, attribute, value):
         if value == str(self.float_value):
             raise ValueError(f"'{attribute.name}' must be different to 'float_value'")
 
-    @datamodel.validator("extra_value")
+    @datamodels.validator("extra_value")
     def _extra_value_validator(self, attribute, value):
         if bool(value):
             raise ValueError(f"'{attribute.name}' must be equivalent to False")
@@ -314,19 +314,19 @@ class InheritedModelWithValidators(ModelWithValidators):
     extra_value: bool  # redefined with decorator and a different type
     new_int_value: int  # added field
 
-    @datamodel.validator("str_value")
+    @datamodels.validator("str_value")
     def _str_value_validator(self, attribute, value):
         # Redeclare using same validator function name
         if len(value) > 5:
             raise ValueError(f"'{attribute.name}' must contain 5 chars or less")
 
-    @datamodel.validator("extra_value")
+    @datamodels.validator("extra_value")
     def _another_extra_value_validator(self, attribute, value):
         # Redeclare using a different validator function name
         if value is True:
             raise ValueError(f"'{attribute.name}' must be False")
 
-    @datamodel.validator("new_int_value")
+    @datamodels.validator("new_int_value")
     def _int_value_validator(self, attribute, value):
         # Using a name already existing in the superclass for the validator function
         if self.int_value != value:
@@ -347,26 +347,26 @@ class InheritedModelWithValidatorsFactory(factory.Factory):
 
 
 # ModelWithRootValidators
-class ModelWithRootValidators(datamodel.DataModel):
+class ModelWithRootValidators(datamodels.DataModel):
     int_value: int
     float_value: float
     str_value: str
 
     class_counter: ClassVar[int] = 0
 
-    @datamodel.root_validator
+    @datamodels.root_validator
     def _root_validator(cls, instance):
         assert cls is type(instance)
         assert issubclass(cls, ModelWithRootValidators)
         assert isinstance(instance, ModelWithRootValidators)
         cls.class_counter = 0
 
-    @datamodel.root_validator
+    @datamodels.root_validator
     def _another_root_validator(cls, instance):
         assert cls.class_counter == 0
         cls.class_counter += 1
 
-    @datamodel.root_validator
+    @datamodels.root_validator
     def _final_root_validator(cls, instance):
         assert cls.class_counter == 1
         cls.class_counter += 1
@@ -386,17 +386,17 @@ class ModelWithRootValidatorsFactory(factory.Factory):
 
 # InheritedModelWithRootValidators
 class InheritedModelWithRootValidators(ModelWithRootValidators):
-    @datamodel.root_validator
+    @datamodels.root_validator
     def _root_validator(cls, instance):
         assert cls.class_counter == 2
         cls.class_counter += 10
 
-    @datamodel.root_validator
+    @datamodels.root_validator
     def _another_root_validator(cls, instance):
         assert cls.class_counter == 12
         cls.class_counter += 10
 
-    @datamodel.root_validator
+    @datamodels.root_validator
     def _final_root_validator(cls, instance):
         assert cls.class_counter == 22
         if str(instance.int_value) == instance.str_value:
@@ -418,7 +418,7 @@ S = TypeVar("S")
 U = TypeVar("U", bound=int)
 
 
-class SimpleGenericModel(datamodel.DataModel, Generic[T]):
+class SimpleGenericModel(datamodels.DataModel, Generic[T]):
     generic_value: T
     int_value: int = 0
 
@@ -459,7 +459,7 @@ def any_model_instance(request):
 def test_datamodel_class_members(any_model_instance):
     assert hasattr(any_model_instance, "__init__")
     assert hasattr(any_model_instance, "__datamodel_fields__") and isinstance(
-        any_model_instance.__datamodel_fields__, tuple
+        any_model_instance.__datamodel_fields__, utils.FrozenNamespace
     )
     assert hasattr(any_model_instance, "__datamodel_params__") and isinstance(
         any_model_instance.__datamodel_params__, utils.FrozenNamespace
@@ -779,27 +779,27 @@ class TestFieldFunctions:
     def test_missing_annotations(self):
         with pytest.raises(TypeError, match="other_value"):
 
-            class Model(datamodel.DataModel):
-                other_value = datamodel.field(default=None)
+            class Model(datamodels.DataModel):
+                other_value = datamodels.field(default=None)
 
     def test_field_defaults(self):
-        class Model(datamodel.DataModel):
-            str_value: str = datamodel.field(default="DEFAULT")
+        class Model(datamodels.DataModel):
+            str_value: str = datamodels.field(default="DEFAULT")
 
         assert Model().str_value == "DEFAULT"
         assert Model(str_value="other").str_value == "other"
 
         with pytest.raises(TypeError, match="int_value"):
 
-            class Model(datamodel.DataModel):
-                int_value: int = datamodel.field(default="DEFAULT")
+            class Model(datamodels.DataModel):
+                int_value: int = datamodels.field(default="DEFAULT")
 
             Model()
 
     def test_field_default_factory(self):
         # Classic type factory
-        class Model(datamodel.DataModel):
-            list_value: List[int] = datamodel.field(default_factory=list)
+        class Model(datamodels.DataModel):
+            list_value: List[int] = datamodels.field(default_factory=list)
 
         list_value = Model().list_value
         assert isinstance(list_value, list) and len(list_value) == 0
@@ -808,8 +808,8 @@ class TestFieldFunctions:
         def list_factory():
             return list(i for i in range(5))
 
-        class Model(datamodel.DataModel):
-            list_value: List[int] = datamodel.field(default_factory=list_factory)
+        class Model(datamodels.DataModel):
+            list_value: List[int] = datamodels.field(default_factory=list_factory)
 
         list_value = Model().list_value
         assert (
@@ -819,15 +819,15 @@ class TestFieldFunctions:
         # Invalid default and default_factory combination
         with pytest.raises(ValueError, match="both default and default_factory"):
 
-            class Model(datamodel.DataModel):
-                list_value: Optional[List[int]] = datamodel.field(
+            class Model(datamodels.DataModel):
+                list_value: Optional[List[int]] = datamodels.field(
                     default=None, default_factory=list
                 )
 
     @pytest.mark.parametrize("value", [5, "5", 1.1, "22"])
     def test_field_converter(self, value):
-        class Model(datamodel.DataModel):
-            int_value: int = datamodel.field(converter=int)
+        class Model(datamodels.DataModel):
+            int_value: int = datamodels.field(converter=int)
 
         assert Model(int_value=value).int_value == int(value)
 
@@ -835,8 +835,8 @@ class TestFieldFunctions:
             assert Model(int_value="invalid")
 
     def test_invalid_field_converter(self):
-        class OtherModel(datamodel.DataModel):
-            int_value: int = datamodel.field(converter=str)
+        class OtherModel(datamodels.DataModel):
+            int_value: int = datamodels.field(converter=str)
 
         with pytest.raises(TypeError, match="int_value"):
             OtherModel(int_value=3)
@@ -846,8 +846,8 @@ class TestFieldFunctions:
 
     @pytest.mark.parametrize("value", [1, 2.2, "3", "asdf"])
     def test_auto_field_converter(self, value):
-        class Model(datamodel.DataModel):
-            int_value: int = datamodel.field(converter=True)
+        class Model(datamodels.DataModel):
+            int_value: int = datamodels.field(converter=True)
 
         try:
             expected_value = int(value)
