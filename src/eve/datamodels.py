@@ -372,14 +372,14 @@ def _get_attribute_from_bases(
 
 def _substitute_typevars(
     type_hint: Type, type_params_map: Mapping[TypeVar, Union[Type, TypeVar]]
-) -> Union[Type, TypeVar]:
+) -> Tuple[Union[Type, TypeVar], bool]:
     if isinstance(type_hint, typing.TypeVar):
         assert type_hint in type_params_map
-        return type_params_map[type_hint]
+        return type_params_map[type_hint], True
     elif getattr(type_hint, "__parameters__", []):
-        return type_hint[tuple(type_params_map[tp] for tp in type_hint.__parameters__)]
+        return type_hint[tuple(type_params_map[tp] for tp in type_hint.__parameters__)], True
     else:
-        return type_hint
+        return type_hint, False
 
 
 def _make_counting_attr_from_attr(
@@ -628,10 +628,11 @@ def _make_concrete_with_cache(
 
     # Get actual types for generic fields
     type_params_map = dict(zip(datamodel_cls.__parameters__, type_args))
-    concrete_annotations = {
-        f_name: _substitute_typevars(f_type, type_params_map)
-        for f_name, f_type in typing.get_type_hints(datamodel_cls).items()
-    }
+    concrete_annotations = {}
+    for f_name, f_type in typing.get_type_hints(datamodel_cls).items():
+        new_annotation, replaced = _substitute_typevars(f_type, type_params_map)
+        if replaced:
+            concrete_annotations[f_name] = new_annotation
 
     # Create new concrete class
     if not class_name:

@@ -755,10 +755,17 @@ class TestGenericModels:
             and Model3 is datamodels.concretize(SimpleGenericModel, concrete_type)
         )
 
+    @pytest.mark.parametrize("concrete_type", [int, float, str])
+    def test_generic_model_alias(self, concrete_type):
+        Model = datamodels.concretize(SimpleGenericModel, concrete_type)
+
+        assert SimpleGenericModel[concrete_type].__class__ is Model
+        assert typing.get_origin(SimpleGenericModel[concrete_type]) is Model
+
         class SubModel(SimpleGenericModel[concrete_type]):
             ...
 
-        assert SubModel.__base__ is Model1
+        assert SubModel.__base__ is Model
 
     @pytest.mark.parametrize(
         "value", [False, 1, 1.1, "string", [1], ("a", "b"), {1, 2, 3}, {"a": 1}]
@@ -771,7 +778,7 @@ class TestGenericModels:
     )
     @pytest.mark.parametrize("concrete_type", [int, float, str])
     def test_concrete_field_type_validation(self, concrete_type, value):
-        Model = SimpleGenericModel[concrete_type]
+        Model = SimpleGenericModel[concrete_type].__class__
 
         if isinstance(value, concrete_type):  # concrete_type == type(value):
             model = Model(generic_value=value)

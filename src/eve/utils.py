@@ -27,8 +27,8 @@ import itertools
 import operator
 import pickle
 import re
-import typing
 import types
+import typing
 import uuid
 import warnings
 
@@ -434,6 +434,7 @@ class FrozenNamespace(types.SimpleNamespace):
            ...
         TypeError: Trying to modify immutable 'FrozenNamespace' instance.
     """
+
     def __setattr__(self, _name: str, _value: Any) -> None:
         raise TypeError(f"Trying to modify immutable '{self.__class__.__name__}' instance.")
 
