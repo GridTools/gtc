@@ -60,6 +60,9 @@ class _AttrClassLike(Protocol):
 class _DataClassLike(Protocol):
     __dataclass_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
 
+    def __post_init__(self) -> None:
+        ...
+
 
 class BaseDataModelLike(_AttrClassLike, _DataClassLike, Protocol):
     __datamodel_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
@@ -67,9 +70,6 @@ class BaseDataModelLike(_AttrClassLike, _DataClassLike, Protocol):
     __datamodel_validators__: ClassVar[
         Tuple[NonDataDescriptor[BaseDataModelLike, BoundRootValidatorFunc], ...]
     ]
-
-    def __post_init__(self: BaseDataModelLike) -> None:
-        ...
 
 
 class GenericDataModelLike(BaseDataModelLike):
@@ -103,7 +103,7 @@ class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  
     types passed at creation (``__args__``).
 
     Both :class:`typing._GenericAlias` and this class implement a
-    ``__mro__entries__`` method (PEP 560) and therefore when instances
+    ``__mro__entries__`` method (PEP 560) and, therefore, when instances
     of these classes are found in the list of bases of a new class, they
     are automatically substituted by the original Python class, and the
     new type is created as usual.
@@ -393,8 +393,8 @@ def _substitute_typevars(
         return type_hint, False
 
 
-def _make_counting_attr_from_attr(
-    field_attr: attr.Attribute, *, include_type: bool = False, **kwargs: Any
+def _make_counting_attr_from_attribute(
+    field_attrib: attr.Attribute, *, include_type: bool = False, **kwargs: Any
 ) -> Any:  # attr.s lies on purpose in some typings
     members = [
         "default",
@@ -412,32 +412,32 @@ def _make_counting_attr_from_attr(
     if include_type:
         members.append("type")
 
-    return attr.ib(**{key: getattr(field_attr, key) for key in members}, **kwargs)  # type: ignore  # too hard for mypy
+    return attr.ib(**{key: getattr(field_attrib, key) for key in members}, **kwargs)  # type: ignore  # too hard for mypy
 
 
-def _make_dataclass_field_from_attr(field_attr: attr.Attribute) -> dataclasses.Field:
+def _make_dataclass_field_from_attr(field_attrib: attr.Attribute) -> dataclasses.Field:
     MISSING = getattr(dataclasses, "MISSING", NOTHING)
     default = MISSING
     default_factory = MISSING
-    if isinstance(field_attr.default, attr.Factory):  # type: ignore  # attr.s lies on purpose in some typings
-        default_factory = field_attr.default.factory  # type: ignore  # attr.s lies on purpose in some typings
-    elif field_attr.default is not attr.NOTHING:
-        default = field_attr.default
+    if isinstance(field_attrib.default, attr.Factory):  # type: ignore  # attr.s lies on purpose in some typings
+        default_factory = field_attrib.default.factory  # type: ignore  # attr.s lies on purpose in some typings
+    elif field_attrib.default is not attr.NOTHING:
+        default = field_attrib.default
 
-    assert field_attr.eq == field_attr.order  # dataclasses.compare == (attr.eq and attr.order)
+    assert field_attrib.eq == field_attrib.order  # dataclasses.compare == (attr.eq and attr.order)
 
     dataclasses_field = dataclasses.Field(  # type: ignore  # dataclasses.Field signature seems invisible to mypy
         default=default,
         default_factory=default_factory,
-        init=field_attr.init,
-        repr=field_attr.repr if not callable(field_attr.repr) else None,
-        hash=field_attr.hash,
-        compare=field_attr.eq,
-        metadata=field_attr.metadata,
+        init=field_attrib.init,
+        repr=field_attrib.repr if not callable(field_attrib.repr) else None,
+        hash=field_attrib.hash,
+        compare=field_attrib.eq,
+        metadata=field_attrib.metadata,
     )
-    dataclasses_field.name = field_attr.name
-    assert field_attr.type is not None
-    dataclasses_field.type = field_attr.type
+    dataclasses_field.name = field_attrib.name
+    assert field_attrib.type is not None
+    dataclasses_field.type = field_attrib.type
 
     return dataclasses_field
 
@@ -539,24 +539,24 @@ def _make_datamodel(
 
     # Add collected field validators
     for field_name, field_validator in field_validators.items():
-        field_attrib = cls.__dict__.get(field_name, None)
-        if not field_attrib:
+        field_c_attr = cls.__dict__.get(field_name, None)
+        if not field_c_attr:
             # Field has not been defined in the current class namespace,
             # look for field definition in the base classes.
             base_field_attr = _get_attribute_from_bases(field_name, mro_bases, annotations)
             if base_field_attr:
                 # Create a new field in the current class cloning the existing
                 # definition and add the new validator (attrs recommendation)
-                field_attrib = _make_counting_attr_from_attr(
+                field_c_attr = _make_counting_attr_from_attribute(
                     base_field_attr,
                 )
-                setattr(cls, field_name, field_attrib)
+                setattr(cls, field_name, field_c_attr)
             else:
                 raise TypeError(f"Validator assigned to non existing '{field_name}' field.")
 
         # Add field validator using field_attr.validator
-        assert isinstance(field_attrib, attr._make._CountingAttr)  # type: ignore  # attr._make is not visible for mypy
-        field_attrib.validator(field_validator)
+        assert isinstance(field_c_attr, attr._make._CountingAttr)  # type: ignore  # attr._make is not visible for mypy
+        field_c_attr.validator(field_validator)
 
     setattr(cls, _ROOT_VALIDATORS, tuple(root_validators))
 
@@ -637,13 +637,17 @@ def _make_concrete_with_cache(
             f"({len(type_args)} used, {len(datamodel_cls.__parameters__)} expected)."
         )
 
-    # Get actual types for generic fields
+    # Replace field definitions with the new actual types for generic fields
     type_params_map = dict(zip(datamodel_cls.__parameters__, type_args))
-    concrete_annotations = {}
-    for f_name, f_type in typing.get_type_hints(datamodel_cls).items():
-        new_annotation, replaced = _substitute_typevars(f_type, type_params_map)
+    model_fields = getattr(datamodel_cls, _MODEL_FIELDS)
+    new_annotations = {}
+    new_field_c_attrs = {}
+    for field_name, field_type in typing.get_type_hints(datamodel_cls).items():
+        new_annotation, replaced = _substitute_typevars(field_type, type_params_map)
         if replaced:
-            concrete_annotations[f_name] = new_annotation
+            new_annotations[field_name] = new_annotation
+            field_attrib = getattr(model_fields, field_name)
+            new_field_c_attrs[field_name] = _make_counting_attr_from_attribute(field_attrib)
 
     # Create new concrete class
     if not class_name:
@@ -654,8 +658,9 @@ def _make_concrete_with_cache(
         class_name = f"{datamodel_cls.__name__}__{'_'.join(arg_names)}"
 
     namespace = {
-        "__annotations__": concrete_annotations,
+        "__annotations__": new_annotations,
         "__module__": module if module else datamodel_cls.__module__,
+        **new_field_c_attrs,
     }
 
     concrete_cls = type(class_name, (datamodel_cls,), namespace)
@@ -663,7 +668,7 @@ def _make_concrete_with_cache(
 
     if _MODEL_FIELDS not in concrete_cls.__dict__:
         # If original model does not inherit from GenericModel,
-        # _make_datamodel() hasn't been called yet
+        # _make_datamodel() hasn't been called yet, so call it now
         params = getattr(datamodel_cls, _MODEL_PARAMS)
         concrete_cls = _make_datamodel(
             concrete_cls,
