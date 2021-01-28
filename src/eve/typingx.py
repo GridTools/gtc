@@ -38,7 +38,7 @@ V = TypeVar("V")
 
 class NonDataDescriptor(Protocol[T, V]):  # type: ignore
     @overload
-    def __get__(self, _instance: None, _owner_type: Optional[Type[T]] = None) -> NonDataDescriptor:
+    def __get__(self, _instance: None, _owner_type: Type[T]) -> NonDataDescriptor:
         ...
 
     @overload

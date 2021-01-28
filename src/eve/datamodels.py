@@ -31,7 +31,6 @@ from typing import (
     ClassVar,
     Dict,
     List,
-    Literal,
     Mapping,
     Optional,
     Protocol,
@@ -66,7 +65,7 @@ class BaseDataModelLike(_AttrClassLike, _DataClassLike, Protocol):
     __datamodel_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
     __datamodel_params__: ClassVar[utils.FrozenNamespace]
     __datamodel_validators__: ClassVar[
-        Tuple[NonDataDescriptor[BaseDataModelLike, RootValidatorFunc], ...]
+        Tuple[NonDataDescriptor[BaseDataModelLike, BoundRootValidatorFunc], ...]
     ]
 
     def __post_init__(self: BaseDataModelLike) -> None:
@@ -86,8 +85,11 @@ class GenericDataModelLike(BaseDataModelLike):
 
 DataModelLike = Union[BaseDataModelLike, GenericDataModelLike]
 
-ValidatorFunc = Callable[[DataModelLike, attr.Attribute, Any], None]
+ValidatorFunc = Callable[[DataModelLike, attr.Attribute, T], None]
+BoundValidatorFunc = Callable[[attr.Attribute, T], None]
+
 RootValidatorFunc = Callable[[Type[DataModelLike], DataModelLike], None]
+BoundRootValidatorFunc = Callable[[DataModelLike], None]
 
 
 class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  # typing._GenericAlias is not visible for mypy
@@ -135,7 +137,7 @@ class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  
     __origin__: Type[GenericDataModelLike]
 
     def __getitem__(self, args: Union[Type, Tuple[Type]]) -> GenericDataModelAlias:
-        origin_model: GenericDataModelLike = self.__origin__
+        origin_model: Type[GenericDataModelLike] = self.__origin__
         assert isinstance(origin_model, type) and is_generic(origin_model)
         return origin_model.__class_getitem__(args)  # equivalent to: self.__origin__[args]
 
