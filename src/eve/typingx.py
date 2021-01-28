@@ -36,11 +36,9 @@ T = TypeVar("T")
 V = TypeVar("V")
 
 
-class NonDataDescriptorProto(Protocol[T, V]):  # type: ignore
+class NonDataDescriptor(Protocol[T, V]):  # type: ignore
     @overload
-    def __get__(
-        self, _instance: None, _owner_type: Optional[Type[T]] = None
-    ) -> NonDataDescriptorProto:
+    def __get__(self, _instance: None, _owner_type: Optional[Type[T]] = None) -> NonDataDescriptor:
         ...
 
     @overload
@@ -48,6 +46,6 @@ class NonDataDescriptorProto(Protocol[T, V]):  # type: ignore
         ...
 
 
-class DataDescriptorProto(NonDataDescriptorProto[T, V], Protocol):  # type: ignore
+class DataDescriptor(NonDataDescriptor[T, V], Protocol):  # type: ignore
     def __set__(self, _instance: T, _value: V) -> None:
         ...

@@ -31,6 +31,7 @@ from typing import (
     ClassVar,
     Dict,
     List,
+    Literal,
     Mapping,
     Optional,
     Protocol,
@@ -42,7 +43,7 @@ from typing import (
 
 import attr
 
-from eve.typingx import NonDataDescriptorProto
+from eve.typingx import NonDataDescriptor
 
 from . import utils
 from .concepts import NOTHING
@@ -53,34 +54,40 @@ T = TypeVar("T")
 V = TypeVar("V")
 
 
-class _AttrClassProto(Protocol):
+class _AttrClassLike(Protocol):
     __attrs_attrs__: ClassVar[Tuple[attr.Attribute, ...]]
 
 
-class _DataClassProto(Protocol):
+class _DataClassLike(Protocol):
     __dataclass_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
 
 
-class BaseDataModelProto(_AttrClassProto, _DataClassProto, Protocol):
+class BaseDataModelLike(_AttrClassLike, _DataClassLike, Protocol):
     __datamodel_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
     __datamodel_params__: ClassVar[utils.FrozenNamespace]
     __datamodel_validators__: ClassVar[
-        Tuple[NonDataDescriptorProto[BaseDataModelProto, RootValidatorFunc], ...]
+        Tuple[NonDataDescriptor[BaseDataModelLike, RootValidatorFunc], ...]
     ]
 
-    def __post_init__(self: BaseDataModelProto) -> None:
+    def __post_init__(self: BaseDataModelLike) -> None:
         ...
 
 
-class GenericDataModelProto(BaseDataModelProto):
+class GenericDataModelLike(BaseDataModelLike):
     __args__: ClassVar[Tuple[Union[Type, TypeVar]]]
     __parameters__: ClassVar[Tuple[TypeVar]]
 
+    @classmethod
+    def __class_getitem__(
+        cls: Type[GenericDataModelLike], args: Union[Type, Tuple[Type]]
+    ) -> GenericDataModelAlias:
+        ...
 
-DataModelProto = Union[BaseDataModelProto, GenericDataModelProto]
 
-ValidatorFunc = Callable[[DataModelProto, attr.Attribute, Any], None]
-RootValidatorFunc = Callable[[Type[DataModelProto], DataModelProto], None]
+DataModelLike = Union[BaseDataModelLike, GenericDataModelLike]
+
+ValidatorFunc = Callable[[DataModelLike, attr.Attribute, Any], None]
+RootValidatorFunc = Callable[[Type[DataModelLike], DataModelLike], None]
 
 
 class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  # typing._GenericAlias is not visible for mypy
@@ -125,10 +132,12 @@ class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  
             - https://www.python.org/dev/peps/pep-0560/
     """
 
-    __origin__: Type[GenericDataModelProto]
+    __origin__: Type[GenericDataModelLike]
 
     def __getitem__(self, args: Union[Type, Tuple[Type]]) -> GenericDataModelAlias:
-        return self.__origin___[args]
+        origin_model: GenericDataModelLike = self.__origin__
+        assert isinstance(origin_model, type) and is_generic(origin_model)
+        return origin_model.__class_getitem__(args)  # equivalent to: self.__origin__[args]
 
     @property  # type: ignore  # Read-only property cannot override read-write property
     def __class__(self) -> Type:
@@ -166,7 +175,7 @@ class _TupleValidator:
         self.validators = validators
         self.tuple_type = tuple_type
 
-    def __call__(self, instance: _AttrClassProto, attribute: attr.Attribute, value: Any) -> None:
+    def __call__(self, instance: _AttrClassLike, attribute: attr.Attribute, value: Any) -> None:
         if not isinstance(value, self.tuple_type):
             raise TypeError(
                 f"In '{attribute.name}' validation, got '{value}' that is a {type(value)} instead of {self.tuple_type}."
@@ -199,7 +208,7 @@ class _OrValidator:
         self.validators = validators
         self.error_type = error_type
 
-    def __call__(self, instance: _AttrClassProto, attribute: attr.Attribute, value: Any) -> None:
+    def __call__(self, instance: _AttrClassLike, attribute: attr.Attribute, value: Any) -> None:
         passed = False
         for v in self.validators:
             try:
@@ -223,7 +232,7 @@ class _LiteralValidator:
     def __init__(self, literal: Any) -> None:
         self.literal = literal
 
-    def __call__(self, instance: _AttrClassProto, attribute: attr.Attribute, value: Any) -> None:
+    def __call__(self, instance: _AttrClassLike, attribute: attr.Attribute, value: Any) -> None:
         if isinstance(self.literal, bool):
             valid = value is self.literal
         else:
@@ -237,7 +246,7 @@ class _LiteralValidator:
 def empty_attrs_validator() -> attr._ValidatorType:
     """Create an attr.s empty validator which always succeeds."""
 
-    def _empty_validator(instance: _AttrClassProto, attribute: attr.Attribute, value: Any) -> None:
+    def _empty_validator(instance: _AttrClassLike, attribute: attr.Attribute, value: Any) -> None:
         pass
 
     return _empty_validator
@@ -432,16 +441,16 @@ def _make_dataclass_field_from_attr(field_attr: attr.Attribute) -> dataclasses.F
 
 
 def _make_non_instantiable_init() -> Callable[..., None]:
-    def __init__(self: DataModelProto, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: DataModelLike, *args: Any, **kwargs: Any) -> None:
         raise TypeError(f"Trying to instantiate '{type(self).__name__}' abstract class.")
 
     return __init__
 
 
-def _make_post_init(has_post_init: bool) -> Callable[[DataModelProto], None]:
+def _make_post_init(has_post_init: bool) -> Callable[[DataModelLike], None]:
     if has_post_init:
 
-        def __attrs_post_init__(self: DataModelProto) -> None:
+        def __attrs_post_init__(self: DataModelLike) -> None:
             if attr._config._run_validators is True:  # type: ignore  # attr._config is not visible for mypy
                 for validator in type(self).__datamodel_validators__:
                     validator.__get__(self)(self)
@@ -449,7 +458,7 @@ def _make_post_init(has_post_init: bool) -> Callable[[DataModelProto], None]:
 
     else:
 
-        def __attrs_post_init__(self: DataModelProto) -> None:
+        def __attrs_post_init__(self: DataModelLike) -> None:
             if attr._config._run_validators is True:  # type: ignore  # attr._config is not visible for mypy
                 for validator in type(self).__datamodel_validators__:
                     validator.__get__(self)(self)
@@ -459,7 +468,7 @@ def _make_post_init(has_post_init: bool) -> Callable[[DataModelProto], None]:
 
 def _make_data_model_class_getitem() -> classmethod:
     def __class_getitem__(
-        cls: Type[GenericDataModelProto], args: Union[Type, Tuple[Type]]
+        cls: Type[GenericDataModelLike], args: Union[Type, Tuple[Type]]
     ) -> GenericDataModelAlias:
         """Return an instance compatible with aliases created by the `typing` module for `typing.Generic`s.
 
@@ -607,12 +616,12 @@ def _make_datamodel(
 
 @utils.optional_lru_cache(maxsize=None, typed=True)
 def _make_concrete_with_cache(
-    datamodel_cls: Type[GenericDataModelProto],
+    datamodel_cls: Type[GenericDataModelLike],
     /,
     *type_args: Type,
     class_name: Optional[str] = None,
     module: Optional[str] = None,
-) -> Type[DataModelProto]:
+) -> Type[DataModelLike]:
     if not is_generic(datamodel_cls):
         raise TypeError(f"'{datamodel_cls.__name__}' is not a generic model class.")
     if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
@@ -671,7 +680,7 @@ def is_datamodel(obj: Any) -> bool:
     return hasattr(cls, _MODEL_FIELDS)
 
 
-def is_generic(datamodel: Union[DataModelProto, Type[DataModelProto]]) -> bool:
+def is_generic(datamodel: Union[DataModelLike, Type[DataModelLike]]) -> bool:
     """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
     if not is_datamodel(datamodel):
         raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
@@ -679,9 +688,9 @@ def is_generic(datamodel: Union[DataModelProto, Type[DataModelProto]]) -> bool:
     return len(getattr(datamodel, "__parameters__", [])) > 0
 
 
-def is_instantiable(datamodel: Type[DataModelProto]) -> bool:
+def is_instantiable(datamodel: Type[DataModelLike]) -> bool:
     """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
-    if not (isinstance(type) and is_datamodel(datamodel)):
+    if not (isinstance(datamodel, type) and is_datamodel(datamodel)):
         raise ValueError(f"Invalid datamodel class: '{datamodel}'.")
 
     params = getattr(datamodel, _MODEL_PARAMS)
@@ -690,24 +699,24 @@ def is_instantiable(datamodel: Type[DataModelProto]) -> bool:
 
 
 def get_fields(
-    datamodel: Union[DataModelProto, Type[DataModelProto]]
+    datamodel: Union[DataModelLike, Type[DataModelLike]]
 ) -> Tuple[dataclasses.Field, ...]:
     """Return a tuple describing the fields of this Data Model."""
-    if is_datamodel():
+    if is_datamodel(datamodel):
         return tuple(getattr(datamodel, _MODEL_FIELDS))
     else:
         raise TypeError(f"Invalid dataclass type or instance: '{datamodel}'.")
 
 
 def concretize(
-    datamodel_cls: Type[GenericDataModelProto],
+    datamodel_cls: Type[GenericDataModelLike],
     /,
     *type_args: Type,
     class_name: Optional[str] = None,
     module: Optional[str] = None,
     overwrite_definition: bool = True,
     support_pickling: bool = True,
-) -> Type[DataModelProto]:
+) -> Type[DataModelLike]:
     """Generate a new concrete subclass of a generic Data Model.
 
     Arguments:
@@ -729,7 +738,7 @@ def concretize(
     concrete_cls = _make_concrete_with_cache(
         datamodel_cls, *type_args, class_name=class_name, module=module
     )
-    assert is_datamodel(concrete_cls)
+    assert isinstance(concrete_cls, type) and is_datamodel(concrete_cls)
 
     # For pickling to work, the new class has to be added to the proper module
     if support_pickling:
@@ -772,7 +781,7 @@ def root_validator(func: Callable, /) -> classmethod:
 
 
 def fields(
-    datamodel: Union[DataModelProto, Type[DataModelProto]], *, as_dataclass: bool = False
+    datamodel: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: bool = False
 ) -> utils.FrozenNamespace:
     """Return the field meta-information of a Data Model.
 
@@ -806,7 +815,9 @@ def fields(
     if as_dataclass:
         return utils.FrozenNamespace(**{f.name: f for f in datamodel.__dataclass_fields__})
     else:
-        return getattr(datamodel, _MODEL_FIELDS)
+        ns = getattr(datamodel, _MODEL_FIELDS)
+        assert isinstance(ns, utils.FrozenNamespace)
+        return ns
 
 
 def field(
