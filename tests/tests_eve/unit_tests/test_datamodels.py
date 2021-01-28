@@ -758,8 +758,7 @@ class TestGenericModels:
         class SubModel(SimpleGenericModel[concrete_type]):
             ...
 
-        base = SubModel.__base__
-        assert SubModel.__bases__[0] is Model
+        assert SubModel.__base__ is Model1
 
     @pytest.mark.parametrize(
         "value", [False, 1, 1.1, "string", [1], ("a", "b"), {1, 2, 3}, {"a": 1}]
