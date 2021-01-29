@@ -41,7 +41,6 @@ from typing import (
     Union,
 )
 
-import boltons
 import factory
 import pytest
 import pytest_factoryboy as pytfboy
@@ -51,114 +50,28 @@ from eve import datamodels, utils
 
 T = TypeVar("T")
 
-# --- Utils ---
 model_factories: List[factory.Factory] = []
 invalid_model_factories: List[factory.Factory] = []
 
 
-_FACTORY_COLLECTION_NAME_TAG = "__FACTORY_COLLECTION__"
-_FACTORY_FIXTURE_COLLECTION_NAME_TAG = "__FACTORY_FIXTURE_COLLECTION__"
-_MODEL_FIXTURE_COLLECTION_NAME_TAG = "__MODEL_FIXTURE_COLLECTION__"
-
-
-def collect_factories(
-    module_globals: Dict[str, Any],
+def register_factory(
+    factory_or_name: Optional[Union[factory.Factory, str]] = None,
     *,
-    factories_collection: Optional[Union[str, MutableSequence]] = None,
-    factory_fixtures_collection: Optional[Union[str, MutableSequence]] = None,
-    model_fixtures_collection: Optional[Union[str, MutableSequence]] = None,
-) -> List[Tuple[factory.Factory, str]]:
-    """Register factoryboy factory classes as pytest fixtures.
+    collection: Optional[MutableSequence[factory.Factory]] = None,
+) -> Union[factory.Factory, Callable[[factory.Factory], factory.Factory]]:
+    if isinstance(factory_or_name, str):
+        name = factory_or_name
+        factory_class = None
+    else:
+        name = None
+        factory_class = factory_or_name
 
-    Arguments:
-        module_globals: Globals ``dict`` of the test module where the factories
-            should be registered.
-        factories_collection: List (or name of the global variable in
-            `module_globals` collecting all `factoryboy` :class:`factory.Factory`
-            classes.
-        factory_fixtures_collection: List (or name of the global variable in
-            `module_globals` collecting all pytest fixtures creating factories.
-        model_fixtures_collection: List (or name of the global variable in
-            `module_globals` collecting all pytest fixtures creating instances
-            of particular models.
+    def _decorator(factory: factory.Factory) -> factory.Factory:
+        if collection is not None:
+            collection.append(factory)
+        return pytfboy.register(factory, name)
 
-    Conventions expected by this function:
-
-        - All factory classes names end with ``Factory``.
-        - The default collections passed in the arguments (``factory_collections``,
-          ``factory_fixtures_collection`` and ``model_fixtures_collection``) can
-          overwritten in particular cases, if the Factory contains a
-          ``__FACTORY_COLLECTION__``, ``__FACTORY_FIXTURE_COLLECTION__`` or
-          ``__MODEL_FIXTURE_COLLECTION__`` string attributes. In these cases,
-          they will be added respectively to the global variable collection named
-          with the content of the tag.
-    """
-    default_factories_collection = (
-        module_globals[factories_collection]
-        if isinstance(factories_collection, str)
-        else factories_collection
-    )
-    default_factory_fixtures_collection = (
-        module_globals[factory_fixtures_collection]
-        if isinstance(factory_fixtures_collection, str)
-        else factory_fixtures_collection
-    )
-    default_model_fixtures_collection = (
-        module_globals[model_fixtures_collection]
-        if isinstance(factories_collection, str)
-        else model_fixtures_collection
-    )
-
-    pytfboy_register_args = []
-    for name, value in module_globals.items():
-        if isinstance(value, type) and issubclass(value, factory.Factory):
-            assert name.endswith("Factory")
-            factory_fixture_name = boltons.strutils.camel2under(name)
-            model_fixture_name = boltons.strutils.camel2under(value._meta.model.__name__)
-            if factory_fixture_name.endswith(f"{model_fixture_name}_factory"):
-                # Use the name of the factory fixture for the model fixture,
-                # to support different factories for the same model
-                model_fixture_name = factory_fixture_name.replace("_factory", "")
-
-            factories_collection = module_globals.get(
-                getattr(value, _FACTORY_COLLECTION_NAME_TAG, None), default_factories_collection
-            )
-            if factories_collection is not None:
-                factories_collection.append(value)
-
-            factory_fixtures_collection = module_globals.get(
-                getattr(value, _FACTORY_FIXTURE_COLLECTION_NAME_TAG, None),
-                default_factory_fixtures_collection,
-            )
-            if factory_fixtures_collection is not None:
-                factory_fixtures_collection.append(pytest.lazy_fixture(factory_fixture_name))
-
-            model_fixtures_collection = module_globals.get(
-                getattr(value, _MODEL_FIXTURE_COLLECTION_NAME_TAG, None),
-                default_model_fixtures_collection,
-            )
-            if model_fixtures_collection is not None:
-                model_fixtures_collection.append(pytest.lazy_fixture(model_fixture_name))
-
-            pytfboy_register_args.append(
-                (value, model_fixture_name)
-            )  # pytfboy.register(value, model_fixture_name)
-
-    return pytfboy_register_args
-
-
-def make_tag_decorator(tag_value_pairs: List[Tuple(str, str)]) -> Callable[[T], T]:
-    def _collector(obj: T) -> T:
-        for tag, value in tag_value_pairs:
-            setattr(obj, tag, value)
-        return obj
-
-    return _collector
-
-
-invalid_model_factory = make_tag_decorator(
-    [(_FACTORY_COLLECTION_NAME_TAG, "invalid_model_factories")]
-)
+    return _decorator(factory_class) if factory_class is not None else _decorator
 
 
 # --- Models, factories and fixtures ---
@@ -182,7 +95,7 @@ class NonInstantiableModel(datamodels.DataModel, instantiable=False):
     pass
 
 
-@invalid_model_factory
+@register_factory(collection=invalid_model_factories)
 class NonInstantiableModelFactory(factory.Factory):
     class Meta:
         model = NonInstantiableModel
@@ -193,6 +106,7 @@ class EmptyModel(datamodels.DataModel):
     pass
 
 
+@register_factory(collection=model_factories)
 class EmptyModelFactory(factory.Factory):
     class Meta:
         model = EmptyModel
@@ -213,6 +127,7 @@ class BasicFieldsModel(datamodels.DataModel):
     class_var: ClassVar[int] = 0
 
 
+@register_factory(collection=model_factories)
 class BasicFieldsModelFactory(factory.Factory):
     class Meta:
         model = BasicFieldsModel
@@ -230,6 +145,7 @@ class BasicFieldsModelFactory(factory.Factory):
     )
 
 
+@register_factory("fixed_basic_fields_model", collection=model_factories)
 class FixedBasicFieldsModelFactory(BasicFieldsModelFactory):
     bool_value = True
     int_value = 1
@@ -257,6 +173,7 @@ class BasicFieldsModelWithDefaults(datamodels.DataModel):
     class_var: ClassVar[int] = 0
 
 
+@register_factory(collection=model_factories)
 class BasicFieldsModelWithDefaultsFactory(factory.Factory):
     class Meta:
         model = BasicFieldsModelWithDefaults
@@ -283,6 +200,7 @@ class AdvancedFieldsModel(datamodels.DataModel):
     class_var: ClassVar[Dict[str, int]] = {"a": 0}
 
 
+@register_factory(collection=model_factories)
 class AdvancedFieldsModelFactory(factory.Factory):
     class Meta:
         model = AdvancedFieldsModel
@@ -304,6 +222,7 @@ class AdvancedFieldsModelFactory(factory.Factory):
     nested_dict = {"empty": [], 0: [], 1: [("a", "b", 10), None, None]}
 
 
+@register_factory("other_advanced_fields_model", collection=model_factories)
 class OtherAdvancedFieldsModelFactory(AdvancedFieldsModelFactory):
     str_list = []
     float_sequence = tuple()
@@ -324,6 +243,7 @@ class CompositeModel(datamodels.DataModel):
     basic_model_with_defaults: BasicFieldsModelWithDefaults
 
 
+@register_factory(collection=model_factories)
 class CompositeModelFactory(factory.Factory):
     class Meta:
         model = CompositeModel
@@ -332,6 +252,7 @@ class CompositeModelFactory(factory.Factory):
     basic_model_with_defaults = factory.SubFactory(BasicFieldsModelWithDefaultsFactory)
 
 
+@register_factory("fixed_composite_model", collection=model_factories)
 class FixedCompositeModelFactory(factory.Factory):
     class Meta:
         model = CompositeModel
@@ -379,6 +300,7 @@ class ModelWithValidators(datamodels.DataModel):
             raise ValueError(f"'{attribute.name}' must be equivalent to False")
 
 
+@register_factory(collection=model_factories)
 class ModelWithValidatorsFactory(factory.Factory):
     class Meta:
         model = ModelWithValidators
@@ -418,6 +340,7 @@ class InheritedModelWithValidators(ModelWithValidators):
             raise ValueError(f"'{attribute.name}' value must be equal to 'extra_value'")
 
 
+@register_factory(collection=model_factories)
 class InheritedModelWithValidatorsFactory(factory.Factory):
     class Meta:
         model = InheritedModelWithValidators
@@ -460,6 +383,7 @@ class ModelWithRootValidators(datamodels.DataModel):
             raise ValueError("'int_value' and 'float_value' must be different")
 
 
+@register_factory(collection=model_factories)
 class ModelWithRootValidatorsFactory(factory.Factory):
     class Meta:
         model = ModelWithRootValidators
@@ -488,6 +412,7 @@ class InheritedModelWithRootValidators(ModelWithRootValidators):
             raise ValueError("'int_value' and 'str_value' must be different")
 
 
+@register_factory(collection=model_factories)
 class InheritedModelWithRootValidatorsFactory(factory.Factory):
     class Meta:
         model = InheritedModelWithRootValidators
@@ -508,6 +433,7 @@ class GenericModel(datamodels.DataModel, Generic[T]):
     int_value: int = 0
 
 
+@register_factory(collection=model_factories)
 class GenericModelFactory(factory.Factory):
     class Meta:
         model = GenericModel
@@ -521,6 +447,7 @@ class GenericModelWithDefaults(datamodels.DataModel, Generic[T]):
     int_value: int = 0
 
 
+@register_factory("other_advanced_fields_model", collection=model_factories)
 class GenericModelWithDefaultsFactory(factory.Factory):
     class Meta:
         model = GenericModelWithDefaults
@@ -540,15 +467,6 @@ class AdvancedGenericModel(GenericModel[T], Generic[S, U, T]):
 @pytest.fixture(params=[int, float, str, complex])
 def instantiated_generic_model_class(request):
     return GenericModel[request.param]
-
-
-# Register factories as fixtures using pytest_factoryboy plugin
-pytfboy_register_args = collect_factories(
-    globals(),
-    factories_collection=model_factories,
-)
-for factory_class, model_fixture_name in pytfboy_register_args:
-    pytfboy.register(factory_class, model_fixture_name)
 
 
 @pytest.fixture(params=model_factories)
