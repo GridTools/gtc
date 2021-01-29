@@ -31,6 +31,7 @@ from typing import (
     ClassVar,
     Dict,
     List,
+    Literal,
     Mapping,
     Optional,
     Protocol,
@@ -103,10 +104,10 @@ class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  
     types passed at creation (``__args__``).
 
     Both :class:`typing._GenericAlias` and this class implement a
-    ``__mro__entries__()`` method (PEP 560) and, therefore, when instances
-    of these classes are found in the list of bases of a new class, they
-    are automatically substituted by the original Python class, and the
-    new type is created as usual.
+    ``__mro__entries__()`` method (PEP 560) and, therefore, when
+    instances of these classes are found in the list of bases of
+    a new class, they are automatically substituted by the original
+    Python class, and the new type is created as usual.
 
     Instances of this class work exactly in the same way, but also
     create new actual Data Model classes during the `concretization`
@@ -114,8 +115,8 @@ class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  
     generic models in the ``__origin__`` attribute.
 
     The new concrete class can be accessed as usual using
-    :class:`typing.get_origin` or by using the custom
-    :attr:`__class__` shortcut provided by this class.
+    :class:`typing.get_origin` or by using the custom :attr:`__class__`
+    shortcut provided by this class.
 
     Examples:
         >>> from typing import Generic, get_origin
@@ -259,7 +260,6 @@ def or_attrs_validator(
     *validators: attr._ValidatorType, error_type: Type[Exception]
 ) -> attr._ValidatorType:
     """Create an attr.s validator combinator where only one of the validators needs to pass."""
-    # vals: Tuple[_AttrsValidatorFunc] = tuple(utils.flatten(validators))
     if len(validators) == 1:
         return validators[0]
     else:
@@ -309,6 +309,8 @@ def strict_type_attrs_validator(type_hint: Type) -> attr._ValidatorType:
             return attr.validators.instance_of(type_hint.__bound__)
         else:
             return empty_attrs_validator()
+    elif type_hint is None:
+        return attr.validators.instance_of(type(None))
     elif type_hint is Any:
         return empty_attrs_validator()
     elif origin_type is typing.Literal:
@@ -706,14 +708,60 @@ def is_instantiable(datamodel: Type[DataModelLike]) -> bool:
     return params.instantiable
 
 
+@typing.overload
 def get_fields(
-    datamodel: Union[DataModelLike, Type[DataModelLike]]
+    datamodel: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: Literal[False] = False
+) -> utils.FrozenNamespace:
+    ...
+
+
+@typing.overload
+def get_fields(
+    datamodel: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: Literal[True]
 ) -> Tuple[dataclasses.Field, ...]:
-    """Return a tuple describing the fields of this Data Model."""
-    if is_datamodel(datamodel):
-        return tuple(getattr(datamodel, _MODEL_FIELDS))
+    ...
+
+
+def get_fields(
+    datamodel: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: bool = False
+) -> Union[utils.FrozenNamespace, Tuple[dataclasses.Field, ...]]:
+    """Return the field meta-information of a Data Model.
+
+    Arguments:
+        datamodel: A Data Model class or instance.
+
+    Keyword Arguments:
+        as_dataclass: If ``True`` (the default is ``False``), field information is returned
+            as :class:`dataclass.Field` instances instead of :class:`attr.Attribute`.
+
+    Examples:
+        >>> from typing import List
+        >>> @datamodel
+        ... class Model:
+        ...     amount: int = 1
+        ...     name: str
+        ...     numbers: List[float]
+        >>> fields(Model)  # doctest:+ELLIPSIS
+        FrozenNamespace(amount=Attribute(name='amount', default=1, ...),\
+ name=Attribute(name='name', default=NOTHING, ...),\
+ numbers=Attribute(name='numbers', default=NOTHING, ...))
+        >>> fields(Model, as_dataclass=True)  # doctest:+ELLIPSIS
+        (Field(name='amount',type='int',default=1,default_factory=...),\
+ Field(name='name',type='str',default=...),\
+ Field(name='numbers',type='List[float]',default=...))
+    """
+    if not is_datamodel(datamodel):
+        raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
+
+    if as_dataclass:
+        return datamodel.__dataclass_fields__
     else:
-        raise TypeError(f"Invalid dataclass type or instance: '{datamodel}'.")
+        ns = getattr(datamodel, _MODEL_FIELDS)
+        assert isinstance(ns, utils.FrozenNamespace)
+        return ns
+
+
+fields = get_fields
 
 
 def concretize(
@@ -770,6 +818,13 @@ def validator(name: str) -> Callable[[Callable], Callable]:
 
     Arguments:
         name: Name of the field to be validated by the decorated function.
+
+    The decorated functions should have the following signature:
+    ``def _validator_function(self, attribute, value):`` where
+    ``self`` will be the model instance being validated, ``attribute``
+    the definition information of the attribute (the value of
+    ``__datamodel_fields__.field_name``) and ``value`` the actual value
+    received for this field.
     """
     assert isinstance(name, str)
 
@@ -781,51 +836,17 @@ def validator(name: str) -> Callable[[Callable], Callable]:
 
 
 def root_validator(func: Callable, /) -> classmethod:
-    """Decorator to define a custom root validator."""
+    """Decorator to define a custom root validator.
+
+    The decorated functions should have the following signature:
+    ``def _root_validator_function(cls, instance):`` where ``cls`` will
+    be the class of the model and ``instance`` the actual instance being
+    validated.
+    """
 
     cls_method = classmethod(func)
     setattr(cls_method, _ROOT_VALIDATOR_TAG, None)
     return cls_method
-
-
-def fields(
-    datamodel: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: bool = False
-) -> utils.FrozenNamespace:
-    """Return the field meta-information of a Data Model.
-
-    Arguments:
-        datamodel: A Data Model class or instance.
-
-    Keyword Arguments:
-        as_dataclass: If ``True`` (the default is ``False``), field information is returned
-            as :class:`dataclass.Field` instances instead of :class:`attr.Attribute`.
-
-    Examples:
-        >>> from typing import List
-        >>> @datamodel
-        ... class Model:
-        ...     amount: int = 1
-        ...     name: str
-        ...     numbers: List[float]
-        >>> fields(Model)  # doctest:+ELLIPSIS
-        FrozenNamespace(amount=Attribute(name='amount', default=1, ...),\
- name=Attribute(name='name', default=NOTHING, ...),\
- numbers=Attribute(name='numbers', default=NOTHING, ...))
-        >>> fields(Model, as_dataclass=True)  # doctest:+ELLIPSIS
-        FrozenNamespace(amount=Field(name='amount',type='int',default=1,...),\
- name=Field(name='name',type='str',default=<dataclasses._MISSING_TYPE object ...),\
- numbers=Field(name='numbers',type='List[float]',default=<dataclasses._MISSING_TYPE object ...))
-
-    """
-    if not is_datamodel(datamodel):
-        raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
-
-    if as_dataclass:
-        return utils.FrozenNamespace(**{f.name: f for f in datamodel.__dataclass_fields__})
-    else:
-        ns = getattr(datamodel, _MODEL_FIELDS)
-        assert isinstance(ns, utils.FrozenNamespace)
-        return ns
 
 
 def field(

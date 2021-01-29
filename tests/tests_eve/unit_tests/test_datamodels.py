@@ -55,21 +55,15 @@ invalid_model_factories: List[factory.Factory] = []
 
 
 def register_factory(
-    factory_or_name: Optional[Union[factory.Factory, str]] = None,
+    factory_class: Optional[factory.Factory] = None,
     *,
+    model_fixture: Optional[str] = None,
     collection: Optional[MutableSequence[factory.Factory]] = None,
 ) -> Union[factory.Factory, Callable[[factory.Factory], factory.Factory]]:
-    if isinstance(factory_or_name, str):
-        name = factory_or_name
-        factory_class = None
-    else:
-        name = None
-        factory_class = factory_or_name
-
     def _decorator(factory: factory.Factory) -> factory.Factory:
         if collection is not None:
             collection.append(factory)
-        return pytfboy.register(factory, name)
+        return pytfboy.register(factory, model_fixture)
 
     return _decorator(factory_class) if factory_class is not None else _decorator
 
@@ -145,7 +139,7 @@ class BasicFieldsModelFactory(factory.Factory):
     )
 
 
-@register_factory("fixed_basic_fields_model", collection=model_factories)
+@register_factory(model_fixture="fixed_basic_fields_model", collection=model_factories)
 class FixedBasicFieldsModelFactory(BasicFieldsModelFactory):
     bool_value = True
     int_value = 1
@@ -222,7 +216,7 @@ class AdvancedFieldsModelFactory(factory.Factory):
     nested_dict = {"empty": [], 0: [], 1: [("a", "b", 10), None, None]}
 
 
-@register_factory("other_advanced_fields_model", collection=model_factories)
+@register_factory(model_fixture="other_advanced_fields_model", collection=model_factories)
 class OtherAdvancedFieldsModelFactory(AdvancedFieldsModelFactory):
     str_list = []
     float_sequence = tuple()
@@ -252,7 +246,7 @@ class CompositeModelFactory(factory.Factory):
     basic_model_with_defaults = factory.SubFactory(BasicFieldsModelWithDefaultsFactory)
 
 
-@register_factory("fixed_composite_model", collection=model_factories)
+@register_factory(model_fixture="fixed_composite_model", collection=model_factories)
 class FixedCompositeModelFactory(factory.Factory):
     class Meta:
         model = CompositeModel
@@ -447,7 +441,7 @@ class GenericModelWithDefaults(datamodels.DataModel, Generic[T]):
     int_value: int = 0
 
 
-@register_factory("other_advanced_fields_model", collection=model_factories)
+@register_factory(model_fixture="other_advanced_fields_model", collection=model_factories)
 class GenericModelWithDefaultsFactory(factory.Factory):
     class Meta:
         model = GenericModelWithDefaults
