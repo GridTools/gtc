@@ -68,7 +68,7 @@ class BaseDataModelLike(_AttrClassLike, _DataClassLike, Protocol):
     __datamodel_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
     __datamodel_params__: ClassVar[utils.FrozenNamespace]
     __datamodel_validators__: ClassVar[
-        Tuple[NonDataDescriptor[BaseDataModelLike, BoundRootValidatorFunc], ...]
+        Tuple[NonDataDescriptor[BaseDataModelLike, BoundRootValidator], ...]
     ]
 
 
@@ -86,10 +86,10 @@ class GenericDataModelLike(BaseDataModelLike):
 DataModelLike = Union[BaseDataModelLike, GenericDataModelLike]
 
 ValidatorFunc = Callable[[DataModelLike, attr.Attribute, T], None]
-BoundValidatorFunc = Callable[[attr.Attribute, T], None]
+BoundValidator = Callable[[attr.Attribute, T], None]
 
 RootValidatorFunc = Callable[[Type[DataModelLike], DataModelLike], None]
-BoundRootValidatorFunc = Callable[[DataModelLike], None]
+BoundRootValidator = Callable[[DataModelLike], None]
 
 
 class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  # typing._GenericAlias is not visible for mypy
@@ -103,18 +103,19 @@ class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  
     types passed at creation (``__args__``).
 
     Both :class:`typing._GenericAlias` and this class implement a
-    ``__mro__entries__`` method (PEP 560) and, therefore, when instances
+    ``__mro__entries__()`` method (PEP 560) and, therefore, when instances
     of these classes are found in the list of bases of a new class, they
     are automatically substituted by the original Python class, and the
     new type is created as usual.
 
     Instances of this class work exactly in the same way, but also
-    create an actual new concrete class which is stored in ``__origin__``
-    instead of the original generic model.
+    create new actual Data Model classes during the `concretization`
+    of generic models, which are stored instead of the original
+    generic models in the ``__origin__`` attribute.
 
-    The new concrete class can be accessed as usual using:class:`typing.get_origin`
-    or by using the custom :attr:`__class__` shortcut provided
-    by this class.
+    The new concrete class can be accessed as usual using
+    :class:`typing.get_origin` or by using the custom
+    :attr:`__class__` shortcut provided by this class.
 
     Examples:
         >>> from typing import Generic, get_origin
