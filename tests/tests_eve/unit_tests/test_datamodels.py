@@ -25,12 +25,14 @@ import types
 import typing
 from typing import (
     Any,
+    Callable,
     ClassVar,
     Dict,
     Generic,
     List,
     Literal,
     Mapping,
+    MutableSequence,
     Optional,
     Sequence,
     Set,
@@ -47,33 +49,116 @@ import pytest_factoryboy as pytfboy
 from eve import datamodels, utils
 
 
+T = TypeVar("T")
+
 # --- Utils ---
-invalid_model_factories = []
-model_factory_fixtures = []
-model_instance_fixtures = []
+model_factories: List[factory.Factory] = []
+invalid_model_factories: List[factory.Factory] = []
 
 
-def register_factories():
-    """Register factoryboy factory classes as pytest fixtures."""
+_FACTORY_COLLECTION_NAME_TAG = "__FACTORY_COLLECTION__"
+_FACTORY_FIXTURE_COLLECTION_NAME_TAG = "__FACTORY_FIXTURE_COLLECTION__"
+_MODEL_FIXTURE_COLLECTION_NAME_TAG = "__MODEL_FIXTURE_COLLECTION__"
 
-    for name, value in dict(**globals()).items():
+
+def collect_factories(
+    module_globals: Dict[str, Any],
+    *,
+    factories_collection: Optional[Union[str, MutableSequence]] = None,
+    factory_fixtures_collection: Optional[Union[str, MutableSequence]] = None,
+    model_fixtures_collection: Optional[Union[str, MutableSequence]] = None,
+) -> List[Tuple[factory.Factory, str]]:
+    """Register factoryboy factory classes as pytest fixtures.
+
+    Arguments:
+        module_globals: Globals ``dict`` of the test module where the factories
+            should be registered.
+        factories_collection: List (or name of the global variable in
+            `module_globals` collecting all `factoryboy` :class:`factory.Factory`
+            classes.
+        factory_fixtures_collection: List (or name of the global variable in
+            `module_globals` collecting all pytest fixtures creating factories.
+        model_fixtures_collection: List (or name of the global variable in
+            `module_globals` collecting all pytest fixtures creating instances
+            of particular models.
+
+    Conventions expected by this function:
+
+        - All factory classes names end with ``Factory``.
+        - The default collections passed in the arguments (``factory_collections``,
+          ``factory_fixtures_collection`` and ``model_fixtures_collection``) can
+          overwritten in particular cases, if the Factory contains a
+          ``__FACTORY_COLLECTION__``, ``__FACTORY_FIXTURE_COLLECTION__`` or
+          ``__MODEL_FIXTURE_COLLECTION__`` string attributes. In these cases,
+          they will be added respectively to the global variable collection named
+          with the content of the tag.
+    """
+    default_factories_collection = (
+        module_globals[factories_collection]
+        if isinstance(factories_collection, str)
+        else factories_collection
+    )
+    default_factory_fixtures_collection = (
+        module_globals[factory_fixtures_collection]
+        if isinstance(factory_fixtures_collection, str)
+        else factory_fixtures_collection
+    )
+    default_model_fixtures_collection = (
+        module_globals[model_fixtures_collection]
+        if isinstance(factories_collection, str)
+        else model_fixtures_collection
+    )
+
+    pytfboy_register_args = []
+    for name, value in module_globals.items():
         if isinstance(value, type) and issubclass(value, factory.Factory):
             assert name.endswith("Factory")
             factory_fixture_name = boltons.strutils.camel2under(name)
-            model_factory_fixtures.append(pytest.lazy_fixture(factory_fixture_name))
-
             model_fixture_name = boltons.strutils.camel2under(value._meta.model.__name__)
             if factory_fixture_name.endswith(f"{model_fixture_name}_factory"):
+                # Use the name of the factory fixture for the model fixture,
+                # to support different factories for the same model
                 model_fixture_name = factory_fixture_name.replace("_factory", "")
-            if value not in invalid_model_factories:
-                model_instance_fixtures.append(pytest.lazy_fixture(model_fixture_name))
 
-            pytfboy.register(value, model_fixture_name)
+            factories_collection = module_globals.get(
+                getattr(value, _FACTORY_COLLECTION_NAME_TAG, None), default_factories_collection
+            )
+            if factories_collection is not None:
+                factories_collection.append(value)
+
+            factory_fixtures_collection = module_globals.get(
+                getattr(value, _FACTORY_FIXTURE_COLLECTION_NAME_TAG, None),
+                default_factory_fixtures_collection,
+            )
+            if factory_fixtures_collection is not None:
+                factory_fixtures_collection.append(pytest.lazy_fixture(factory_fixture_name))
+
+            model_fixtures_collection = module_globals.get(
+                getattr(value, _MODEL_FIXTURE_COLLECTION_NAME_TAG, None),
+                default_model_fixtures_collection,
+            )
+            if model_fixtures_collection is not None:
+                model_fixtures_collection.append(pytest.lazy_fixture(model_fixture_name))
+
+            pytfboy_register_args.append(
+                (value, model_fixture_name)
+            )  # pytfboy.register(value, model_fixture_name)
+
+    return pytfboy_register_args
 
 
-def invalid_model_factory(factory):
-    invalid_model_factories.append(factory)
-    return factory
+def make_tag_decorator(tag_value_pairs: List[Tuple(str, str)]) -> Callable[[T], T]:
+    def _collector(obj: T) -> T:
+        for tag, value in tag_value_pairs:
+            setattr(obj, tag, value)
+        return obj
+
+    return _collector
+
+
+invalid_model_factory = make_tag_decorator(
+    [(_FACTORY_COLLECTION_NAME_TAG, "invalid_model_factories")]
+)
 
 
 # --- Models, factories and fixtures ---
@@ -418,67 +503,84 @@ S = TypeVar("S")
 U = TypeVar("U", bound=int)
 
 
-class SimpleGenericModel(datamodels.DataModel, Generic[T]):
+class GenericModel(datamodels.DataModel, Generic[T]):
     generic_value: T
     int_value: int = 0
 
 
-class SimpleGenericModelFactory(factory.Factory):
+class GenericModelFactory(factory.Factory):
     class Meta:
-        model = SimpleGenericModel
+        model = GenericModel
 
     generic_value = None
     int_value = 1
 
 
-class AdvancedGenericModel(SimpleGenericModel[T], Generic[U, S, T]):
-    generic_value: T
+class GenericModelWithDefaults(datamodels.DataModel, Generic[T]):
+    generic_value: T = 3
     int_value: int = 0
 
 
+class GenericModelWithDefaultsFactory(factory.Factory):
+    class Meta:
+        model = GenericModelWithDefaults
+
+    generic_value = None
+    int_value = 1
+
+
+class AdvancedGenericModel(GenericModel[T], Generic[S, U, T]):
+    generic_value: T
+    generic_value_s: S
+    generic_value_u: U
+    generic_list: List[T]
+    generic_tuple_dict: Dict[T, Union[T, Tuple[S, U]]]
+
+
 @pytest.fixture(params=[int, float, str, complex])
-def instantiated_simple_generic_model_class(request):
-    return SimpleGenericModel[request.param]
+def instantiated_generic_model_class(request):
+    return GenericModel[request.param]
 
 
 # Register factories as fixtures using pytest_factoryboy plugin
-register_factories()
+pytfboy_register_args = collect_factories(
+    globals(),
+    factories_collection=model_factories,
+)
+for factory_class, model_fixture_name in pytfboy_register_args:
+    pytfboy.register(factory_class, model_fixture_name)
 
 
-@pytest.fixture(params=model_factory_fixtures)
+@pytest.fixture(params=model_factories)
 def any_model_factory(request):
     return request.param
 
 
-@pytest.fixture(params=model_instance_fixtures)
-def any_model_instance(request):
-    return request.param
-
-
 # --- Tests ---
-def test_datamodel_class_members(any_model_instance):
-    assert hasattr(any_model_instance, "__init__")
-    assert hasattr(any_model_instance, "__datamodel_fields__") and isinstance(
-        any_model_instance.__datamodel_fields__, utils.FrozenNamespace
+def test_datamodel_class_members(any_model_factory):
+    model_instance = any_model_factory()
+    assert hasattr(model_instance, "__init__")
+    assert hasattr(model_instance, "__datamodel_fields__") and isinstance(
+        model_instance.__datamodel_fields__, utils.FrozenNamespace
     )
-    assert hasattr(any_model_instance, "__datamodel_params__") and isinstance(
-        any_model_instance.__datamodel_params__, utils.FrozenNamespace
+    assert hasattr(model_instance, "__datamodel_params__") and isinstance(
+        model_instance.__datamodel_params__, utils.FrozenNamespace
     )
-    assert hasattr(any_model_instance, "__datamodel_validators__") and isinstance(
-        any_model_instance.__datamodel_validators__, tuple
+    assert hasattr(model_instance, "__datamodel_validators__") and isinstance(
+        model_instance.__datamodel_validators__, tuple
     )
-    assert hasattr(any_model_instance, "__dataclass_fields__") and isinstance(
-        any_model_instance.__dataclass_fields__, tuple
+    assert hasattr(model_instance, "__dataclass_fields__") and isinstance(
+        model_instance.__dataclass_fields__, tuple
     )
 
-    assert dataclasses.is_dataclass(any_model_instance)
+    assert dataclasses.is_dataclass(model_instance)
 
-    field_names = [field.name for field in any_model_instance.__dataclass_fields__]
-    type_hints = typing.get_type_hints(any_model_instance.__class__)
+    field_names = [field.name for field in model_instance.__dataclass_fields__]
+    type_hints = typing.get_type_hints(model_instance.__class__)
     for name, type_hint in type_hints.items():
         if typing.get_origin(type_hint) is ClassVar:
-            assert hasattr(any_model_instance, name)
-            assert hasattr(any_model_instance.__class__, name)
+            assert hasattr(model_instance, name)
+            assert hasattr(model_instance.__class__, name)
             assert name not in field_names
 
 
@@ -487,11 +589,10 @@ def test_non_instantiable(non_instantiable_model_factory):
         non_instantiable_model_factory()
 
 
-def test_field_redefinition(basic_fields_model_factory):
-    base_model = basic_fields_model_factory()
+def test_field_redefinition(basic_fields_model):
+    model = basic_fields_model
     field_values = {
-        field.name: getattr(base_model, field.name)
-        for field in BasicFieldsModel.__dataclass_fields__
+        field.name: getattr(model, field.name) for field in BasicFieldsModel.__dataclass_fields__
     }
 
     # Redefinition with same type
@@ -512,8 +613,8 @@ def test_field_redefinition(basic_fields_model_factory):
     SubModel(**new_field_values, int_value=1.0)
 
 
-def test_default_values(basic_fields_model_with_defaults_factory):
-    model = basic_fields_model_with_defaults_factory()
+def test_default_values(basic_fields_model_with_defaults):
+    model = basic_fields_model_with_defaults
 
     assert model.bool_value is True
     assert model.int_value == 1
@@ -740,29 +841,29 @@ class TestRootValidators:
 class TestGenericModels:
     @pytest.mark.parametrize("concrete_type", [int, float, str])
     def test_generic_model_instantiation_name(self, concrete_type):
-        Model = datamodels.concretize(SimpleGenericModel, concrete_type)
+        Model = datamodels.concretize(GenericModel, concrete_type)
         assert concrete_type.__name__ in Model.__name__
 
     @pytest.mark.parametrize("concrete_type", [int, float, str])
     def test_generic_model_instantiation_cache(self, concrete_type):
-        Model1 = datamodels.concretize(SimpleGenericModel, concrete_type)
-        Model2 = datamodels.concretize(SimpleGenericModel, concrete_type)
-        Model3 = datamodels.concretize(SimpleGenericModel, concrete_type)
+        Model1 = datamodels.concretize(GenericModel, concrete_type)
+        Model2 = datamodels.concretize(GenericModel, concrete_type)
+        Model3 = datamodels.concretize(GenericModel, concrete_type)
 
         assert (
             Model1 is Model2
             and Model2 is Model3
-            and Model3 is datamodels.concretize(SimpleGenericModel, concrete_type)
+            and Model3 is datamodels.concretize(GenericModel, concrete_type)
         )
 
     @pytest.mark.parametrize("concrete_type", [int, float, str])
     def test_generic_model_alias(self, concrete_type):
-        Model = datamodels.concretize(SimpleGenericModel, concrete_type)
+        Model = datamodels.concretize(GenericModel, concrete_type)
 
-        assert SimpleGenericModel[concrete_type].__class__ is Model
-        assert typing.get_origin(SimpleGenericModel[concrete_type]) is Model
+        assert GenericModel[concrete_type].__class__ is Model
+        assert typing.get_origin(GenericModel[concrete_type]) is Model
 
-        class SubModel(SimpleGenericModel[concrete_type]):
+        class SubModel(GenericModel[concrete_type]):
             ...
 
         assert SubModel.__base__ is Model
@@ -770,19 +871,19 @@ class TestGenericModels:
     @pytest.mark.parametrize(
         "value", [False, 1, 1.1, "string", [1], ("a", "b"), {1, 2, 3}, {"a": 1}]
     )
-    def test_generic_field_type_validation(self, simple_generic_model_factory, value):
-        simple_generic_model_factory(generic_value="")
+    def test_generic_field_type_validation(self, generic_model_factory, value):
+        generic_model_factory(generic_value="")
 
     @pytest.mark.parametrize(
         "value", [False, 1, 1.1, "string", [1], ("a", "b"), {1, 2, 3}, {"a": 1}]
     )
     @pytest.mark.parametrize("concrete_type", [int, float, str])
     def test_concrete_field_type_validation(self, concrete_type, value):
-        Model = SimpleGenericModel[concrete_type].__class__
+        Model = GenericModel[concrete_type].__class__
 
-        if isinstance(value, concrete_type):  # concrete_type == type(value):
+        if isinstance(value, concrete_type):
             model = Model(generic_value=value)
-            assert model.int_value == 0
+            assert model.int_value == Model.__datamodel_fields__.int_value.default
         else:
             with pytest.raises(TypeError, match="generic_value"):
                 model = Model(generic_value=value)
