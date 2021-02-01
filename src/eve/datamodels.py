@@ -35,6 +35,7 @@ from typing import (
     Mapping,
     Optional,
     Protocol,
+    Sequence,
     Tuple,
     Type,
     TypeVar,
@@ -690,45 +691,45 @@ def is_datamodel(obj: Any) -> bool:
     return hasattr(cls, _MODEL_FIELDS)
 
 
-def is_generic(datamodel: Union[DataModelLike, Type[DataModelLike]]) -> bool:
-    """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
-    if not is_datamodel(datamodel):
-        raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
+def is_generic(model: Union[DataModelLike, Type[DataModelLike]]) -> bool:
+    """Returns True if `model` is a generic Data Model class or an instance of a generic Data Model."""
+    if not is_datamodel(model):
+        raise TypeError(f"Invalid datamodel instance or class: '{model}'.")
 
-    return len(getattr(datamodel, "__parameters__", [])) > 0
+    return len(getattr(model, "__parameters__", [])) > 0
 
 
-def is_instantiable(datamodel: Type[DataModelLike]) -> bool:
-    """Returns True if `obj` is a generic Data Model class or an instance of a generic Data Model."""
-    if not (isinstance(datamodel, type) and is_datamodel(datamodel)):
-        raise ValueError(f"Invalid datamodel class: '{datamodel}'.")
+def is_instantiable(model: Type[DataModelLike]) -> bool:
+    """Returns True if `model` is a instantiable Data Model class or an instance of a instantiable Data Model."""
+    if not is_datamodel(model):
+        raise TypeError(f"Invalid datamodel instance or class: '{model}'.")
 
-    params = getattr(datamodel, _MODEL_PARAMS)
+    params = getattr(model, _MODEL_PARAMS)
     assert hasattr(params, "instantiable") and isinstance(params.instantiable, bool)
     return params.instantiable
 
 
 @typing.overload
 def get_fields(
-    datamodel: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: Literal[False] = False
+    model: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: Literal[False] = False
 ) -> utils.FrozenNamespace:
     ...
 
 
 @typing.overload
 def get_fields(
-    datamodel: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: Literal[True]
+    model: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: Literal[True]
 ) -> Tuple[dataclasses.Field, ...]:
     ...
 
 
 def get_fields(
-    datamodel: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: bool = False
+    model: Union[DataModelLike, Type[DataModelLike]], *, as_dataclass: bool = False
 ) -> Union[utils.FrozenNamespace, Tuple[dataclasses.Field, ...]]:
     """Return the field meta-information of a Data Model.
 
     Arguments:
-        datamodel: A Data Model class or instance.
+        model: A Data Model class or instance.
 
     Keyword Arguments:
         as_dataclass: If ``True`` (the default is ``False``), field information is returned
@@ -750,18 +751,87 @@ def get_fields(
  Field(name='name',type='str',default=...),\
  Field(name='numbers',type='List[float]',default=...))
     """
-    if not is_datamodel(datamodel):
-        raise ValueError(f"Invalid datamodel instance or class: '{datamodel}'.")
+    if not (isinstance(model, type) and is_datamodel(model)):
+        raise TypeError(f"Invalid datamodel instance or class: '{model}'.")
 
     if as_dataclass:
-        return datamodel.__dataclass_fields__
+        return model.__dataclass_fields__
     else:
-        ns = getattr(datamodel, _MODEL_FIELDS)
+        ns = getattr(model, _MODEL_FIELDS)
         assert isinstance(ns, utils.FrozenNamespace)
         return ns
 
 
 fields = get_fields
+
+
+def asdict(
+    instance: DataModelLike,
+    *,
+    dict_factory: Type[Mapping[Any, Any]] = dict,
+    retain_collection_types: bool = False,
+) -> Dict[str, Any]:
+    """Return the contents of a Data Model instance as a new mapping from field names to values.
+
+    Arguments:
+        instance: Data Model instance.
+
+    Keyword Arguments:
+        dict_factory: A callable to produce ``dict`` instances from.
+        retain_collection_types: Do not convert to ``list`` when encountering an
+            attribute whose type is ``tuple`` or ``set``.
+
+    Examples:
+        >>> @datamodel
+        ... class C:
+        ...     x: int
+        ...     y: int
+        >>> c = C(x=1, y=2)
+        >>> assert asdict(c) == {'x': 1, 'y': 2}
+    """
+    if not is_datamodel(instance) or isinstance(instance, type):
+        raise TypeError(f"Invalid datamodel instance: '{instance}'.")
+    return attr.asdict(
+        instance,
+        dict_factory=dict_factory,
+        recurse=True,
+        retain_collection_types=retain_collection_types,
+    )
+
+
+def astuple(
+    instance: DataModelLike,
+    *,
+    tuple_factory: Type[Sequence[Any]] = tuple,
+    retain_collection_types: bool = False,
+) -> Tuple[Any, ...]:
+    """Return the contents of a Data Model instance as a new tuple of field values.
+
+    Arguments:
+        instance: Data Model instance.
+
+    Keyword Arguments:
+        tuple_factory: A callable to produce ``tuple`` instances from.
+        retain_collection_types: Do not convert to ``list`` or ``dict`` when
+            encountering an attribute which type is ``tuple``, ``dict``
+            or ``set``.
+
+    Examples:
+        >>> @datamodel
+        ... class C:
+        ...     x: int
+        ...     y: int
+        >>> c = C(x=1, y=2)
+        >>> assert astuple(c) == (1, 2)
+    """
+    if not is_datamodel(instance) or isinstance(instance, type):
+        raise TypeError(f"Invalid datamodel instance: '{instance}'.")
+    return attr.astuple(
+        instance,
+        tuple_factory=tuple_factory,
+        recurse=True,
+        retain_collection_types=retain_collection_types,
+    )
 
 
 def concretize(
