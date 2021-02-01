@@ -433,10 +433,23 @@ class FrozenNamespace(types.SimpleNamespace):
         Traceback (most recent call last):
            ...
         TypeError: Trying to modify immutable 'FrozenNamespace' instance.
+
+        >>> ns = FrozenNamespace(a=10, b="hello")
+        >>> list(ns.items())
+        [('a', 10), ('b', 'hello')]
     """
 
     def __setattr__(self, _name: str, _value: Any) -> None:
         raise TypeError(f"Trying to modify immutable '{self.__class__.__name__}' instance.")
+
+    def items(self) -> Iterable[Tuple[str, Any]]:
+        return self.__dict__.items()
+
+    def keys(self) -> Iterable[str]:
+        return self.__dict__.keys()
+
+    def values(self) -> Iterable[Any]:
+        return self.__dict__.values()
 
 
 class UIDGenerator:
