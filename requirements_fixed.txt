@@ -12,7 +12,7 @@ babel==2.8.0              # via sphinx
 backcall==0.2.0           # via ipython
 beautifulsoup4==4.9.2     # via sphinx-material
 black==20.8b1             # via -r /home/enriqueg/Projects/gtc/.requirements_min.tmp
-bleach==3.2.1             # via nbconvert
+bleach==3.3.0             # via nbconvert
 boltons==20.2.1           # via -r /home/enriqueg/Projects/gtc/.requirements_min.tmp
 cached-property==1.5.2    # via aspy.refactor-imports
 certifi==2020.6.20        # via requests
