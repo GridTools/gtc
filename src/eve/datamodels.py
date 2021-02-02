@@ -22,7 +22,6 @@ from __future__ import annotations
 import collections
 import dataclasses
 import sys
-import types
 import typing
 import warnings
 from typing import (
@@ -150,7 +149,6 @@ class GenericDataModelAlias(typing._GenericAlias, _root=True):  # type: ignore  
 
 
 # Implementation
-_ATTR_SETTINGS = types.MappingProxyType({"auto_attribs": True, "slots": False, "kw_only": True})
 _FIELD_VALIDATOR_TAG = "_FIELD_VALIDATOR_TAG"
 _MODEL_FIELDS = "__datamodel_fields__"
 _MODEL_PARAMS = "__datamodel_params__"
@@ -160,9 +158,6 @@ _ROOT_VALIDATORS = "__datamodel_validators__"
 
 class _SENTINEL:
     ...
-
-
-AUTO_CONVERTER = _SENTINEL()
 
 
 # -- Validators --
@@ -273,6 +268,7 @@ def literal_type_attrs_validator(*type_args: Type) -> attr._ValidatorType:
 def tuple_type_attrs_validator(*type_args: Type, tuple_type: Type = tuple) -> attr._ValidatorType:
     """Create an attr.s strict type validator for Tuple typings."""
     if len(type_args) == 2 and (type_args[1] is Ellipsis):
+        # Tuple as an immutable sequence type: Tuple[int, ...]
         if not issubclass(tuple_type, tuple):
             raise TypeError(f"Invalid 'tuple' subclass '{tuple_type}'.")
         member_type_hint = type_args[0]
@@ -281,6 +277,7 @@ def tuple_type_attrs_validator(*type_args: Type, tuple_type: Type = tuple) -> at
             iterable_validator=attr.validators.instance_of(tuple_type),
         )
     else:
+        # Tuple as a heterogeneous container: Tuple[int, float]
         return _TupleValidator(tuple(strict_type_attrs_validator(t) for t in type_args), tuple_type)
 
 
@@ -344,7 +341,7 @@ def strict_type_attrs_validator(type_hint: Type) -> attr._ValidatorType:
 # -- DataModel --
 def _collect_field_validators(cls: Type, *, delete_tag: bool = True) -> Dict[str, ValidatorFunc]:
     result = {}
-    for _, member in cls.__dict__.items():
+    for member in cls.__dict__.values():
         if hasattr(member, _FIELD_VALIDATOR_TAG):
             field_name = getattr(member, _FIELD_VALIDATOR_TAG)
             result[field_name] = member
@@ -361,7 +358,7 @@ def _collect_root_validators(cls: Type, *, delete_tag: bool = True) -> List[Root
             if validator not in result:
                 result.append(validator)
 
-    for _, member in cls.__dict__.items():
+    for member in cls.__dict__.values():
         if hasattr(member, _ROOT_VALIDATOR_TAG):
             result.append(member)
             if delete_tag:
@@ -452,6 +449,7 @@ def _make_non_instantiable_init() -> Callable[..., None]:
 
 
 def _make_post_init(has_post_init: bool) -> Callable[[DataModelLike], None]:
+    # Duplicated code to facilitate the source inspection of the generated `__init__()` method
     if has_post_init:
 
         def __attrs_post_init__(self: DataModelLike) -> None:
@@ -526,8 +524,9 @@ def _make_datamodel(
                     else attr._make.and_(type_validator, cls.__dict__[key]._validator)  # type: ignore  # attr._make is not visible for mypy
                 )
 
-                if cls.__dict__[key].converter is AUTO_CONVERTER:
-                    cls.__dict__[key].converter = _make_type_coercer(type_hint)
+                # TODO(egparedes): implement type coercing
+                # if cls.__dict__[key].converter is True:
+                #     cls.__dict__[key].converter = _make_type_coercer(type_hint)
 
     # All fields should be annotated with type hints
     for key, value in cls.__dict__.items():
@@ -569,18 +568,18 @@ def _make_datamodel(
                 "datamodel(init=True) is incompatible with custom '__init__' methods, use '__post_init__' instead."
             )
 
-        has_post_init = "__post_init__" in cls.__dict__
         if not instantiable:
             cls.__init__ = _make_non_instantiable_init()
         else:
             # For dataclasses emulation, __attrs_post_init__ calls __post_init__ (if it exists)
-            cls.__attrs_post_init__ = _make_post_init(has_post_init)
+            cls.__attrs_post_init__ = _make_post_init(has_post_init="__post_init__" in cls.__dict__)
 
     cls.__class_getitem__ = _make_data_model_class_getitem()
 
+    attr_settings = {"auto_attribs": True, "slots": False, "kw_only": True}
     hash_arg = None if not unsafe_hash else True
     new_cls = attr.define(  # type: ignore  # attr.define is not visible for mypy
-        **_ATTR_SETTINGS,
+        **attr_settings,
         init=init and instantiable,
         repr=repr,
         eq=eq,
@@ -621,7 +620,6 @@ def _make_datamodel(
 @utils.optional_lru_cache(maxsize=None, typed=True)
 def _make_concrete_with_cache(
     datamodel_cls: Type[GenericDataModelLike],
-    /,
     *type_args: Type,
     class_name: Optional[str] = None,
     module: Optional[str] = None,
@@ -838,8 +836,8 @@ def concretize(
     *type_args: Type,
     class_name: Optional[str] = None,
     module: Optional[str] = None,
-    overwrite_definition: bool = True,
     support_pickling: bool = True,
+    overwrite_definition: bool = True,
 ) -> Type[DataModelLike]:
     """Generate a new concrete subclass of a generic Data Model.
 
@@ -854,10 +852,10 @@ def concretize(
             `type_args` in the name.
         module: Value of the ``__module__`` attribute of the new class.
             The default value is the name of the module containing the generic Data Model.
-        overwrite_definition: If ``True`` (the default) a previous
-            definition of the class in the target module will be overwritten.
-        support_pickling: If ``True`` (the default) support for pickling will be added
+        support_pickling: If ``True``, support for pickling will be added
             by actually inserting the new class into the target `module`.
+        overwrite_definition: If ``True``, a previous definition of the class in
+            the target module will be overwritten.
     """
     concrete_cls = _make_concrete_with_cache(
         datamodel_cls, *type_args, class_name=class_name, module=module
@@ -921,14 +919,13 @@ def field(
     *,
     default: Any = NOTHING,
     default_factory: Callable[[None], Any] = NOTHING,
-    converter: Callable = None,
     init: bool = True,
     repr: bool = True,  # noqa: A002   # shadowing 'repr' python builtin
     hash: Optional[bool] = None,  # noqa: A002   # shadowing 'hash' python builtin
     compare: bool = True,
     metadata: Optional[Mapping[Any, Any]] = None,
 ) -> Any:  # attr.s lies on purpose in some typings
-    """Return an object to identify dataclass fields.
+    """Define a new attribute on a class with advanced options.
 
     Keyword Arguments:
         default: If provided, this will be the default value for this field.
@@ -938,39 +935,45 @@ def field(
             be called when a default value is needed for this field. Among other
             purposes, this can be used to specify fields with mutable default values.
             It is an error to specify both `default` and `default_factory`.
-        init: If ``True`` (the default), this field is included as a parameter to the
+        init: If ``True``, this field is included as a parameter to the
             generated ``__init__()`` method.
-        repr: If ``True`` (the default), this field is included in the string returned
+        repr: If ``True``, this field is included in the string returned
             by the generated ``__repr__()`` method.
         hash: This can be a ``bool`` or ``None``. If ``True``, this field is included
-            in the generated ``__hash__()`` method. If ``None`` (the default), use the
-            value of `compare`, which would normally be the expected behavior: a field
+            in the generated ``__hash__()`` method. If ``None``, use the value of
+            `compare`, which would normally be the expected behavior: a field
             should be considered in the `hash` if it’s used for comparisons.
             Setting this value to anything other than ``None`` is `discouraged`.
-        compare: If ``True`` (the default), this field is included in the
-            generated equality and comparison methods (__eq__(), __gt__(), et al.).
+        compare: If ``True``, this field is included in the generated equality and
+            comparison methods (__eq__(), __gt__(), et al.).
         metadata: An arbitrary mapping, not used at all by Data Models, and provided
             only as a third-party extension mechanism. Multiple third-parties can each
             have their own key, to use as a namespace in the metadata.
 
+    Examples:
+        >>> from typing import List
+        >>> @datamodel
+        ... class C:
+        ...     mylist: List[int] = field(default_factory=lambda : [1, 2, 3])
+        >>> c = C()
+        >>> c.mylist
+        [1, 2, 3]
+
     Note:
-        Currently implemented using `attr.ib` (https://www.attrs.org/).
+        Currently implemented using :func:`attr.ib` from `attrs <https://www.attrs.org/>`_
     """
 
     defaults_kwargs = {}
+    if default is not NOTHING and default_factory is not NOTHING:
+        raise ValueError("Cannot specify both default and default_factory.")
+
     if default is not NOTHING:
         defaults_kwargs["default"] = default
     if default_factory is not NOTHING:
-        if "default" in defaults_kwargs:
-            raise ValueError("Cannot specify both default and default_factory.")
         defaults_kwargs["factory"] = default_factory
-
-    if isinstance(converter, bool):
-        converter = AUTO_CONVERTER if converter is True else None
 
     return attr.ib(  # type: ignore  # attr.s lies on purpose in some typings
         **defaults_kwargs,
-        converter=converter,
         init=init,
         repr=repr,
         hash=hash,
@@ -992,7 +995,7 @@ def datamodel(
     frozen: bool = False,
     instantiable: bool = True,
 ) -> Union[Type, Callable[[Type], Type]]:
-    """Add dunder and validation methods to the passed class.
+    """A class decorator to add generated special methods to classes according to the specified attributes.
 
     Examines PEP 526 __annotations__ to determine field types and creates
     strict type validation functions for the fields.
@@ -1001,30 +1004,28 @@ def datamodel(
         cls: Original class definition.
 
     Keyword Arguments:
-        init: If ``True`` (the default), a ``__init__()`` method with validation
-            will be generated. If the class already defines ``__init__()``,
-            an error is raised.
-        repr: If ``True`` (the default), a ``__repr__()`` method will be generated.
+        init: If ``True``, a ``__init__()`` method with validation will be generated.
+            If the class already defines ``__init__()``, an error is raised.
+        repr: If ``True``, a ``__repr__()`` method will be generated.
             If the class already defines ``__repr__()``, it will be overwritten.
-        eq: If ``True`` (the default), ``__eq__()`` and ``__ne__()`` methods will be
-            generated. This method compares the class as if it were a tuple of its
-            fields. Both instances in the comparison must be of identical type.
-        order:  If ``True`` (the default is ``False``), add ``__lt__()``, ``__le__()``,
-            ``__gt__()``, and ``__ge__()`` methods that behave like `eq` above and
-            allow instances to be ordered. If ``None`` mirror value of `eq`.
-        unsafe_hash: If ``False`` (the default), a ``__hash__()`` method is generated
-            in a safe way according to how ``eq`` and ``frozen`` are set, or set to
-            ``None`` (disabled) otherwise. If ``True``, a ``__hash__()`` method is
-            generated anyway (use with care). See :func:`dataclasses.dataclass` for
-            the complete explanation.
-        frozen: If ``True`` (the default is ``False``), assigning to fields will generate
-            an exception. This emulates read-only frozen instances. The ``__setattr__()``
-            and ``__delattr__()`` methods should not be defined in the class.
-        instantiable: If ``False`` (default is ``True``) the class will contain an
-            invalid ``__init__()`` method that raises an exception.
+        eq: If ``True``, ``__eq__()`` and ``__ne__()`` methods will be generated.
+            This method compares the class as if it were a tuple of its fields.
+            Both instances in the comparison must be of identical type.
+        order:  If ``True``, add ``__lt__()``, ``__le__()``, ``__gt__()``,
+            and ``__ge__()`` methods that behave like `eq` above and allow instances
+            to be ordered. If ``None`` mirror value of `eq`.
+        unsafe_hash: If ``False``, a ``__hash__()`` method is generated in a safe way
+            according to how ``eq`` and ``frozen`` are set, or set to ``None`` (disabled)
+            otherwise. If ``True``, a ``__hash__()`` method is generated anyway
+            (use with care). See :func:`dataclasses.dataclass` for the complete explanation.
+        frozen: If ``True``, assigning to fields will generate an exception.
+            This emulates read-only frozen instances. The ``__setattr__()`` and
+            ``__delattr__()`` methods should not be defined in the class.
+        instantiable: If ``False`` the class will contain an invalid ``__init__()``
+            method that raises an exception.
 
     Note:
-        Currently implemented using `attr.s` (https://www.attrs.org/).
+        Currently implemented using :func:`attr.s` from `attrs <https://www.attrs.org/>`_
     """
 
     def _decorator(cls: Type) -> Type:
@@ -1081,17 +1082,18 @@ class DataModel:
         )
 
 
-# -- WIP --
-def _make_type_coercer(type_hint: Type[T]) -> Callable[[Any], T]:
-    # TODO: implement this method
-    return type_hint if isinstance(type_hint, type) else lambda x: x  # type: ignore
+# TODO(egparedes): implement type coercing
+# def _make_type_coercer(type_hint: Type[T]) -> Callable[[Any], T]:
+#     return type_hint if isinstance(type_hint, type) else lambda x: x  # type: ignore
 
 
+# TODO(egparedes): implement full instance freezing
 # def _frozen_setattr(instance, attribute, value):
 #     raise attr.exceptions.FrozenAttributeError(
 #         f"Trying to modify immutable '{attribute.name}' attribute in '{type(instance).__name__}' instance."
 #     )
 
 
+# TODO(egparedes): implement validation on attribute assignment
 # def _valid_setattr(instance, attribute, value):
 #     print("SET", attribute, value)
