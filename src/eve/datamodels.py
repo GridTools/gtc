@@ -29,6 +29,7 @@ from typing import (
     Callable,
     ClassVar,
     Dict,
+    Generator,
     List,
     Literal,
     Mapping,
@@ -65,8 +66,13 @@ class _DataClassLike(Protocol):
         ...
 
 
-class DataModelLike(_AttrClassLike, _DataClassLike, Protocol):
-    __datamodel_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
+class _DevToolsPrettyPrintable(Protocol):
+    def __pretty__(self, fmt: Callable[[Any], Any], **kwargs: Any) -> Generator[Any, None, None]:
+        ...
+
+
+class DataModelLike(_AttrClassLike, _DataClassLike, _DevToolsPrettyPrintable, Protocol):
+    __datamodel_fields__: ClassVar[utils.FrozenNamespace]
     __datamodel_params__: ClassVar[utils.FrozenNamespace]
     __datamodel_validators__: ClassVar[
         Tuple[NonDataDescriptor[DataModelLike, BoundRootValidator], ...]
@@ -468,6 +474,30 @@ def _make_post_init(has_post_init: bool) -> Callable[[DataModelLike], None]:
     return __attrs_post_init__
 
 
+def _make_devtools_pretty() -> Callable[
+    [DataModelLike, Callable[[Any], Any]], Generator[Any, None, None]
+]:
+    def __pretty__(
+        self: DataModelLike, fmt: Callable[[Any], Any], **kwargs: Any
+    ) -> Generator[Any, None, None]:
+        """Used by `devtools <https://python-devtools.helpmanual.io/>` to provide a human readable representation.
+
+        Note:
+            Adapted from `pydantic <https://github.com/samuelcolvin/pydantic>`.
+        """
+        yield self.__class__.__name__ + "("
+        yield 1
+        for name in self.__datamodel_fields__.keys():
+            yield name + "="
+            yield fmt(getattr(self, name))
+            yield ","
+            yield 0
+        yield -1
+        yield ")"
+
+    return __pretty__
+
+
 def _make_data_model_class_getitem() -> classmethod:
     def __class_getitem__(
         cls: Type[GenericDataModelLike], args: Union[Type, Tuple[Type]]
@@ -590,6 +620,7 @@ def _make_datamodel(
     assert new_cls is cls
 
     # Final postprocessing
+    cls.__pretty__ = _make_devtools_pretty()
     setattr(
         cls,
         _MODEL_PARAMS,
