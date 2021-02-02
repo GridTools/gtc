@@ -66,15 +66,15 @@ class _DataClassLike(Protocol):
         ...
 
 
-class BaseDataModelLike(_AttrClassLike, _DataClassLike, Protocol):
+class DataModelLike(_AttrClassLike, _DataClassLike, Protocol):
     __datamodel_fields__: ClassVar[Tuple[dataclasses.Field, ...]]
     __datamodel_params__: ClassVar[utils.FrozenNamespace]
     __datamodel_validators__: ClassVar[
-        Tuple[NonDataDescriptor[BaseDataModelLike, BoundRootValidator], ...]
+        Tuple[NonDataDescriptor[DataModelLike, BoundRootValidator], ...]
     ]
 
 
-class GenericDataModelLike(BaseDataModelLike):
+class GenericDataModelLike(DataModelLike):
     __args__: ClassVar[Tuple[Union[Type, TypeVar]]]
     __parameters__: ClassVar[Tuple[TypeVar]]
 
@@ -84,8 +84,6 @@ class GenericDataModelLike(BaseDataModelLike):
     ) -> GenericDataModelAlias:
         ...
 
-
-DataModelLike = Union[BaseDataModelLike, GenericDataModelLike]
 
 ValidatorFunc = Callable[[DataModelLike, attr.Attribute, T], None]
 BoundValidator = Callable[[attr.Attribute, T], None]
