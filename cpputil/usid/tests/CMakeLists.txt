@@ -1,0 +1,11 @@
+add_executable(nabla_naive nabla_naive.cpp)
+target_link_libraries(nabla_naive PRIVATE usid_naive_helper fvm_nabla_driver gtest_main)
+add_test(NAME nabla_naive COMMAND $<TARGET_FILE:nabla_naive>)
+
+if(CMAKE_CUDA_COMPILER)
+    add_executable(nabla_cuda nabla_cuda.cu)
+    target_link_libraries(nabla_cuda PRIVATE usid_cuda_helper fvm_nabla_driver gtest_main)
+    gridtools_setup_target(nabla_cuda CUDA_ARCH sm_50)
+    target_compile_options(nabla_cuda PRIVATE "-std=c++17")
+    add_test(NAME nabla_cuda COMMAND $<TARGET_FILE:nabla_cuda>)
+endif()
