@@ -670,11 +670,12 @@ def _make_concrete_with_cache(
 ) -> Type[DataModelLike]:
     if not is_generic(datamodel_cls):
         raise TypeError(f"'{datamodel_cls.__name__}' is not a generic model class.")
-    if not all(isinstance(t, (type, typing.TypeVar)) for t in type_args):
-        raise TypeError(
-            f"Only 'type' and 'typing.TypeVar' values can be passed as arguments "
-            f"to instantiate a generic model class (received: {type_args})."
-        )
+    for t in type_args:
+        if not (isinstance(t, type) or t.__module__ == "typing"):
+            raise TypeError(
+                f"Only 'type' and 'typing' definitions can be passed as arguments "
+                f"to instantiate a generic model class (received: {type_args})."
+            )
     if len(type_args) != len(datamodel_cls.__parameters__):
         raise TypeError(
             f"Instantiating '{datamodel_cls.__name__}' generic model with a wrong number of parameters "
@@ -695,10 +696,20 @@ def _make_concrete_with_cache(
 
     # Create new concrete class
     if not class_name:
-        arg_names = [
-            type_params_map[tp_var].__name__ if tp_var in type_params_map else tp_var.__name__
-            for tp_var in datamodel_cls.__parameters__
-        ]
+        arg_names = []
+        for tp_var in datamodel_cls.__parameters__:
+            arg_string = tp_var.__name__
+            if tp_var in type_params_map:
+                concrete_arg = type_params_map[tp_var]
+                if isinstance(concrete_arg, type):
+                    arg_string = concrete_arg.__name__
+                else:
+                    arg_string = utils.slugify(
+                        str(concrete_arg).replace("typing.", "").replace("...", "ellipsis")
+                    )
+
+            arg_names.append(arg_string)
+
         class_name = f"{datamodel_cls.__name__}__{'_'.join(arg_names)}"
 
     namespace = {
