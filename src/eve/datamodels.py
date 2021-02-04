@@ -256,6 +256,18 @@ def empty_attrs_validator() -> attr._ValidatorType:
     return _empty_validator
 
 
+def instance_of_int_attrs_validator() -> attr._ValidatorType:
+    """Create an attr.s validator for `int` values which fails with `bool` values."""
+
+    def _int_validator(instance: _AttrClassLike, attribute: attr.Attribute, value: Any) -> None:
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise TypeError(
+                f"'{attribute.name}' must be {int} (got '{value}' that is a {type(value)})."
+            )
+
+    return _int_validator
+
+
 def or_attrs_validator(
     *validators: attr._ValidatorType, error_type: Type[Exception]
 ) -> attr._ValidatorType:
@@ -305,7 +317,10 @@ def strict_type_attrs_validator(type_hint: Type) -> attr._ValidatorType:
 
     if isinstance(type_hint, type):
         assert not type_args
-        return attr.validators.instance_of(type_hint)
+        if type_hint is int:
+            return instance_of_int_attrs_validator()
+        else:
+            return attr.validators.instance_of(type_hint)
     elif isinstance(type_hint, typing.TypeVar):
         if type_hint.__bound__:
             return attr.validators.instance_of(type_hint.__bound__)
@@ -516,7 +531,6 @@ def _make_data_model_class_getitem() -> classmethod:
 def _make_datamodel(
     cls: Type,
     *,
-    init: bool,  # noqa: A002   # shadowing 'init' python builtin
     repr: bool,  # noqa: A002   # shadowing 'repr' python builtin
     eq: bool,
     order: bool,
@@ -540,7 +554,7 @@ def _make_datamodel(
     for key in annotations:
         type_hint = resolved_annotations[key]
         if typing.get_origin(type_hint) is not ClassVar:
-            type_validator = strict_type_attrs_validator(type_hint) if init else None
+            type_validator = strict_type_attrs_validator(type_hint)
             if key not in cls.__dict__:
                 setattr(cls, key, attr.ib(validator=type_validator))
             elif not isinstance(cls.__dict__[key], attr._make._CountingAttr):  # type: ignore  # attr._make is not visible for mypy
@@ -592,17 +606,16 @@ def _make_datamodel(
     setattr(cls, _ROOT_VALIDATORS, tuple(root_validators))
 
     # Update class with attr.s features
-    if init:
-        if "__init__" in cls.__dict__:
-            raise TypeError(
-                "datamodel(init=True) is incompatible with custom '__init__' methods, use '__post_init__' instead."
-            )
+    if "__init__" in cls.__dict__:
+        raise TypeError(
+            "datamodel(init=True) is incompatible with custom '__init__' methods, use '__post_init__' instead."
+        )
 
-        if not instantiable:
-            cls.__init__ = _make_non_instantiable_init()
-        else:
-            # For dataclasses emulation, __attrs_post_init__ calls __post_init__ (if it exists)
-            cls.__attrs_post_init__ = _make_post_init(has_post_init="__post_init__" in cls.__dict__)
+    if not instantiable:
+        cls.__init__ = _make_non_instantiable_init()
+    else:
+        # For dataclasses emulation, __attrs_post_init__ calls __post_init__ (if it exists)
+        cls.__attrs_post_init__ = _make_post_init(has_post_init="__post_init__" in cls.__dict__)
 
     cls.__class_getitem__ = _make_data_model_class_getitem()
 
@@ -610,7 +623,7 @@ def _make_datamodel(
     hash_arg = None if not unsafe_hash else True
     new_cls = attr.define(  # type: ignore  # attr.define is not visible for mypy
         **attr_settings,
-        init=init and instantiable,
+        init=instantiable,
         repr=repr,
         eq=eq,
         order=order,
@@ -625,7 +638,7 @@ def _make_datamodel(
         cls,
         _MODEL_PARAMS,
         utils.FrozenNamespace(
-            init=init,
+            init=True,
             repr=repr,
             eq=eq,
             order=order,
@@ -1018,7 +1031,6 @@ def datamodel(
     cls: Type = None,
     /,
     *,
-    init: bool = True,  # noqa: A002   # shadowing 'init' python builtin
     repr: bool = True,  # noqa: A002   # shadowing 'repr' python builtin
     eq: bool = True,
     order: bool = False,
@@ -1035,8 +1047,6 @@ def datamodel(
         cls: Original class definition.
 
     Keyword Arguments:
-        init: If ``True``, a ``__init__()`` method with validation will be generated.
-            If the class already defines ``__init__()``, an error is raised.
         repr: If ``True``, a ``__repr__()`` method will be generated.
             If the class already defines ``__repr__()``, it will be overwritten.
         eq: If ``True``, ``__eq__()`` and ``__ne__()`` methods will be generated.
@@ -1062,7 +1072,6 @@ def datamodel(
     def _decorator(cls: Type) -> Type:
         return _make_datamodel(
             cls,
-            init=init,
             repr=repr,
             eq=eq,
             order=order,
@@ -1091,7 +1100,6 @@ class DataModel:
         cls,
         /,
         *,
-        init: bool = True,
         repr: bool = True,  # noqa: A002   # shadowing 'repr' python builtin
         eq: bool = True,
         order: bool = False,
@@ -1103,7 +1111,6 @@ class DataModel:
         super().__init_subclass__(**kwargs)  # type: ignore  # super() does not need to be object
         _make_datamodel(
             cls,
-            init=init,
             repr=repr,
             eq=eq,
             order=order,
