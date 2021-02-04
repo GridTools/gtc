@@ -37,7 +37,7 @@ Examples:
     ...     name: str
     ...     value: int
     ...
-    ...     @validator('name)
+    ...     @validator('name')
     ...     def _name_validator(self, attribute, value):
     ...         if len(value) < 5:
     ...             raise ValueError(
@@ -767,7 +767,7 @@ def _make_concrete_with_cache(
             concrete_cls,
             **{
                 name: getattr(params, name)
-                for name in ("init", "repr", "eq", "order", "unsafe_hash", "frozen", "instantiable")
+                for name in ("repr", "eq", "order", "unsafe_hash", "frozen", "instantiable")
             },
         )
 

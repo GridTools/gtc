@@ -49,7 +49,6 @@ from eve import datamodels, utils
 T = TypeVar("T")
 
 
-# --- Utils and sample data ---
 example_model_factories: List[factory.Factory] = []
 
 
@@ -696,6 +695,7 @@ def test_basic_generic_field_type_validation():
         PartialGenericModel(value=(1, 2))
 
 
+# Reuse sample_type_data from test_field_type_hint
 @pytest.mark.parametrize(["type_hint", "valid_values", "wrong_values"], sample_type_data)
 def test_concrete_field_type_validation(
     type_hint: Type, valid_values: Sequence[Any], wrong_values: Sequence[Any]
