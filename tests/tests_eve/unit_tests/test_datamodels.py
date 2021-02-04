@@ -19,10 +19,9 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import inspect
-import random
 import types
 import typing
+from typing import Set  # noqa: F401  # imported but unused (used in exec() context)
 from typing import (
     Any,
     Callable,
@@ -30,12 +29,9 @@ from typing import (
     Dict,
     Generic,
     List,
-    Literal,
-    Mapping,
     MutableSequence,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Type,
     TypeVar,
@@ -127,7 +123,7 @@ class GenericModelFactory(factory.Factory):
 
 
 @pytest.fixture(params=example_model_factories)
-def example_model_factory(request):
+def example_model_factory(request) -> datamodels.DataModelLike:  # type: ignore
     return request.param
 
 
@@ -227,36 +223,35 @@ def test_default_factories():
 
 
 # Test field specification
-@pytest.mark.parametrize(
-    ["type_hint", "valid_values", "wrong_values"],
-    [
-        ("bool", [True, False], [1, "True"]),
-        ("int", [1, -1], [1.0, True, "1"]),
-        ("float", [1.0], [1, "1.0"]),
-        ("str", ["", "one"], [1, ("one",)]),
-        ("complex", [1j], [1, 1.0, "1j"]),
-        ("bytes", [b"bytes", b""], ["string", ["a"]]),
-        ("None", [None], [1, "string", []]),
-        ("typing.Any", ["any"], tuple()),
-        ("typing.Literal[1, 1.0, True]", [1, 1.0, True], [False]),
-        ("typing.Tuple[int, str]", [(3, "three")], [(), (3, 3)]),
-        ("typing.Tuple[int, ...]", [(1, 2, 3), ()], [3, (3, "three")]),
-        ("typing.List[int]", ([1, 2, 3], []), (1, [1.0])),
-        ("typing.Set[int]", ({1, 2, 3}, set()), (1, [1], (1,), {1: None})),
-        ("typing.Dict[int, str]", ({}, {3: "three"}), ([(3, "three")], 3, "three", [])),
-        ("typing.Sequence[int]", ([1, 2, 3], [], (1, 2, 3), tuple()), (1, [1.0], {1})),
-        ("typing.MutableSequence[int]", ([1, 2, 3], []), ((1, 2, 3), tuple(), 1, [1.0], {1})),
-        ("typing.Set[int]", ({1, 2, 3}, set()), (1, [1], (1,), {1: None})),
-        ("typing.Union[int, float, str]", [1, 3.0, "one"], [[1], [], 1j]),
-        ("typing.Optional[int]", [1, None], [[1], [], 1j]),
-        (
-            "typing.Dict[Union[int, float, str], Union[Tuple[int, Optional[float]], Set[int]]]",
-            [{1: (2, 3.0)}, {1.0: (2, None)}, {"1": {1, 2}}],
-            [{(1, 1.0, "1"): set()}, {1: [1]}, {"1": (1,)}],
-        ),
-    ],
-)
-def test_field_type_hint(type_hint, valid_values, wrong_values):
+sample_type_data = [
+    ("bool", [True, False], [1, "True"]),
+    ("int", [1, -1], [1.0, True, "1"]),
+    ("float", [1.0], [1, "1.0"]),
+    ("str", ["", "one"], [1, ("one",)]),
+    ("complex", [1j], [1, 1.0, "1j"]),
+    ("bytes", [b"bytes", b""], ["string", ["a"]]),
+    ("typing.Any", ["any"], tuple()),
+    ("typing.Literal[1, 1.0, True]", [1, 1.0, True], [False]),
+    ("typing.Tuple[int, str]", [(3, "three")], [(), (3, 3)]),
+    ("typing.Tuple[int, ...]", [(1, 2, 3), ()], [3, (3, "three")]),
+    ("typing.List[int]", ([1, 2, 3], []), (1, [1.0])),
+    ("typing.Set[int]", ({1, 2, 3}, set()), (1, [1], (1,), {1: None})),
+    ("typing.Dict[int, str]", ({}, {3: "three"}), ([(3, "three")], 3, "three", [])),
+    ("typing.Sequence[int]", ([1, 2, 3], [], (1, 2, 3), tuple()), (1, [1.0], {1})),
+    ("typing.MutableSequence[int]", ([1, 2, 3], []), ((1, 2, 3), tuple(), 1, [1.0], {1})),
+    ("typing.Set[int]", ({1, 2, 3}, set()), (1, [1], (1,), {1: None})),
+    ("typing.Union[int, float, str]", [1, 3.0, "one"], [[1], [], 1j]),
+    ("typing.Optional[int]", [1, None], [[1], [], 1j]),
+    (
+        "typing.Dict[Union[int, float, str], Union[Tuple[int, Optional[float]], Set[int]]]",
+        [{1: (2, 3.0)}, {1.0: (2, None)}, {"1": {1, 2}}],
+        [{(1, 1.0, "1"): set()}, {1: [1]}, {"1": (1,)}],
+    ),
+]
+
+
+@pytest.mark.parametrize(["type_hint", "valid_values", "wrong_values"], sample_type_data)
+def test_field_type_hint(type_hint: Type, valid_values: Sequence[Any], wrong_values: Sequence[Any]):
     context = {}
     exec(
         f"""
@@ -399,7 +394,7 @@ class ChildModelWithValidators(ModelWithValidators):
 
 
 @pytest.mark.parametrize("model_class", [ModelWithValidators, ChildModelWithValidators])
-def test_field_validators(model_class):
+def test_field_validators(model_class: datamodels.DataModelLike):
 
     with pytest.raises(ValueError, match="int_value"):
         model_class(int_value=-1)
@@ -502,7 +497,7 @@ class ChildModelWithRootValidators(ModelWithRootValidators):
 
 
 @pytest.mark.parametrize("model_class", [ModelWithRootValidators, ChildModelWithRootValidators])
-def test_root_validators(model_class):
+def test_root_validators(model_class: datamodels.DataModelLike):
     model_class(int_value=0, float_value=1.1, str_value="")
     with pytest.raises(ValueError, match="float_value"):
         model_class(int_value=1, float_value=1.0, str_value="")
@@ -629,3 +624,87 @@ def test_non_instantiable():
     assert NonInstantiableModel2.__datamodel_params__.instantiable is False
     with pytest.raises(TypeError, match="Trying to instantiate"):
         NonInstantiableModel2()
+
+
+# Test generic models
+@pytest.mark.parametrize(
+    "concrete_type",
+    [int, List[float], Tuple[int, ...], Optional[int], Union[int, float]],
+)
+def test_generic_model_instantiation_name(concrete_type: Type):
+    Model = datamodels.concretize(GenericModel, concrete_type)
+    assert Model.__name__.startswith(GenericModel.__name__)
+    assert Model.__name__ != GenericModel.__name__
+
+    Model = datamodels.concretize(GenericModel, concrete_type, class_name="MyNewConcreteClass")
+    assert Model.__name__ == "MyNewConcreteClass"
+
+
+@pytest.mark.parametrize(
+    "concrete_type",
+    [int, List[float], Tuple[int, ...], Optional[int], Union[int, float]],
+)
+def test_generic_model_alias(concrete_type: Type):
+    Model = datamodels.concretize(GenericModel, concrete_type)
+
+    assert GenericModel[concrete_type].__class__ is Model
+    assert typing.get_origin(GenericModel[concrete_type]) is Model
+
+    class SubModel(GenericModel[concrete_type]):
+        ...
+
+    assert SubModel.__base__ is Model
+
+
+@pytest.mark.parametrize(
+    "concrete_type",
+    [int, List[float], Tuple[int, ...], Optional[int], Union[int, float]],
+)
+def test_generic_model_instantiation_cache(concrete_type):
+    Model1 = datamodels.concretize(GenericModel, concrete_type)
+    Model2 = datamodels.concretize(GenericModel, concrete_type)
+    Model3 = datamodels.concretize(GenericModel, concrete_type)
+
+    assert (
+        Model1 is Model2
+        and Model2 is Model3
+        and Model3 is datamodels.concretize(GenericModel, concrete_type)
+    )
+
+
+def test_basic_generic_field_type_validation():
+    class GenericModel(datamodels.DataModel, Generic[T]):
+        value: T
+
+    GenericModel(value=1)
+    GenericModel(value="value")
+    GenericModel(value=(1.0, "value"))
+    GenericModel(value=None)
+
+    class PartialGenericModel(datamodels.DataModel, Generic[T]):
+        value: List[T]
+
+    PartialGenericModel(value=[])
+    PartialGenericModel(value=[1])
+    PartialGenericModel(value=["value"])
+    PartialGenericModel(value=[1.0, "value"])
+    PartialGenericModel(value=[(1.0, "value")])
+    PartialGenericModel(value=[None])
+    with pytest.raises(TypeError, match="'value'"):
+        PartialGenericModel(value=1)
+    with pytest.raises(TypeError, match="'value'"):
+        PartialGenericModel(value=(1, 2))
+
+
+@pytest.mark.parametrize(["type_hint", "valid_values", "wrong_values"], sample_type_data)
+def test_concrete_field_type_validation(
+    type_hint: Type, valid_values: Sequence[Any], wrong_values: Sequence[Any]
+):
+    Model = GenericModel[eval(type_hint)].__class__
+
+    for value in valid_values:
+        Model(value=value)
+
+    for value in wrong_values:
+        with pytest.raises((TypeError, ValueError), match="'value'"):
+            Model(value=value)

@@ -315,7 +315,9 @@ def strict_type_attrs_validator(type_hint: Type) -> attr._ValidatorType:
     origin_type = typing.get_origin(type_hint)
     type_args = typing.get_args(type_hint)
 
-    if isinstance(type_hint, type):
+    if isinstance(type_hint, type) and type_hint is not type(  # noqa: E721  # use isinstance()
+        None
+    ):
         assert not type_args
         if type_hint is int:
             return instance_of_int_attrs_validator()
@@ -326,8 +328,6 @@ def strict_type_attrs_validator(type_hint: Type) -> attr._ValidatorType:
             return attr.validators.instance_of(type_hint.__bound__)
         else:
             return empty_attrs_validator()
-    elif type_hint is None:
-        return attr.validators.instance_of(type(None))
     elif type_hint is Any:
         return empty_attrs_validator()
     elif origin_type is typing.Literal:
@@ -671,7 +671,7 @@ def _make_concrete_with_cache(
     if not is_generic(datamodel_cls):
         raise TypeError(f"'{datamodel_cls.__name__}' is not a generic model class.")
     for t in type_args:
-        if not (isinstance(t, type) or t.__module__ == "typing"):
+        if not (isinstance(t, (type, type(None))) or getattr(t, "__module__", None) == "typing"):
             raise TypeError(
                 f"Only 'type' and 'typing' definitions can be passed as arguments "
                 f"to instantiate a generic model class (received: {type_args})."
