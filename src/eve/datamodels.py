@@ -496,6 +496,7 @@ def _make_dataclass_field_from_attr(field_attrib: attr.Attribute) -> dataclasses
     dataclasses_field.name = field_attrib.name
     assert field_attrib.type is not None
     dataclasses_field.type = field_attrib.type
+    dataclasses_field._field_type = dataclasses._FIELD  # type: ignore  #dataclasses._FIELD seems invisible to mypy
 
     return dataclasses_field
 
@@ -692,9 +693,10 @@ def _make_datamodel(
             **{field_attr.name: field_attr for field_attr in cls.__attrs_attrs__}
         ),
     )
-    cls.__dataclass_fields__ = tuple(  # dataclasses emulation
-        _make_dataclass_field_from_attr(field_attr) for field_attr in cls.__attrs_attrs__
-    )
+    cls.__dataclass_fields__ = {  # dataclasses emulation
+        field_attr.name: _make_dataclass_field_from_attr(field_attr)
+        for field_attr in cls.__attrs_attrs__
+    }
 
     return cls
 
@@ -840,11 +842,13 @@ def get_fields(
  Field(name='name',type='str',default=...),\
  Field(name='numbers',type='List[float]',default=...))
     """
-    if not (isinstance(model, type) and is_datamodel(model)):
+    if not is_datamodel(model):
         raise TypeError(f"Invalid datamodel instance or class: '{model}'.")
+    if not isinstance(model, type):
+        model = model.__class__
 
     if as_dataclass:
-        return model.__dataclass_fields__
+        return dataclasses.fields(model)
     else:
         ns = getattr(model, _MODEL_FIELDS)
         assert isinstance(ns, utils.FrozenNamespace)

@@ -158,12 +158,14 @@ def test_dataclass_compatibility(example_model_factory):
     model_class = model.__class__
 
     assert hasattr(model_class, "__dataclass_fields__") and isinstance(
-        model_class.__dataclass_fields__, tuple
+        model_class.__dataclass_fields__, dict
     )
     assert set(model_class.__datamodel_fields__.keys()) == set(
-        f.name for f in model_class.__dataclass_fields__
+        model_class.__dataclass_fields__.keys()
     )
     assert dataclasses.is_dataclass(model_class)
+    field_names = set(model_class.__datamodel_fields__.keys())
+    assert all(f.name in field_names for f in dataclasses.fields(model))
 
 
 def test_init():
@@ -623,6 +625,30 @@ def test_non_instantiable():
     assert NonInstantiableModel2.__datamodel_params__.instantiable is False
     with pytest.raises(TypeError, match="Trying to instantiate"):
         NonInstantiableModel2()
+
+
+# Test module functions
+def test_info_functions():
+    @datamodels.datamodel
+    class Model:
+        int_value: int
+        float_value: float
+        str_value: str
+        class_counter: ClassVar[int] = 0
+
+    fields_info = datamodels.fields(Model)
+    fields_info_keys = set(fields_info.keys())
+
+    assert isinstance(fields_info, utils.FrozenNamespace)
+    assert fields_info_keys == {"int_value", "float_value", "str_value"}
+    assert datamodels.get_fields(Model) == fields_info
+    assert datamodels.fields(Model, as_dataclass=True) == dataclasses.fields(Model)
+
+    model = Model(int_value=1, float_value=2.0, str_value="string")
+
+    assert fields_info == datamodels.fields(model)
+    assert datamodels.asdict(model) == {"int_value": 1, "float_value": 2.0, "str_value": "string"}
+    assert datamodels.astuple(model) == (1, 2.0, "string")
 
 
 # Test generic models
