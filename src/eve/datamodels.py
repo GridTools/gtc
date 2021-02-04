@@ -14,8 +14,46 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""Data Model class and related utils."""
+"""Data Model class and related utils.
 
+Data Models can be considered as an extension to ``dataclasses`` providing
+run-time validation utils for fields. Values assigned to fields at
+initialization are validated with automatic type checkings using the
+field type definition. Custom field validation methods can also be added with
+the :func:`validator` decorator, and global instance validation methods with
+:func:`root_validator`.
+
+The datamodels API is intentionally copying ``dataclasses`` API as close as
+possible. Actually, Data Model classes are also ``dataclasses``, so all functions
+dealing with ``dataclasses`` should also work with Data Models.
+
+Notes:
+    Since the current implementation uses `attrs <https://www.attrs.org/>`_ internally,
+    Data Model classes are also ``attrs`` classes.
+
+Examples:
+    >>> @datamodel
+    ... class SampleModel:
+    ...     name: str
+    ...     value: int
+    ...
+    ...     @validator('name)
+    ...     def _name_validator(self, attribute, value):
+    ...         if len(value) < 5:
+    ...             raise ValueError(
+    ...                 f"Provided value '{value}' for '{attribute.name}' field is too short."
+    ...             )
+
+
+    >>> class AnotherSampleModel(DataModel):
+    ...     name: str
+    ...     friends: List[str]
+    ...
+    ...     @root_validator
+    ...     def _root_validator(cls, instance):
+    ...         if instace.name in instance.friends:
+    ...             raise ValueError("'name' value cannot appear in 'friends' list.")
+"""
 
 from __future__ import annotations
 
