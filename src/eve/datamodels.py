@@ -1093,7 +1093,7 @@ def datamodel(
 ) -> Union[Type, Callable[[Type], Type]]:
     """A class decorator to add generated special methods to classes according to the specified attributes.
 
-    Examines PEP 526 __annotations__ to determine field types and creates
+    Examines PEP 526 ``__annotations__`` to determine field types and creates
     strict type validation functions for the fields.
 
     Arguments:
