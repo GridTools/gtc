@@ -221,6 +221,19 @@ Modified example of the copy stencil emphasizing the behaviour of temporary fiel
       with location(Vertex) as v:
         field_out[v] = tmp_field[v]
 
+Example for a sparse field assignment using a generator expression on neighbors:
+
+.. code-block:: python
+
+  @gtscript.stencil
+  def scale_sparse(
+    mesh: Mesh,
+    original_field : SparseField[[Vertex], float]
+    scaled_field : SparseField[[Vertex], float]
+  ):
+      with location(Vertex) as v:
+        scaled_field[v, :] = 2*original_field[v] for v in edges(v)
+
 Todo: Off-center writes
 
 Expressions
@@ -284,10 +297,10 @@ Fields are accessed using the subscript operator :code:`[]` with the index being
   field[v, 0]  # value at the current layer and location `v`
   field[v, -1] # value at location `v` with vertical offset -1
 
-Arithmetic operators
+Arithmetic operators / Elementary reductions
 --------------------
 
-Arithmetic operators on values of type :code:`gtc.common.DataType` follow the regular python syntax.
+Arithmetic operators and reductions on values of type :code:`gtc.common.DataType` follow the regular python syntax.
 
 .. code-block:: python
 
@@ -295,11 +308,13 @@ Arithmetic operators on values of type :code:`gtc.common.DataType` follow the re
   a - b
   a * b
   a / b
+  min(a, b)
+  max(a, b)
 
-Neighbor reductions
---------------------
+Generator expressions on neighbors
+----------------------------------
 
-Reductions over neighbors are composed of a reduction function, a generator expression, representing a set of values on the neighboring locations, and a neighbor selector, specifying the neighbors to be reduced over. GTScript supports four reduction functions :code:`sum`, :code:`product`, :code:`min`, :code:`max`, computing the sum, product, mimimum and maximum, respectively, of its arguments. The argument to a reduction function is a generator expression with the following syntax:
+Operations on neighbors are expressed using generator expressions, used e.g. in sparse field assignments and neighbor reductions. They follow the regular python syntax:
 
 .. code-block:: python
 
@@ -326,11 +341,31 @@ Pseudo-code for :code:`vertices` and :code:`edges` convenience functions:
   def edges(of : Location):
     return neighbors(of, Edge)
 
+Example of a generator expression on the vertices of a primary location :code:`e`:
+
+.. code-block:: python
+
+    vertex_field[v] for v in vertices(e)
+
+Neighbor reductions
+--------------------
+
+Reductions over neighbors are composed of a reduction function and a generator expression on the neighbors to reduce over. GTScript supports four reduction functions :code:`sum`, :code:`product`, :code:`min`, :code:`max`, computing the sum, product, mimimum and maximum, respectively, of its arguments.
+
 Example computing the sum of :code:`vertex_field` over all neighboring vertices of :code:`e`:
 
 .. code-block:: python
 
   sum(vertex_field[v] for v in vertices(e))
   product(vertex_field[v] for v in vertices(e))
+
+Optionally reductions may be supplied with a weights argument, where the :code:`i`-th weight is multiplied to the value on the :code:`i`-th neighbor.
+
+.. code-block:: python
+
+  sum(gen_exp, weights=None)
+  product(gen_exp, weights=None)
+  min(gen_exp, weights=None)
+  max(gen_exp, weights=None)
 
 Todo: Sparse field example
