@@ -206,7 +206,7 @@ The left-hand-side of an assignment is always a :code:`Field` defined on the cur
   field = expression
   field[location] = expression
 
-Modified example of the copy stencil emphasizing the behaviour of temporary fields using a  generator expression on neighbors:
+Modified example of the copy stencil emphasizing the behaviour of temporary fields:
 
 .. code-block:: python
 
@@ -221,17 +221,18 @@ Modified example of the copy stencil emphasizing the behaviour of temporary fiel
       with location(Vertex) as v:
         field_out[v] = tmp_field[v]
 
-Copy stencil for a sparse field:
+Example for a sparse field assignment using a generator expression on neighbors:
 
 .. code-block:: python
 
   @gtscript.stencil
-  def tmp_field_copy(
+  def scale_sparse(
     mesh: Mesh,
-    sparse_field : SparseField[[Vertex], float]
+    original_field : SparseField[[Vertex], float]
+    scaled_field : SparseField[[Vertex], float]
   ):
       with location(Vertex) as v:
-        sparse_field[v, :] = sparse_field[v] for v in edges(v)
+        scaled_field[v, :] = 2*original_field[v] for v in edges(v)
 
 Todo: Off-center writes
 
