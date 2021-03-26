@@ -103,7 +103,7 @@ pytest==6.1.0             # via -r /home/enriqueg/Projects/gtc/requirements_dev.
 python-dateutil==2.8.1    # via jupyter-client
 python-slugify[unidecode]==4.0.1  # via sphinx-material
 pytz==2020.1              # via babel
-pyyaml==5.3.1             # via pre-commit
+pyyaml==5.4             # via pre-commit
 pyzmq==19.0.2             # via jupyter-client, notebook, qtconsole
 qtconsole==4.7.7          # via jupyter
 qtpy==1.9.0               # via qtconsole
