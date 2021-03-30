@@ -95,7 +95,7 @@ pycparser==2.20           # via cffi
 pydantic==1.6.1           # via -r /home/enriqueg/Projects/gtc/.requirements_min.tmp
 pydocstyle==5.1.1         # via flake8-docstrings
 pyflakes==2.2.0           # via flake8
-pygments==2.7.1           # via ipython, jupyter-console, jupyterlab-pygments, nbconvert, qtconsole, sphinx
+pygments==2.7.4           # via ipython, jupyter-console, jupyterlab-pygments, nbconvert, qtconsole, sphinx
 pyparsing==2.4.7          # via packaging
 pyrsistent==0.17.3        # via jsonschema
 pytest-cov==2.10.1        # via -r /home/enriqueg/Projects/gtc/requirements_dev.txt
