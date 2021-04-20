@@ -88,7 +88,7 @@ pre-commit==2.7.1         # via -r /home/enriqueg/Projects/gtc/requirements_dev.
 prometheus-client==0.8.0  # via notebook
 prompt-toolkit==3.0.7     # via ipython, jupyter-console
 ptyprocess==0.6.0         # via pexpect, terminado
-py==1.9.0                 # via pytest, tox
+py==1.10.0                 # via pytest, tox
 pybind11==2.5.0           # via -r /home/enriqueg/Projects/gtc/.requirements_min.tmp, cppimport
 pycodestyle==2.6.0        # via flake8
 pycparser==2.20           # via cffi
