@@ -1,5 +1,7 @@
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/eth-cscs/eve_toolchain)
 
+**_! Archived: the development that started in this repository was moved to the GridTools/gt4py repository !_**
+
 Eve: A framework for implementing DSL toolchains in Python
 ==========================================================
 
